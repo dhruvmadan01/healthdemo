@@ -83,6 +83,7 @@ body {
     .device-shell {
         border-radius: 40px;
         border: 12px solid #000000;
+        padding-top: 28px;
     }
     
     /* Device Notch */
@@ -103,9 +104,9 @@ body {
 
 /* Device Header / Status Bar */
 .status-bar {
+    display: none;
     height: 40px;
     padding: 0 24px;
-    display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 0.8rem;

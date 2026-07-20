@@ -264,7 +264,7 @@ class BookingFlow {
                 insurance: insurance,
                 paymentStatus: "Paid",
                 paymentAmount: parseFloat(document.getElementById('bookingTotalPayable').innerText.replace('$', '')),
-                qrCode: `HEALTHFLOW-MOCK-QR-${apptId}`,
+                qrCode: `MEDIGI-MOCK-QR-${apptId}`,
                 visitToken: `T-${tokenNum}`,
                 status: "Upcoming",
                 checkInStatus: "Not Checked In",

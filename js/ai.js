@@ -109,7 +109,7 @@ class AIChat {
         // Default medical assistant response
         return `
             Based on your query, I suggest monitoring your vitals and logging daily details in your profile settings. 
-            Remember, I am an AI assistant for guidance; consult our licensed HealthFlow network physicians like 
+            Remember, I am an AI assistant for guidance; consult our licensed MediGi network physicians like 
             Dr. Vance or Dr. Reyes for definitive clinical diagnoses.
         `;
     }

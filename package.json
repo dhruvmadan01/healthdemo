@@ -1,0 +1,21 @@
+{
+  "name": "medigi-patient-portal",
+  "version": "1.0.0",
+  "description": "MediGi Patient Portal App",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx http-server . -p 3000",
+    "build": "node build.js",
+    "start": "npx http-server . -p 3000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/core": "^8.4.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.4.2"
+  }
+}
