@@ -627,12 +627,16 @@
                                 <span class="filter-chip" id="chip-distance" onclick="toggleChipFilter('distance')">Distance <i class="fa-solid fa-chevron-down"></i></span>
                                 <span class="filter-chip" id="chip-price" onclick="toggleChipFilter('price')">Max Fee <i class="fa-solid fa-chevron-down"></i></span>
                                 <span class="filter-chip" id="chip-rating" onclick="toggleChipFilter('rating')">Rating <i class="fa-solid fa-chevron-down"></i></span>
+                                <span class="filter-chip" id="chip-gender" onclick="toggleChipFilter('gender')">Gender <i class="fa-solid fa-chevron-down"></i></span>
+                                <span class="filter-chip" id="chip-experience" onclick="toggleChipFilter('experience')">Experience <i class="fa-solid fa-chevron-down"></i></span>
+                                <span class="filter-chip" id="chip-type" onclick="toggleChipFilter('type')">Type <i class="fa-solid fa-chevron-down"></i></span>
+                                <span class="filter-chip" id="chip-language" onclick="toggleChipFilter('language')">Language <i class="fa-solid fa-chevron-down"></i></span>
                                 <span class="filter-chip" id="chip-today" onclick="toggleChipFilter('today')">Available Today</span>
                             </div>
                         </div>
 
                         <!-- Dropdown filters drawer (hidden by default) -->
-                        <div id="filter-dropdowns-container" style="display:none; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;" class="card-section">
+                        <div id="filter-dropdowns-container" style="display:none; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px;" class="card-section">
                             <!-- Distance Slider -->
                             <div class="filter-group" id="group-distance" style="display:none;">
                                 <label>Distance</label>
@@ -658,6 +662,45 @@
                                     <option value="0">All Ratings</option>
                                     <option value="4.5">★ 4.5 & Above</option>
                                     <option value="4.0">★ 4.0 & Above</option>
+                                </select>
+                            </div>
+                            <!-- Gender Dropdown -->
+                            <div class="filter-group" id="group-gender" style="display:none;">
+                                <label>Doctor Gender</label>
+                                <select id="filt-gender" class="form-control" style="padding-left:14px;" onchange="filterDirectory()">
+                                    <option value="All">Any Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <!-- Experience Dropdown -->
+                            <div class="filter-group" id="group-experience" style="display:none;">
+                                <label>Experience</label>
+                                <select id="filt-exp" class="form-control" style="padding-left:14px;" onchange="filterDirectory()">
+                                    <option value="0">Any Experience</option>
+                                    <option value="5">5+ Years</option>
+                                    <option value="10">10+ Years</option>
+                                    <option value="15">15+ Years</option>
+                                </select>
+                            </div>
+                            <!-- Consult Type Dropdown -->
+                            <div class="filter-group" id="group-type" style="display:none;">
+                                <label>Consult Type</label>
+                                <select id="filt-type" class="form-control" style="padding-left:14px;" onchange="filterDirectory()">
+                                    <option value="All">Any Type</option>
+                                    <option value="Online">Online / Video</option>
+                                    <option value="In-Person">In-Person / Clinic</option>
+                                </select>
+                            </div>
+                            <!-- Language Dropdown -->
+                            <div class="filter-group" id="group-language" style="display:none;">
+                                <label>Language Spoken</label>
+                                <select id="filt-language" class="form-control" style="padding-left:14px;" onchange="filterDirectory()">
+                                    <option value="All">Any Language</option>
+                                    <option value="English">English</option>
+                                    <option value="Spanish">Spanish</option>
+                                    <option value="Mandarin">Mandarin</option>
+                                    <option value="Hindi">Hindi</option>
                                 </select>
                             </div>
                         </div>

@@ -16,6 +16,7 @@ const mockDoctors = [
         types: ["In-Person", "Online"],
         insurance: ["blue-cross", "united-health", "aetna"],
         availableToday: true,
+        gender: "Male",
         awards: "Top Cardiologist Bay Area (2024)",
         slots: ["09:00 AM", "10:30 AM", "11:15 AM", "02:00 PM", "04:30 PM"],
         image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200"
@@ -34,6 +35,7 @@ const mockDoctors = [
         types: ["In-Person"],
         insurance: ["blue-cross", "aetna", "cigna"],
         availableToday: true,
+        gender: "Female",
         awards: "Outstanding Pediatric Service Award",
         slots: ["08:30 AM", "10:00 AM", "01:30 PM", "03:45 PM"],
         image: "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=200"
@@ -52,6 +54,7 @@ const mockDoctors = [
         types: ["In-Person", "Online"],
         insurance: ["united-health", "cigna"],
         availableToday: false,
+        gender: "Male",
         awards: "Distinguished Neuroscientist of the Year",
         slots: ["11:00 AM", "03:00 PM"],
         image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200"
@@ -70,6 +73,7 @@ const mockDoctors = [
         types: ["Online"],
         insurance: ["blue-cross", "united-health", "aetna", "cigna"],
         availableToday: true,
+        gender: "Female",
         awards: "UCSF Resident of Excellence",
         slots: ["09:30 AM", "11:30 AM", "02:30 PM", "04:00 PM"],
         image: "https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?auto=format&fit=crop&q=80&w=200"
@@ -746,6 +750,26 @@ function filterDirectory() {
     const todayChip = document.getElementById("chip-today");
     const todayFilt = todayChip ? todayChip.classList.contains("active") : false;
 
+    // Gender filter from chip/select dropdown
+    const genderEl = document.getElementById("filt-gender");
+    const genderChip = document.getElementById("chip-gender");
+    const genderFilt = genderEl && genderChip && genderChip.classList.contains("active") ? genderEl.value : "All";
+
+    // Experience filter from chip/select dropdown
+    const expEl = document.getElementById("filt-exp");
+    const expChip = document.getElementById("chip-experience");
+    const expFilt = expEl && expChip && expChip.classList.contains("active") ? parseInt(expEl.value) : 0;
+
+    // Consult Type filter from chip/select dropdown
+    const typeEl = document.getElementById("filt-type");
+    const typeChip = document.getElementById("chip-type");
+    const typeFilt = typeEl && typeChip && typeChip.classList.contains("active") ? typeEl.value : "All";
+
+    // Language filter from chip/select dropdown
+    const langEl = document.getElementById("filt-language");
+    const langChip = document.getElementById("chip-language");
+    const langFilt = langEl && langChip && langChip.classList.contains("active") ? langEl.value : "All";
+
     // Filter Doctors
     const filteredDocs = mockDoctors.filter(doc => {
         // Query match
@@ -763,7 +787,19 @@ function filterDirectory() {
         // Today match
         const matchesToday = !todayFilt || doc.availableToday;
 
-        return matchesQuery && matchesRating && matchesFees && matchesToday;
+        // Gender match
+        const matchesGender = genderFilt === "All" || doc.gender === genderFilt;
+
+        // Experience match
+        const matchesExp = doc.experience >= expFilt;
+
+        // Consult Type match
+        const matchesType = typeFilt === "All" || doc.types.includes(typeFilt);
+
+        // Language match
+        const matchesLang = langFilt === "All" || doc.languages.includes(langFilt);
+
+        return matchesQuery && matchesRating && matchesFees && matchesToday && matchesGender && matchesExp && matchesType && matchesLang;
     });
 
     // Filter Hospitals
@@ -1629,10 +1665,18 @@ function toggleChipFilter(filterType) {
         const distChip = document.getElementById("chip-distance");
         const priceChip = document.getElementById("chip-price");
         const ratingChip = document.getElementById("chip-rating");
+        const genderChip = document.getElementById("chip-gender");
+        const expChip = document.getElementById("chip-experience");
+        const typeChip = document.getElementById("chip-type");
+        const langChip = document.getElementById("chip-language");
 
         const anyDropdownActive = (distChip && distChip.classList.contains("active")) ||
                                   (priceChip && priceChip.classList.contains("active")) ||
-                                  (ratingChip && ratingChip.classList.contains("active"));
+                                  (ratingChip && ratingChip.classList.contains("active")) ||
+                                  (genderChip && genderChip.classList.contains("active")) ||
+                                  (expChip && expChip.classList.contains("active")) ||
+                                  (typeChip && typeChip.classList.contains("active")) ||
+                                  (langChip && langChip.classList.contains("active"));
 
         if (drawer) {
             drawer.style.display = anyDropdownActive ? "grid" : "none";
