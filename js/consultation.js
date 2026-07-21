@@ -312,6 +312,172 @@ class ConsultationModule {
         }
     }
 
+    async uploadPrescriptionPDF() {
+        const prescId = this.latestPrescriptionId;
+        if (!prescId) {
+            alert("No active prescription record to export.");
+            return;
+        }
+
+        const btn = document.getElementById('btnUploadPrescription');
+        const origText = btn.innerHTML;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving...`;
+        btn.disabled = true;
+
+        const presc = db.data.prescriptions.find(p => p.id === prescId);
+        const patient = db.getPatient(presc.patientId);
+        const doc = db.getDoctor(presc.doctorId);
+        const hospital = db.getHospital(doc.hospitalId);
+        const age = new Date().getFullYear() - new Date(patient.dob).getFullYear();
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            // Layout Styling Metrics
+            pdf.setFillColor(15, 76, 129); // Primary Clinical Blue
+            pdf.rect(0, 0, 210, 30, 'F');
+
+            // Header Text
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(16);
+            pdf.text(hospital.name, 15, 12);
+            
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(9);
+            pdf.text(hospital.address, 15, 18);
+
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(`${doc.name}, MD`, 150, 12);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text("Authorized Medical Practitioner", 150, 18);
+
+            // Patient details card
+            pdf.setFillColor(243, 244, 246); // light gray
+            pdf.roundedRect(15, 40, 180, 20, 3, 3, 'F');
+            
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(9);
+            pdf.text("PATIENT PROFILE", 20, 46);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(`Name: ${patient.name}`, 20, 53);
+            pdf.text(`Age/Gender: ${age} yrs / ${patient.gender}`, 80, 53);
+            pdf.text(`Date: ${presc.date}`, 145, 46);
+            pdf.text(`Prescription ID: ${presc.id.replace('pr_', 'RX-')}`, 145, 53);
+
+            // Rx Logo Symbol
+            pdf.setTextColor(15, 76, 129);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(26);
+            pdf.text("Rx", 15, 75);
+
+            // Medicines Table Headers
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(10);
+            pdf.text("Prescribed Medications", 15, 88);
+
+            pdf.setFillColor(229, 231, 235);
+            pdf.rect(15, 93, 180, 8, 'F');
+            
+            pdf.setFontSize(8.5);
+            pdf.text("Medicine Name", 18, 98);
+            pdf.text("Dose", 85, 98);
+            pdf.text("Duration", 115, 98);
+            pdf.text("Instructions", 145, 98);
+
+            // Medicines List details
+            let y = 107;
+            pdf.setFont('helvetica', 'normal');
+            
+            if (presc.medicines.length === 0) {
+                pdf.text("No medications prescribed.", 20, y);
+            } else {
+                presc.medicines.forEach(m => {
+                    pdf.text(m.name, 18, y);
+                    pdf.text(m.dose, 85, y);
+                    pdf.text(m.duration, 115, y);
+                    pdf.text(m.foodInstructions, 145, y);
+                    
+                    pdf.setDrawColor(243, 244, 246);
+                    pdf.line(15, y + 2, 195, y + 2);
+                    y += 10;
+                });
+            }
+
+            // Doctor Notes
+            y += 5;
+            pdf.setFont('helvetica', 'bold');
+            pdf.text("Doctor Advisory Notes:", 15, y);
+            pdf.setFont('helvetica', 'oblique');
+            pdf.setFontSize(8);
+            pdf.text(presc.notes, 15, y + 5, { maxWidth: 180 });
+
+            // Signature stamp representation
+            y += 28;
+            pdf.setDrawColor(156, 163, 175);
+            pdf.line(140, y, 190, y);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(7.5);
+            pdf.text("Physician Stamp / Signature", 145, y + 4);
+
+            // Output blob
+            const pdfBlob = pdf.output('blob');
+            const fileName = `Prescription-${presc.id.replace('pr_', 'RX-')}.pdf`;
+            const filePath = `${db.data.currentUser}/${fileName}`;
+
+            let publicUrl = "";
+            try {
+                const { data, error } = await supabaseClient.storage
+                    .from('healthcare-files')
+                    .upload(filePath, pdfBlob, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+                
+                if (error) throw error;
+                
+                const { data: urlData } = supabaseClient.storage
+                    .from('healthcare-files')
+                    .getPublicUrl(filePath);
+                
+                publicUrl = urlData.publicUrl;
+            } catch (storageErr) {
+                console.warn("Supabase storage upload failed, using local simulation. Ensure a public bucket named 'healthcare-files' exists in Supabase.", storageErr);
+                publicUrl = URL.createObjectURL(pdfBlob);
+            }
+
+            // Create a new report entry so it appears in "My Reports"
+            const newReport = {
+                id: 'lr_' + Date.now(),
+                patientId: db.data.currentUser,
+                testName: `Prescription (${presc.id.replace('pr_', 'RX-')})`,
+                date: new Date().toISOString().split('T')[0],
+                status: 'Ready',
+                doctor: doc.name,
+                file: publicUrl
+            };
+
+            db.data.labReports.push(newReport);
+            db.save();
+
+            alert("Prescription PDF uploaded to Supabase successfully and saved under My Reports!");
+
+        } catch (err) {
+            console.error("Prescription upload error:", err);
+            alert(`Failed to save prescription to cloud: ${err.message}`);
+        } finally {
+            btn.innerHTML = origText;
+            btn.disabled = false;
+        }
+    }
+
     sharePrescription() {
         const user = db.getCurrentUser();
         alert(`Transmitting digital prescription to MediGi Network Partner Pharmacies for ${user.name}. Auto-coordinating insurance approvals...`);

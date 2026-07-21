@@ -187,7 +187,7 @@ class HealthcareDB {
                     reviews: { rating: 4.9, count: 245 },
                     consultingFee: 150,
                     consultationTypes: ["In-person", "Online"],
-                    languages: ["English", "Spanish"],
+                    languages: ["English", "Hindi"],
                     acceptedInsurance: ["Aetna", "Blue Cross", "Cigna", "UnitedHealth"],
                     availability: ["09:00 - 12:00", "14:00 - 17:00"],
                     awards: ["Top Cardiologist Metro Area 2024", "AMA Research Award"],
@@ -203,7 +203,7 @@ class HealthcareDB {
                     reviews: { rating: 4.7, count: 189 },
                     consultingFee: 100,
                     consultationTypes: ["In-person", "Online"],
-                    languages: ["English", "French"],
+                    languages: ["English"],
                     acceptedInsurance: ["Blue Cross", "Cigna", "Medicaid"],
                     availability: ["08:30 - 11:30", "13:00 - 16:30"],
                     awards: ["Compassionate Care Award 2025"],
@@ -219,7 +219,7 @@ class HealthcareDB {
                     reviews: { rating: 4.8, count: 312 },
                     consultingFee: 120,
                     consultationTypes: ["In-person", "Online"],
-                    languages: ["English", "Mandarin"],
+                    languages: ["Hindi"],
                     acceptedInsurance: ["Aetna", "UnitedHealth", "Humana"],
                     availability: ["10:00 - 13:00", "15:00 - 18:00"],
                     awards: ["Young Investigator Fellowship 2023"],
@@ -235,7 +235,7 @@ class HealthcareDB {
                     reviews: { rating: 4.9, count: 420 },
                     consultingFee: 200,
                     consultationTypes: ["In-person"],
-                    languages: ["English", "Tagalog"],
+                    languages: ["English", "Hindi"],
                     acceptedInsurance: ["Aetna", "Blue Cross", "Medicare"],
                     availability: ["09:00 - 13:00"],
                     awards: ["National Neurological Society Lifetime Fellow"],
@@ -305,11 +305,19 @@ class HealthcareDB {
     }
 
     getCurrentUser() {
-        return this.data.patients[this.data.currentUser];
+        const patient = this.data.patients[this.data.currentUser];
+        if (patient) {
+            patient.healthScore = this.calculateHealthScore(patient);
+        }
+        return patient;
     }
 
     getPatient(id) {
-        return this.data.patients[id];
+        const patient = this.data.patients[id];
+        if (patient) {
+            patient.healthScore = this.calculateHealthScore(patient);
+        }
+        return patient;
     }
 
     getFamilyMembers() {
@@ -394,6 +402,66 @@ class HealthcareDB {
     calculateBMI(weight, height) {
         const heightM = height / 100;
         return parseFloat((weight / (heightM * heightM)).toFixed(1));
+    }
+
+    calculateHealthScore(patient) {
+        if (!patient) return 80;
+        
+        let score = 85; // Starting base score
+
+        // 1. BMI Calculation
+        const height = patient.height || 170;
+        const weight = patient.weight || 70;
+        const bmi = patient.bmi || this.calculateBMI(weight, height);
+
+        if (bmi >= 18.5 && bmi <= 24.9) {
+            score += 5; // Healthy range
+        } else if (bmi < 18.5) {
+            score -= 5; // Underweight
+        } else if (bmi >= 25 && bmi < 30) {
+            score -= 5; // Overweight
+        } else if (bmi >= 30) {
+            score -= 10; // Obese
+        }
+
+        // 2. Lifestyle factors
+        if (patient.lifestyle) {
+            const ls = patient.lifestyle;
+            // Smoking
+            if (ls.smoking === "Never") score += 5;
+            else if (ls.smoking === "Active") score -= 10;
+
+            // Alcohol
+            if (ls.alcohol === "Never" || ls.alcohol === "Socially") score += 3;
+            else if (ls.alcohol === "Frequently") score -= 5;
+
+            // Exercise
+            if (ls.exercise && ls.exercise.toLowerCase() !== "none") {
+                score += 5;
+            } else {
+                score -= 5;
+            }
+
+            // Sleep
+            if (ls.sleep && (ls.sleep.includes("7-8") || ls.sleep.includes("8") || ls.sleep.includes("9"))) {
+                score += 5;
+            } else {
+                score -= 5;
+            }
+        }
+
+        // 3. Medical History
+        if (patient.medicalHistory) {
+            const mh = patient.medicalHistory;
+            const allergyCount = mh.allergies ? mh.allergies.length : 0;
+            score -= (allergyCount * 2);
+
+            const chronicCount = mh.chronicDiseases ? mh.chronicDiseases.length : 0;
+            score -= (chronicCount * 8);
+        }
+
+        // Bound between 50 and 100
+        return Math.max(50, Math.min(100, score));
     }
 }
 

@@ -24,11 +24,9 @@ class HealthcareApp {
 
         // Splash screen transition delay (1.5 seconds)
         setTimeout(() => {
-            const user = db.getCurrentUser();
-            // Automatically log in if already authenticated in this session
-            if (user && localStorage.getItem('is_authenticated') === 'true') {
-                this.loginUser(user.id);
-            } else {
+            if (window.supabaseSession && window.supabaseSession.user) {
+                this.handleSupabaseUserLoggedIn(window.supabaseSession.user);
+            } else if (this.currentScreen === 'splash-screen') {
                 this.navigateTo('welcome-screen');
             }
         }, 1500);
@@ -91,32 +89,237 @@ class HealthcareApp {
     }
 
     // Auth Flows
-    handleEmailLogin(e) {
+    async handleEmailLogin(e) {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
-        const user = Object.values(db.data.patients).find(p => p.email.toLowerCase() === email.toLowerCase());
+        const password = document.getElementById('loginPassword').value;
         
-        if (user) {
-            // Send simulated OTP
-            document.getElementById('otpPhoneText').innerText = user.phone;
-            this.navigateTo('otp-screen');
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const origText = submitBtn.innerText;
+        submitBtn.innerText = "Signing in...";
+        submitBtn.disabled = true;
+
+        try {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                alert(`Login failed: ${error.message}`);
+            } else {
+                console.log("Logged in successfully:", data.user);
+            }
+        } catch (err) {
+            console.error(err);
+            alert(`An unexpected error occurred during login: ${err.message}`);
+        } finally {
+            submitBtn.innerText = origText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    async handleEmailRegister(e) {
+        e.preventDefault();
+        const name = document.getElementById('registerName').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const phone = document.getElementById('registerPhone').value;
+        const dob = document.getElementById('registerDOB').value;
+        const gender = document.getElementById('registerGender').value;
+        const bloodGroup = document.getElementById('registerBloodGroup').value;
+        const height = parseFloat(document.getElementById('registerHeight').value);
+        const weight = parseFloat(document.getElementById('registerWeight').value);
+
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const origText = submitBtn.innerText;
+        submitBtn.innerText = "Signing up...";
+        submitBtn.disabled = true;
+
+        try {
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        full_name: name,
+                        phone: phone,
+                        dob: dob,
+                        gender: gender,
+                        blood_group: bloodGroup,
+                        height: height,
+                        weight: weight
+                    }
+                }
+            });
+
+            if (error) {
+                alert(`Registration failed: ${error.message}`);
+            } else {
+                if (data.session) {
+                    alert("Registration successful! Logging you in...");
+                } else {
+                    alert("Registration successful! Please check your email to verify your account before logging in.");
+                    this.navigateTo('login-screen');
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            alert(`An unexpected error occurred during registration: ${err.message}`);
+        } finally {
+            submitBtn.innerText = origText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    async signInWithGoogle() {
+        try {
+            const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + window.location.pathname
+                }
+            });
+            if (error) throw error;
+        } catch (err) {
+            console.error(err);
+            alert(`Google login failed: ${err.message}`);
+        }
+    }
+
+    handleSupabaseUserLoggedIn(user) {
+        let patient = db.data.patients[user.id];
+        let needsCompletion = false;
+        
+        // Try locating profile by email if not found by UUID
+        if (!patient) {
+            patient = Object.values(db.data.patients).find(p => p.email.toLowerCase() === user.email.toLowerCase());
+            if (patient) {
+                const oldId = patient.id;
+                patient.id = user.id;
+                db.data.patients[user.id] = patient;
+                delete db.data.patients[oldId];
+                
+                if (db.data.currentUser === oldId) {
+                    db.data.currentUser = user.id;
+                }
+                
+                db.data.appointments.forEach(app => {
+                    if (app.patientId === oldId) app.patientId = user.id;
+                });
+                db.data.labReports.forEach(rep => {
+                    if (rep.patientId === oldId) rep.patientId = user.id;
+                });
+                db.data.insuranceAlerts.forEach(al => {
+                    if (al.patientId === oldId) al.patientId = user.id;
+                });
+            }
+        }
+
+        if (!patient) {
+            const meta = user.user_metadata || {};
+            const h = parseFloat(meta.height || 170);
+            const w = parseFloat(meta.weight || 70);
+            const bmi = parseFloat((w / ((h / 100) * (h / 100))).toFixed(1));
+
+            if (!meta.dob || !meta.gender) {
+                needsCompletion = true;
+            }
+
+            patient = {
+                id: user.id,
+                name: meta.full_name || user.email.split('@')[0],
+                dob: meta.dob || "",
+                gender: meta.gender || "Unspecified",
+                bloodGroup: meta.blood_group || "O+",
+                height: h,
+                weight: w,
+                bmi: bmi,
+                email: user.email,
+                phone: meta.phone || user.phone || "",
+                emergencyContact: { name: "", relation: "", phone: "" },
+                settings: { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
+                medicalHistory: { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
+                lifestyle: { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
+                healthScore: 80
+            };
+            db.data.patients[user.id] = patient;
         } else {
-            alert("No user profile found matching this email. Try alex.mercer@email.com.");
+            if (!patient.dob || patient.gender === "Unspecified") {
+                needsCompletion = true;
+            }
+        }
+
+        db.save();
+        this.loginUser(user.id);
+
+        if (needsCompletion) {
+            setTimeout(() => {
+                this.openModal('completeProfileModal');
+            }, 800);
+        }
+    }
+
+    async handleCompleteProfile(e) {
+        e.preventDefault();
+        const phone = document.getElementById('completePhone').value;
+        const dob = document.getElementById('completeDOB').value;
+        const gender = document.getElementById('completeGender').value;
+        const bloodGroup = document.getElementById('completeBloodGroup').value;
+        const height = parseFloat(document.getElementById('completeHeight').value);
+        const weight = parseFloat(document.getElementById('completeWeight').value);
+
+        const patient = db.getPatient(db.data.currentUser);
+        if (patient) {
+            patient.phone = phone;
+            patient.dob = dob;
+            patient.gender = gender;
+            patient.bloodGroup = bloodGroup;
+            patient.height = height;
+            patient.weight = weight;
+            patient.bmi = parseFloat((weight / ((height / 100) * (height / 100))).toFixed(1));
+            
+            db.save();
+            
+            try {
+                await supabaseClient.auth.updateUser({
+                    data: {
+                        phone: phone,
+                        dob: dob,
+                        gender: gender,
+                        blood_group: bloodGroup,
+                        height: height,
+                        weight: weight
+                    }
+                });
+            } catch (err) {
+                console.error("Failed to update Supabase user metadata:", err);
+            }
+
+            alert("Profile setup completed successfully!");
+            this.closeModal('completeProfileModal');
+            this.renderHomeDashboard();
+        }
+    }
+
+    handleSupabaseUserLoggedOut() {
+        localStorage.setItem('is_authenticated', 'false');
+        document.getElementById('mainBottomNav').style.display = 'none';
+        if (
+            this.currentScreen !== 'welcome-screen' &&
+            this.currentScreen !== 'login-screen' &&
+            this.currentScreen !== 'register-screen' &&
+            this.currentScreen !== 'forgot-password-screen'
+        ) {
+            this.navigateTo('welcome-screen');
         }
     }
 
     handleOTPVerify() {
-        // Simulate code verification success
         const user = db.getCurrentUser();
-        this.loginUser(user.id);
-    }
-
-    simulateOAuth(provider) {
-        alert(`Redirecting secure authentication gateway via ${provider}...`);
-        setTimeout(() => {
-            const primaryPatientId = "p1";
-            this.loginUser(primaryPatientId);
-        }, 1000);
+        if (user) {
+            this.loginUser(user.id);
+        }
     }
 
     triggerBiometricLogin() {
@@ -131,7 +334,6 @@ class HealthcareApp {
         const title = document.getElementById('biometricScanTitle');
         const desc = document.getElementById('biometricScanDesc');
         
-        // Custom FaceID animation cycle
         icon.className = "fa-solid fa-face-id";
         title.innerText = "Scanning Face ID...";
         desc.innerText = "Please look at the front camera of your device.";
@@ -143,8 +345,12 @@ class HealthcareApp {
             desc.innerText = "Secure login successful.";
             
             setTimeout(() => {
-                this.loginUser("p1");
-                icon.style.color = ""; // reset color
+                if (user) {
+                    this.loginUser(user.id);
+                } else {
+                    this.loginUser("p1"); // fallback
+                }
+                icon.style.color = "";
             }, 1000);
         }, 2000);
     }
@@ -165,17 +371,21 @@ class HealthcareApp {
         db.save();
         localStorage.setItem('is_authenticated', 'true');
         
-        // Show Bottom Navigation
         document.getElementById('mainBottomNav').style.display = 'flex';
         
-        // Sync dark mode settings of patient
         const user = db.getCurrentUser();
-        this.syncTheme(user.settings.darkMode);
-
+        if (user) {
+            this.syncTheme(user.settings.darkMode);
+        }
         this.navigateTab('home-screen');
     }
 
-    handleLogout() {
+    async handleLogout() {
+        try {
+            await supabaseClient.auth.signOut();
+        } catch (err) {
+            console.error("Supabase signOut error:", err);
+        }
         localStorage.setItem('is_authenticated', 'false');
         document.getElementById('mainBottomNav').style.display = 'none';
         this.navigateTo('welcome-screen');
@@ -459,56 +669,187 @@ class HealthcareApp {
     }
 
     viewReportFile(reportId) {
-        alert("Simulating secure HIPAA diagnostic PDF download...");
+        const report = db.data.labReports.find(r => r.id === reportId);
+        if (report && report.file) {
+            if (report.file.startsWith('http') || report.file.startsWith('blob:') || report.file.startsWith('data:')) {
+                window.open(report.file, '_blank');
+            } else {
+                alert(`Simulating secure HIPAA diagnostic PDF download: ${report.file}`);
+            }
+        } else {
+            alert("Report file not found.");
+        }
+    }
+
+    async handleReportUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const statusSpan = document.getElementById('reportUploadStatus');
+        statusSpan.innerText = "Uploading...";
+        statusSpan.style.color = "var(--text-secondary)";
+
+        try {
+            const fileName = `Report-${Date.now()}-${file.name}`;
+            const filePath = `${db.data.currentUser}/${fileName}`;
+
+            let fileUrl = "";
+            try {
+                const { data, error } = await supabaseClient.storage
+                    .from('healthcare-files')
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+
+                if (error) throw error;
+
+                const { data: urlData } = supabaseClient.storage
+                    .from('healthcare-files')
+                    .getPublicUrl(filePath);
+
+                fileUrl = urlData.publicUrl;
+            } catch (storageErr) {
+                console.warn("Supabase storage upload failed, using local simulation. Ensure a public bucket named 'healthcare-files' exists in Supabase.", storageErr);
+                fileUrl = URL.createObjectURL(file);
+            }
+
+            const newReport = {
+                id: 'lr_' + Date.now(),
+                patientId: db.data.currentUser,
+                testName: file.name.replace('.pdf', '') || 'Uploaded Lab Report',
+                date: new Date().toISOString().split('T')[0],
+                status: 'Ready',
+                doctor: 'Self-Uploaded',
+                file: fileUrl
+            };
+
+            db.data.labReports.push(newReport);
+            db.save();
+
+            statusSpan.innerText = "Uploaded!";
+            statusSpan.style.color = "hsl(var(--success-hsl))";
+            
+            this.openMyReports();
+            event.target.value = '';
+
+        } catch (err) {
+            console.error("Report upload error:", err);
+            statusSpan.innerText = "Failed.";
+            statusSpan.style.color = "hsl(var(--danger-hsl))";
+        }
     }
 
     openMyPrescriptions() {
-        const prescriptions = db.getPrescriptions(db.data.currentUser);
-        if (prescriptions.length === 0) {
-            alert("No prescription documents found. Prescriptions appear here after you finish consultations.");
+        this.openModal('prescriptionsModal');
+        const container = document.getElementById('prescriptionsModalList');
+        container.innerHTML = '';
+        
+        const list = db.getPrescriptions(db.data.currentUser);
+        if (list.length === 0) {
+            container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">No prescription records found.</p>`;
             return;
         }
-        
-        // Route to the prescription viewer screen directly with the latest record
-        const latest = prescriptions[prescriptions.length - 1];
-        consultationModule.renderPrescriptionScreen(latest.id);
-    }
 
-    openInsurance() {
-        this.openModal('insuranceModal');
-        const container = document.getElementById('insuranceModalContent');
-        container.innerHTML = '';
-
-        const list = db.getInsuranceAlerts(db.data.currentUser);
-        container.innerHTML = `
-            <div class="card" style="background-color: rgba(20, 184, 166, 0.05);">
-                <h4 style="font-size: 0.85rem; color: hsl(var(--accent-hsl));">Active Plan details</h4>
-                <div class="detail-row" style="margin-top: 8px;">
-                    <span class="detail-label">Provider:</span>
-                    <span class="detail-value">Blue Cross PPO</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Policy Number:</span>
-                    <span class="detail-value">BCX-982749321</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Deductible Cap:</span>
-                    <span class="detail-value">$1,500 / yr</span>
-                </div>
-            </div>
-        `;
-
-        list.forEach(a => {
+        list.forEach(p => {
+            const doc = db.getDoctor(p.doctorId) || { name: p.doctor || 'Self-Uploaded' };
+            
             container.innerHTML += `
-                <div class="widget-alert info">
-                    <i class="fa-solid fa-shield-exclamation"></i>
-                    <div class="widget-alert-content">
-                        <div class="widget-alert-title">${a.title}</div>
-                        <div class="widget-alert-desc">${a.description}</div>
+                <div class="card" style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="font-size: 0.85rem;">Prescription (${p.id.startsWith('pr_self_') ? 'Personal' : p.id.replace('pr_', 'RX-')})</h4>
+                            <p style="font-size: 0.7rem; color: var(--text-muted);">Date: ${p.date} | Phys: ${doc.name}</p>
+                        </div>
+                        <button class="btn btn-secondary" onclick="app.viewPrescription('${p.id}')" style="padding: 6px 10px; font-size: 0.7rem; width: auto;">
+                            <i class="fa-solid fa-file-invoice" style="color: hsl(var(--accent-hsl));"></i> View
+                        </button>
                     </div>
                 </div>
             `;
         });
+    }
+
+    viewPrescription(prescId) {
+        const presc = db.data.prescriptions.find(p => p.id === prescId);
+        if (!presc) return;
+
+        this.closeModal('prescriptionsModal');
+
+        if (presc.id.startsWith('pr_self_')) {
+            if (presc.file) {
+                window.open(presc.file, '_blank');
+            } else {
+                alert("Prescription file not found.");
+            }
+        } else {
+            consultationModule.renderPrescriptionScreen(prescId);
+        }
+    }
+
+    async handlePersonalPrescriptionUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const statusSpan = document.getElementById('prescriptionUploadStatus');
+        statusSpan.innerText = "Uploading...";
+        statusSpan.style.color = "var(--text-secondary)";
+
+        try {
+            const fileName = `Prescription-${Date.now()}-${file.name}`;
+            const filePath = `${db.data.currentUser}/${fileName}`;
+
+            let fileUrl = "";
+            try {
+                const { data, error } = await supabaseClient.storage
+                    .from('healthcare-files')
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+
+                if (error) throw error;
+
+                const { data: urlData } = supabaseClient.storage
+                    .from('healthcare-files')
+                    .getPublicUrl(filePath);
+
+                fileUrl = urlData.publicUrl;
+            } catch (storageErr) {
+                console.warn("Supabase storage upload failed, using local simulation. Ensure a public bucket named 'healthcare-files' exists in Supabase.", storageErr);
+                fileUrl = URL.createObjectURL(file);
+            }
+
+            const newPresc = {
+                id: 'pr_self_' + Date.now(),
+                appointmentId: null,
+                patientId: db.data.currentUser,
+                doctorId: null,
+                doctor: 'Self-Uploaded',
+                date: new Date().toISOString().split('T')[0],
+                notes: 'Personal upload',
+                medicines: [],
+                file: fileUrl
+            };
+
+            db.data.prescriptions.push(newPresc);
+            db.save();
+
+            statusSpan.innerText = "Uploaded!";
+            statusSpan.style.color = "hsl(var(--success-hsl))";
+            
+            this.openMyPrescriptions();
+            event.target.value = '';
+
+        } catch (err) {
+            console.error("Prescription upload error:", err);
+            statusSpan.innerText = "Failed.";
+            statusSpan.style.color = "hsl(var(--danger-hsl))";
+        }
+    }
+
+    openInsurance() {
+        alert("Insurance details portal is coming soon!");
     }
 
     openFamilyProfiles() {
@@ -576,7 +917,7 @@ class HealthcareApp {
     }
 
     openAIChat() {
-        this.navigateTo('ai-chat-screen');
+        alert("AI Assist feature is coming soon!");
     }
 
     // Directory Search engine

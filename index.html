@@ -51,7 +51,7 @@
                             Sign In with Email
                         </button>
                         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                            <button class="btn btn-secondary" onclick="app.simulateOAuth('Google')" style="flex: 1;">
+                            <button class="btn btn-secondary" onclick="app.signInWithGoogle()" style="flex: 1;">
                                 <i class="fa-brands fa-google" style="color: #ea4335;"></i> Google
                             </button>
                             <button class="btn btn-secondary" onclick="app.simulateOAuth('Apple')" style="flex: 1;">
@@ -92,7 +92,78 @@
                         <button type="submit" class="btn btn-primary">Sign In</button>
                     </form>
                     <div style="text-align: center; margin-top: 30px; color: var(--text-muted); font-size: 0.8rem;">
-                        <span>Don't have an account? <b style="color: hsl(var(--accent-hsl)); cursor: pointer;">Register</b></span>
+                        <span>Don't have an account? <b style="color: hsl(var(--accent-hsl)); cursor: pointer;" onclick="app.navigateTo('register-screen')">Register</b></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REGISTRATION SCREEN -->
+            <section id="register-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('login-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Create Account</h3>
+                </div>
+                <div class="screen-content">
+                    <form id="registerForm" onsubmit="app.handleEmailRegister(event)">
+                        <div class="input-group">
+                            <label class="input-label" for="registerName">Full Name</label>
+                            <input class="input-field" type="text" id="registerName" placeholder="John Doe" required>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label" for="registerEmail">Email Address</label>
+                            <input class="input-field" type="email" id="registerEmail" placeholder="name@example.com" required>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label" for="registerPassword">Password</label>
+                            <input class="input-field" type="password" id="registerPassword" placeholder="Enter secure password (min 6 chars)" required>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label" for="registerPhone">Phone Number</label>
+                            <input class="input-field" type="tel" id="registerPhone" placeholder="+1 (555) 019-XXXX" required>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 1;">
+                                <label class="input-label" for="registerDOB">Date of Birth</label>
+                                <input class="input-field" type="date" id="registerDOB" required>
+                            </div>
+                            <div class="input-group" style="flex: 1;">
+                                <label class="input-label" for="registerGender">Gender</label>
+                                <select class="input-field" id="registerGender" required>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 1;">
+                                <label class="input-label" for="registerBloodGroup">Blood Group</label>
+                                <select class="input-field" id="registerBloodGroup" required>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                            <div class="input-group" style="flex: 1;">
+                                <label class="input-label" for="registerHeight">Height (cm)</label>
+                                <input class="input-field" type="number" id="registerHeight" placeholder="175" required min="30" max="300">
+                            </div>
+                            <div class="input-group" style="flex: 1;">
+                                <label class="input-label" for="registerWeight">Weight (kg)</label>
+                                <input class="input-field" type="number" id="registerWeight" placeholder="70" required min="10" max="500">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Sign Up</button>
+                    </form>
+                    <div style="text-align: center; margin-top: 30px; color: var(--text-muted); font-size: 0.8rem;">
+                        <span>Already have an account? <b style="color: hsl(var(--accent-hsl)); cursor: pointer;" onclick="app.navigateTo('login-screen')">Sign In</b></span>
                     </div>
                 </div>
             </section>
@@ -209,7 +280,7 @@
                     <!-- Quick Actions Grid -->
                     <h4 class="section-title">Quick Services</h4>
                     <div class="quick-actions-grid">
-                        <div class="quick-action-item" onclick="bookingFlow.startBooking()">
+                        <div class="quick-action-item" onclick="app.navigateTab('search-screen')">
                             <i class="fa-solid fa-calendar-check"></i>
                             <span>Book Appt</span>
                         </div>
@@ -305,8 +376,7 @@
                         <div class="filter-section-title">Languages</div>
                         <div class="filter-chips" data-filter="language">
                             <span class="chip" data-val="English">English</span>
-                            <span class="chip" data-val="Spanish">Spanish</span>
-                            <span class="chip" data-val="Mandarin">Mandarin</span>
+                            <span class="chip" data-val="Hindi">Hindi</span>
                         </div>
                     </div>
 
@@ -794,6 +864,10 @@
                     </div>
 
                     <!-- PDF Action Buttons -->
+                    <button class="btn btn-accent" id="btnUploadPrescription" onclick="consultationModule.uploadPrescriptionPDF()" style="margin-bottom: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Save to Cloud (Supabase)
+                    </button>
+
                     <button class="btn btn-primary" onclick="consultationModule.downloadPrescriptionPDF()" style="margin-bottom: 12px;">
                         <i class="fa-solid fa-download"></i> Download PDF Document
                     </button>
@@ -933,8 +1007,7 @@
                             <span class="detail-label">Language:</span>
                             <select class="input-field" id="settingsLanguage" onchange="app.changeLanguage(this.value)" style="width: auto; padding: 6px 12px; font-size: 0.8rem;">
                                 <option value="English">English</option>
-                                <option value="Spanish">Spanish</option>
-                                <option value="Mandarin">Mandarin</option>
+                                <option value="Hindi">Hindi</option>
                             </select>
                         </div>
                         <div class="detail-row">
@@ -1041,6 +1114,16 @@
             <div id="reportsModalList">
                 <!-- Lab report items rendered dynamically -->
             </div>
+            <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <h4 style="font-size: 0.85rem; margin-bottom: 10px;">Upload New Report PDF</h4>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" id="reportFileInput" accept="application/pdf" style="display: none;" onchange="app.handleReportUpload(event)">
+                    <button class="btn btn-secondary" onclick="document.getElementById('reportFileInput').click()" style="margin: 0; font-size: 0.8rem; flex: 1;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Choose & Upload PDF
+                    </button>
+                    <span id="reportUploadStatus" style="font-size: 0.7rem; color: var(--text-muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1089,8 +1172,93 @@
         </div>
     </div>
 
+    <!-- Modal 6: Prescriptions List Modal -->
+    <div class="modal-overlay" id="prescriptionsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>My Prescriptions</h3>
+                <div class="back-btn" onclick="app.closeModal('prescriptionsModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="prescriptionsModalList" style="margin-bottom: 20px;">
+                <!-- Prescription list items rendered dynamically -->
+            </div>
+            <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <h4 style="font-size: 0.85rem; margin-bottom: 10px;">Upload Personal Prescription (PDF/Image)</h4>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" id="prescriptionFileInput" accept="application/pdf,image/*" style="display: none;" onchange="app.handlePersonalPrescriptionUpload(event)">
+                    <button class="btn btn-secondary" onclick="document.getElementById('prescriptionFileInput').click()" style="margin: 0; font-size: 0.8rem; flex: 1;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Choose Photo/PDF
+                    </button>
+                    <span id="prescriptionUploadStatus" style="font-size: 0.7rem; color: var(--text-muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 7: Complete Profile Modal -->
+    <div class="modal-overlay" id="completeProfileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Complete Your Profile</h3>
+            </div>
+            <div style="padding: 10px 0;">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 15px;">
+                    Please provide your basic health details to complete your patient account setup.
+                </p>
+                <form id="completeProfileForm" onsubmit="app.handleCompleteProfile(event)">
+                    <div class="input-group">
+                        <label class="input-label" for="completePhone">Phone Number</label>
+                        <input class="input-field" type="tel" id="completePhone" placeholder="+1 (555) 019-XXXX" required>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="completeDOB">Date of Birth</label>
+                            <input class="input-field" type="date" id="completeDOB" required>
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="completeGender">Gender</label>
+                            <select class="input-field" id="completeGender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="completeBloodGroup">Blood Group</label>
+                            <select class="input-field" id="completeBloodGroup" required>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="completeHeight">Height (cm)</label>
+                            <input class="input-field" type="number" id="completeHeight" placeholder="175" required min="30" max="300">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="completeWeight">Weight (kg)</label>
+                            <input class="input-field" type="number" id="completeWeight" placeholder="70" required min="10" max="500">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Save Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
     
     <!-- Custom Application Javascript Files -->
     <script src="js/data.js"></script>
