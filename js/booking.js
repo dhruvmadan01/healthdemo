@@ -24,6 +24,9 @@ class BookingFlow {
         document.getElementById('bookingForm').reset();
         document.getElementById('selectedFilesList').innerHTML = '';
         
+        const currentUserId = db.data.currentUser;
+        const currentUser = db.getPatient(currentUserId);
+
         // Populate doctors select options
         const docSelect = document.getElementById('bookingDoctor');
         docSelect.innerHTML = '<option value="">-- Choose Physician --</option>';
@@ -49,8 +52,6 @@ class BookingFlow {
         if (patientSelect) {
             patientSelect.innerHTML = '';
             
-            const currentUserId = db.data.currentUser;
-            const currentUser = db.getPatient(currentUserId);
             if (currentUser) {
                 patientSelect.innerHTML += `<option value="${currentUser.id}">Myself (${currentUser.name})</option>`;
             } else {
