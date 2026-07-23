@@ -89,6 +89,7 @@ create table if not exists public.doctors (
 -- Enable RLS on doctors
 alter table public.doctors enable row level security;
 create policy "Doctors are viewable by everyone" on public.doctors for select using (true);
+create policy "Anyone can register as a doctor" on public.doctors for insert with check (true);
 
 -- Create appointments table
 create table if not exists public.appointments (

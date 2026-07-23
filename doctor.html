@@ -163,6 +163,33 @@
             50% { transform: scale(1.05); opacity: 0.4; }
             100% { transform: scale(1); opacity: 0.2; }
         }
+
+        /* Mobile specific styling */
+        @media (max-width: 768px) {
+            .doctor-dashboard {
+                grid-template-columns: 1fr !important;
+                margin-top: 10px;
+            }
+            .sidebar-panel.mobile-hidden, .main-panel.mobile-hidden {
+                display: none !important;
+            }
+            .sidebar-panel, .main-panel {
+                width: 100% !important;
+            }
+            body {
+                padding: 10px;
+            }
+            .doctor-header {
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+            .doctor-header div {
+                justify-content: center;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -175,15 +202,28 @@
                 <i class="fa-solid fa-square-h"></i>
                 <span>MediGi Clinical</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <select id="doctorSelect" onchange="loadDoctorQueue()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 8px; font-weight: 500;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <select id="doctorSelect" onchange="loadDoctorQueue()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 8px; font-weight: 500; cursor: pointer;">
                     <!-- Populated dynamically -->
                 </select>
-                <button class="btn btn-secondary" onclick="toggleTheme()" style="margin:0; padding: 6px 12px; width:auto; font-size:0.8rem; background:rgba(255,255,255,0.1); border:none; color:white;">
-                    <i class="fa-solid fa-moon"></i> Theme
+                <button class="btn" onclick="openModal('doctorRegisterModal')" style="margin:0; padding: 6px 12px; width:auto; font-size:0.8rem; background:hsl(var(--accent-hsl)); border:none; color:white; font-weight:600; cursor:pointer;">
+                    <i class="fa-solid fa-user-doctor"></i> Register Physician
+                </button>
+                <button class="btn btn-secondary" onclick="toggleTheme()" style="margin:0; padding: 6px 12px; width:auto; font-size:0.8rem; background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer;">
+                    <i class="fa-solid fa-moon"></i>
                 </button>
             </div>
         </header>
+
+        <!-- Mobile Navigation Tabs (visible only on mobile) -->
+        <div class="mobile-tabs" id="mobileTabs" style="display: none; justify-content: space-around; background: var(--bg-secondary); padding: 8px; border-radius: 12px; margin-top: 15px; border: 1px solid var(--border-color); gap: 10px;">
+            <button class="tab-btn active" id="btnMobileTabQueue" onclick="switchMobileTab('queue')" style="flex: 1; text-align: center; border: none; background: var(--bg-primary); color: var(--text-primary); font-weight: 600; padding: 10px; font-size: 0.8rem; cursor: pointer; border-radius: 8px; display:flex; align-items:center; justify-content:center; gap:6px; transition: all 0.2s ease;">
+                <i class="fa-solid fa-clipboard-list"></i> Queue Schedule
+            </button>
+            <button class="tab-btn" id="btnMobileTabFile" onclick="switchMobileTab('file')" style="flex: 1; text-align: center; border: none; background: transparent; color: var(--text-secondary); font-weight: 500; padding: 10px; font-size: 0.8rem; cursor: pointer; border-radius: 8px; display:flex; align-items:center; justify-content:center; gap:6px; transition: all 0.2s ease;">
+                <i class="fa-solid fa-folder-open"></i> Patient Folder
+            </button>
+        </div>
 
         <!-- Main Workspace -->
         <div class="doctor-dashboard">
@@ -203,10 +243,10 @@
                         <button class="btn btn-primary" onclick="verifyQRManual()" style="margin: 0; padding: 10px 15px; width: auto;"><i class="fa-solid fa-circle-check"></i> Verify</button>
                     </div>
 
-                    <div class="scanner-box" id="simulateScannerBox" onclick="triggerManualCamera()">
+                    <div class="scanner-box" id="simulateScannerBox" onclick="triggerManualCamera()" style="cursor: pointer;">
                         <i class="fa-solid fa-camera" style="font-size: 2rem; color: hsl(var(--accent-hsl)); margin-bottom: 8px;"></i>
                         <h4 style="font-size: 0.85rem; font-weight: 600;">Simulated Scanning Chamber</h4>
-                        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; cursor: pointer;">Click to launch camera simulator scanner.</p>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Click to launch camera simulator scanner.</p>
                     </div>
                 </div>
 
@@ -279,6 +319,96 @@
         </div>
     </div>
 
+    <!-- Doctor Registration Modal -->
+    <div class="modal-overlay" id="doctorRegisterModal">
+        <div class="modal-content" style="max-width: 500px; text-align: left;">
+            <div class="modal-header">
+                <h3>Physician Registration</h3>
+                <div class="back-btn" onclick="closeModal('doctorRegisterModal')" style="width: 32px; height: 32px; border-radius: 50%; display:flex; align-items:center; justify-content:center;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            
+            <form id="doctorRegisterForm" onsubmit="submitDoctorRegistration(event)" style="margin-top: 15px;">
+                <div class="input-group">
+                    <label class="input-label" for="regName">Full Name</label>
+                    <input type="text" id="regName" class="input-field" placeholder="e.g. Dr. Jane Foster" required>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="input-group">
+                        <label class="input-label" for="regSpecialty">Specialty</label>
+                        <select id="regSpecialty" class="input-field" required>
+                            <option value="Cardiology">Cardiology</option>
+                            <option value="Pediatrics">Pediatrics</option>
+                            <option value="Dermatology">Dermatology</option>
+                            <option value="Neurology">Neurology</option>
+                            <option value="General Medicine">General Medicine</option>
+                            <option value="Orthopedics">Orthopedics</option>
+                            <option value="ENT">ENT</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="regExperience">Experience (Years)</label>
+                        <input type="number" id="regExperience" class="input-field" min="1" max="60" placeholder="e.g. 10" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label" for="regQualification">Qualification & Board</label>
+                    <input type="text" id="regQualification" class="input-field" placeholder="e.g. MD, FACP - Johns Hopkins" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="input-group">
+                        <label class="input-label" for="regHospital">Hospital/Center</label>
+                        <select id="regHospital" class="input-field" required>
+                            <option value="h1">St. Elizabeth Medical Center</option>
+                            <option value="h2">Metro Pediatric & General</option>
+                            <option value="h3">Apex Cardiology & Rehab</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="regFee">Consultation Fee ($)</label>
+                        <input type="number" id="regFee" class="input-field" min="10" max="1000" placeholder="e.g. 120" required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label class="input-label">Consultation Formats</label>
+                        <div style="display: flex; gap: 15px; margin-top: 5px;">
+                            <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                                <input type="checkbox" id="formatInPerson" checked> In-person
+                            </label>
+                            <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                                <input type="checkbox" id="formatOnline" checked> Online
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="input-label">Languages Spoken</label>
+                        <div style="display: flex; gap: 15px; margin-top: 5px;">
+                            <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                                <input type="checkbox" id="langEnglish" checked> English
+                            </label>
+                            <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                                <input type="checkbox" id="langHindi"> Hindi
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label" for="regImage">Profile Photo URL (Optional)</label>
+                    <input type="url" id="regImage" class="input-field" placeholder="Paste photo link or leave empty...">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; cursor:pointer;">Register & Start Clinic Session</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Supabase CDN Script -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -305,6 +435,7 @@
 
         let activeAppointmentId = null;
         let scannerTargetApptId = null;
+        let activeMobileTab = 'queue';
 
         // Modal triggers
         function openModal(id) {
@@ -316,10 +447,88 @@
             if (modal) modal.classList.remove('open');
         }
 
+        // Mobile responsive tab switcher
+        function switchMobileTab(tab) {
+            activeMobileTab = tab;
+            
+            const btnQueue = document.getElementById('btnMobileTabQueue');
+            const btnFile = document.getElementById('btnMobileTabFile');
+            
+            const panelSidebar = document.querySelector('.sidebar-panel');
+            const panelMain = document.querySelector('.main-panel');
+            
+            if (tab === 'queue') {
+                btnQueue.classList.add('active');
+                btnQueue.style.color = 'var(--text-primary)';
+                btnQueue.style.background = 'var(--bg-primary)';
+                
+                btnFile.classList.remove('active');
+                btnFile.style.color = 'var(--text-secondary)';
+                btnFile.style.background = 'transparent';
+                
+                panelSidebar.classList.remove('mobile-hidden');
+                panelMain.classList.add('mobile-hidden');
+            } else {
+                btnFile.classList.add('active');
+                btnFile.style.color = 'var(--text-primary)';
+                btnFile.style.background = 'var(--bg-primary)';
+                
+                btnQueue.classList.remove('active');
+                btnQueue.style.color = 'var(--text-secondary)';
+                btnQueue.style.background = 'transparent';
+                
+                panelMain.classList.remove('mobile-hidden');
+                panelSidebar.classList.add('mobile-hidden');
+            }
+        }
+
+        function handleMobileLayoutResize() {
+            const panelSidebar = document.querySelector('.sidebar-panel');
+            const panelMain = document.querySelector('.main-panel');
+            
+            if (window.innerWidth <= 768) {
+                switchMobileTab(activeMobileTab);
+            } else {
+                panelSidebar.classList.remove('mobile-hidden');
+                panelMain.classList.remove('mobile-hidden');
+            }
+        }
+        window.addEventListener('resize', handleMobileLayoutResize);
+
         // Load doctors for selector dropdown
-        function initDoctors() {
+        async function initDoctors() {
             const select = document.getElementById('doctorSelect');
             select.innerHTML = '';
+
+            // Fetch latest doctor listings from Supabase to stay updated
+            try {
+                const { data: remoteDocs, error } = await supabaseClient
+                    .from('doctors')
+                    .select('*');
+                if (!error && remoteDocs) {
+                    remoteDocs.forEach(d => {
+                        db.data.doctors[d.id] = {
+                            id: d.id,
+                            name: d.name,
+                            qualification: d.qualification,
+                            specialty: d.specialty,
+                            experience: parseInt(d.experience || 0),
+                            hospitalId: d.hospital_id,
+                            reviews: d.reviews || { rating: 4.8, count: 100 },
+                            consultingFee: parseFloat(d.consulting_fee || 0),
+                            consultationTypes: d.consultation_types || [],
+                            languages: d.languages || [],
+                            acceptedInsurance: d.accepted_insurance || [],
+                            availability: d.availability || [],
+                            awards: d.awards || [],
+                            image: d.image
+                        };
+                    });
+                    db.save();
+                }
+            } catch (err) {
+                console.error("Failed to sync doctors from cloud database:", err);
+            }
             
             Object.values(db.data.doctors).forEach(d => {
                 select.innerHTML += `<option value="${d.id}">${d.name} (${d.specialty})</option>`;
@@ -455,6 +664,11 @@
             const banner = document.getElementById('verificationSuccessBanner');
             if (banner) banner.style.display = 'none';
 
+            // Auto-switch tabs in mobile view
+            if (window.innerWidth <= 768) {
+                switchMobileTab('file');
+            }
+
             loadDoctorQueue();
 
             const appt = db.data.appointments.find(a => a.id === apptId);
@@ -552,6 +766,11 @@
                 bannerMsg.innerText = `Token ${appt.visitToken} verified successfully. Checked signature logs.`;
                 banner.style.display = 'block';
 
+                // Auto switch tabs on mobile to file to review the details
+                if (window.innerWidth <= 768) {
+                    switchMobileTab('file');
+                }
+
                 // Refresh details card
                 await loadPatientDetails(appt.patientId, appt);
             } else {
@@ -637,6 +856,11 @@
             // Set doctor select dropdown to match appointment doctor
             document.getElementById('doctorSelect').value = appt.doctorId;
             loadDoctorQueue();
+
+            // Auto switch tabs on mobile to file
+            if (window.innerWidth <= 768) {
+                switchMobileTab('file');
+            }
 
             // Show success banner
             const banner = document.getElementById('verificationSuccessBanner');
@@ -817,12 +1041,105 @@
                             <span style="font-size: 0.8rem; font-weight: 600;">Patient Verified ✅ Check-In Completed.</span>
                         </div>
                     ` : `
-                        <button type="button" class="btn btn-primary" onclick="openQRScanner('${appt.id}')" style="margin: 0; width: 100%;">
+                        <button type="button" class="btn btn-primary" onclick="openQRScanner('${appt.id}')" style="margin: 0; width: 100%; cursor:pointer;">
                             <i class="fa-solid fa-camera"></i> Verify Patient Check-In (Scan QR)
                         </button>
                     `}
                 </div>
             `;
+        }
+
+        // Register new doctor
+        async function submitDoctorRegistration(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('regName').value.trim();
+            const specialty = document.getElementById('regSpecialty').value;
+            const qualification = document.getElementById('regQualification').value.trim();
+            const experience = parseInt(document.getElementById('regExperience').value);
+            const hospitalId = document.getElementById('regHospital').value;
+            const consultingFee = parseFloat(document.getElementById('regFee').value);
+            
+            const consultationTypes = [];
+            if (document.getElementById('formatInPerson').checked) consultationTypes.push('In-person');
+            if (document.getElementById('formatOnline').checked) consultationTypes.push('Online');
+            
+            const languages = [];
+            if (document.getElementById('langEnglish').checked) languages.push('English');
+            if (document.getElementById('langHindi').checked) languages.push('Hindi');
+            
+            const imageInput = document.getElementById('regImage').value.trim();
+            const image = imageInput || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300';
+            
+            const id = 'd_' + Date.now();
+            
+            const newDoctor = {
+                id,
+                name,
+                specialty,
+                qualification,
+                experience,
+                hospital_id: hospitalId,
+                reviews: { rating: 5.0, count: 1 },
+                consulting_fee: consultingFee,
+                consultation_types: consultationTypes,
+                languages,
+                accepted_insurance: ['Aetna', 'Blue Cross', 'Cigna', 'UnitedHealth'],
+                availability: ['09:00 - 12:00', '14:00 - 17:00'],
+                awards: ['Registered board clinical practitioner'],
+                image
+            };
+            
+            // Upload to Supabase doctors table
+            try {
+                const { error } = await supabaseClient
+                    .from('doctors')
+                    .insert(newDoctor);
+                
+                if (error) {
+                    console.error("Supabase insert failed:", error);
+                    alert("Error registering in cloud database: " + error.message);
+                    return;
+                }
+            } catch (err) {
+                console.error("Failed to connect to Supabase database:", err);
+                alert("Failed to reach cloud database. Registration saved locally.");
+            }
+            
+            // Save locally
+            db.data.doctors[id] = {
+                id: newDoctor.id,
+                name: newDoctor.name,
+                qualification: newDoctor.qualification,
+                specialty: newDoctor.specialty,
+                experience: newDoctor.experience,
+                hospitalId: newDoctor.hospital_id,
+                reviews: newDoctor.reviews,
+                consultingFee: newDoctor.consulting_fee,
+                consultationTypes: newDoctor.consultation_types,
+                languages: newDoctor.languages,
+                acceptedInsurance: newDoctor.accepted_insurance,
+                availability: newDoctor.availability,
+                awards: newDoctor.awards,
+                image: newDoctor.image
+            };
+            db.save();
+            
+            // Refresh doctor dropdown options and select newly registered doctor
+            const select = document.getElementById('doctorSelect');
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.innerText = `${name} (${specialty})`;
+            select.appendChild(opt);
+            select.value = id;
+            
+            closeModal('doctorRegisterModal');
+            document.getElementById('doctorRegisterForm').reset();
+            
+            alert(`Physician registration successful! Welcome, ${name}.`);
+            
+            // Reload queue
+            loadDoctorQueue();
         }
 
         // Toggle light/dark themes
@@ -843,7 +1160,8 @@
         // On Page Load
         window.onload = async function() {
             loadTheme();
-            initDoctors();
+            handleMobileLayoutResize();
+            await initDoctors();
 
             // Check if there is an URL query parameter for appointment ID (?appt=a_xxxx)
             const params = new URLSearchParams(window.location.search);
