@@ -1,7 +1,49 @@
--- Enable UUID extension if not enabled
-create extension if not exists "uuid-ossp";
+-- 1. Add new columns to the existing doctors table if they do not exist
+alter table public.doctors add column if not exists email text;
+alter table public.doctors add column if not exists phone text;
+alter table public.doctors add column if not exists status text default 'pending';
 
--- Create profiles table
+-- 2. Safely add check constraint for the status column
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'doctors_status_check') then
+        alter table public.doctors add constraint doctors_status_check check (status in ('pending', 'approved', 'rejected'));
+    end if;
+end;
+$$;
+
+
+-- 3. Drop existing policies to prevent "already exists" errors
+drop policy if exists "Users can view any profile (for searching by health_id)" on public.profiles;
+drop policy if exists "Users can update their own profile" on public.profiles;
+drop policy if exists "Users can insert their own profile" on public.profiles;
+
+drop policy if exists "Users can view family relationships they are part of" on public.family_members;
+drop policy if exists "Users can propose family relationships" on public.family_members;
+drop policy if exists "Users can update/approve family relationships they are the member of" on public.family_members;
+drop policy if exists "Users can delete family relationships they are part of" on public.family_members;
+
+drop policy if exists "Hospitals are viewable by everyone" on public.hospitals;
+drop policy if exists "Anyone can register a hospital or clinic" on public.hospitals;
+
+drop policy if exists "Doctors are viewable by everyone" on public.doctors;
+drop policy if exists "Anyone can register as a doctor" on public.doctors;
+drop policy if exists "Admins can update doctors" on public.doctors;
+
+drop policy if exists "Users can view their own appointments" on public.appointments;
+drop policy if exists "Users can insert their own appointments" on public.appointments;
+drop policy if exists "Users can update their own appointments" on public.appointments;
+drop policy if exists "Doctors can view appointments for verification" on public.appointments;
+drop policy if exists "Doctors can update checkin status" on public.appointments;
+
+drop policy if exists "Users can view their own prescriptions" on public.prescriptions;
+drop policy if exists "Users can insert their own prescriptions" on public.prescriptions;
+
+drop policy if exists "Users can view their own lab reports" on public.lab_reports;
+drop policy if exists "Users can insert their own lab reports" on public.lab_reports;
+
+
+-- 4. Create Tables (if they don't exist)
 create table if not exists public.profiles (
     id uuid primary key references auth.users(id) on delete cascade,
     health_id text unique not null,
@@ -23,13 +65,6 @@ create table if not exists public.profiles (
     updated_at timestamptz default timezone('utc'::text, now()) not null
 );
 
--- Enable RLS on profiles
-alter table public.profiles enable row level security;
-create policy "Users can view any profile (for searching by health_id)" on public.profiles for select using (true);
-create policy "Users can update their own profile" on public.profiles for update using (auth.uid() = id);
-create policy "Users can insert their own profile" on public.profiles for insert with check (auth.uid() = id);
-
--- Create family_members table
 create table if not exists public.family_members (
     id uuid primary key default gen_random_uuid(),
     primary_user_id uuid not null references public.profiles(id) on delete cascade,
@@ -41,14 +76,6 @@ create table if not exists public.family_members (
     unique(primary_user_id, member_user_id)
 );
 
--- Enable RLS on family_members
-alter table public.family_members enable row level security;
-create policy "Users can view family relationships they are part of" on public.family_members for select using (auth.uid() = primary_user_id or auth.uid() = member_user_id);
-create policy "Users can propose family relationships" on public.family_members for insert with check (auth.uid() = primary_user_id);
-create policy "Users can update/approve family relationships they are the member of" on public.family_members for update using (auth.uid() = member_user_id or auth.uid() = primary_user_id);
-create policy "Users can delete family relationships they are part of" on public.family_members for delete using (auth.uid() = primary_user_id or auth.uid() = member_user_id);
-
--- Create hospitals table
 create table if not exists public.hospitals (
     id text primary key,
     name text not null,
@@ -63,12 +90,6 @@ create table if not exists public.hospitals (
     created_at timestamptz default timezone('utc'::text, now()) not null
 );
 
--- Enable RLS on hospitals
-alter table public.hospitals enable row level security;
-create policy "Hospitals are viewable by everyone" on public.hospitals for select using (true);
-create policy "Anyone can register a hospital or clinic" on public.hospitals for insert with check (true);
-
--- Create doctors table
 create table if not exists public.doctors (
     id text primary key,
     name text not null,
@@ -90,13 +111,6 @@ create table if not exists public.doctors (
     created_at timestamptz default timezone('utc'::text, now()) not null
 );
 
--- Enable RLS on doctors
-alter table public.doctors enable row level security;
-create policy "Doctors are viewable by everyone" on public.doctors for select using (true);
-create policy "Anyone can register as a doctor" on public.doctors for insert with check (true);
-create policy "Admins can update doctors" on public.doctors for update using (true);
-
--- Create appointments table
 create table if not exists public.appointments (
     id text primary key,
     patient_id uuid references public.profiles(id) on delete cascade,
@@ -117,15 +131,6 @@ create table if not exists public.appointments (
     created_at timestamptz default timezone('utc'::text, now()) not null
 );
 
--- Enable RLS on appointments
-alter table public.appointments enable row level security;
-create policy "Users can view their own appointments" on public.appointments for select using (auth.uid() = patient_id);
-create policy "Users can insert their own appointments" on public.appointments for insert with check (auth.uid() = patient_id);
-create policy "Users can update their own appointments" on public.appointments for update using (auth.uid() = patient_id);
-create policy "Doctors can view appointments for verification" on public.appointments for select using (true);
-create policy "Doctors can update checkin status" on public.appointments for update using (true);
-
--- Create prescriptions table
 create table if not exists public.prescriptions (
     id text primary key,
     appointment_id text references public.appointments(id) on delete set null,
@@ -139,12 +144,6 @@ create table if not exists public.prescriptions (
     created_at timestamptz default timezone('utc'::text, now()) not null
 );
 
--- Enable RLS on prescriptions
-alter table public.prescriptions enable row level security;
-create policy "Users can view their own prescriptions" on public.prescriptions for select using (auth.uid() = patient_id);
-create policy "Users can insert their own prescriptions" on public.prescriptions for insert with check (auth.uid() = patient_id);
-
--- Create lab_reports table
 create table if not exists public.lab_reports (
     id text primary key,
     patient_id uuid references public.profiles(id) on delete cascade,
@@ -156,18 +155,53 @@ create table if not exists public.lab_reports (
     created_at timestamptz default timezone('utc'::text, now()) not null
 );
 
--- Enable RLS on lab_reports
+
+-- 5. Recreate RLS Policies
+alter table public.profiles enable row level security;
+create policy "Users can view any profile (for searching by health_id)" on public.profiles for select using (true);
+create policy "Users can update their own profile" on public.profiles for update using (auth.uid() = id);
+create policy "Users can insert their own profile" on public.profiles for insert with check (auth.uid() = id);
+
+alter table public.family_members enable row level security;
+create policy "Users can view family relationships they are part of" on public.family_members for select using (auth.uid() = primary_user_id or auth.uid() = member_user_id);
+create policy "Users can propose family relationships" on public.family_members for insert with check (auth.uid() = primary_user_id);
+create policy "Users can update/approve family relationships they are the member of" on public.family_members for update using (auth.uid() = member_user_id or auth.uid() = primary_user_id);
+create policy "Users can delete family relationships they are part of" on public.family_members for delete using (auth.uid() = primary_user_id or auth.uid() = member_user_id);
+
+alter table public.hospitals enable row level security;
+create policy "Hospitals are viewable by everyone" on public.hospitals for select using (true);
+create policy "Anyone can register a hospital or clinic" on public.hospitals for insert with check (true);
+
+alter table public.doctors enable row level security;
+create policy "Doctors are viewable by everyone" on public.doctors for select using (true);
+create policy "Anyone can register as a doctor" on public.doctors for insert with check (true);
+create policy "Admins can update doctors" on public.doctors for update using (true);
+
+alter table public.appointments enable row level security;
+create policy "Users can view their own appointments" on public.appointments for select using (auth.uid() = patient_id);
+create policy "Users can insert their own appointments" on public.appointments for insert with check (auth.uid() = patient_id);
+create policy "Users can update their own appointments" on public.appointments for update using (auth.uid() = patient_id);
+create policy "Doctors can view appointments for verification" on public.appointments for select using (true);
+create policy "Doctors can update checkin status" on public.appointments for update using (true);
+
+alter table public.prescriptions enable row level security;
+create policy "Users can view their own prescriptions" on public.prescriptions for select using (auth.uid() = patient_id);
+create policy "Users can insert their own prescriptions" on public.prescriptions for insert with check (auth.uid() = patient_id);
+
 alter table public.lab_reports enable row level security;
 create policy "Users can view their own lab reports" on public.lab_reports for select using (auth.uid() = patient_id);
 create policy "Users can insert their own lab reports" on public.lab_reports for insert with check (auth.uid() = patient_id);
 
--- Seed static tables
+
+-- 6. Seed static tables and update entries
 insert into public.hospitals (id, name, image, address, coordinates, departments, emergency_icu_status, amenities, rating, reviews_count)
 values 
 ('h1', 'St. Elizabeth Medical Center', 'https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?auto=format&fit=crop&q=80&w=400', '736 Medical Parkway, Metro City', '{"lat": 40.7128, "lng": -74.0060}', array['Cardiology', 'Pediatrics', 'Emergency Medicine', 'Neurology', 'Orthopedics'], 'Available (4 ICU beds free)', array['24/7 Ambulance', 'Valet Parking', 'Wheelchair Accessible', 'Cafeteria', 'Pharmacy'], 4.8, 1420),
 ('h2', 'Metro Pediatric & General Hospital', 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=400', '120 Oakwood Lane, West End', '{"lat": 40.7250, "lng": -74.0150}', array['Pediatrics', 'General Medicine', 'Dermatology', 'ENT'], 'Busy (ICU Full)', array['Ambulance Service', 'Parking', 'Wheelchair Accessible', 'On-site Pharmacy'], 4.5, 680),
 ('h3', 'Apex Cardiology & Rehabilitation Clinic', 'https://images.unsplash.com/photo-1586773860418-d3b3de97e663?auto=format&fit=crop&q=80&w=400', '95 Cardiovascular Blvd, Heights District', '{"lat": 40.7010, "lng": -73.9980}', array['Cardiology', 'Physical Rehab', 'Sports Medicine'], 'No ICU (Specialty Clinic)', array['Valet Parking', 'Wheelchair Accessible', 'Rehab Gym'], 4.9, 310)
-on conflict (id) do nothing;
+on conflict (id) do update set
+name = excluded.name,
+address = excluded.address;
 
 insert into public.doctors (id, name, qualification, specialty, experience, hospital_id, reviews, consulting_fee, consultation_types, languages, accepted_insurance, availability, awards, image, email, phone, status)
 values
@@ -175,9 +209,13 @@ values
 ('d2', 'Dr. Marcus Vance', 'MD, FAAP - Johns Hopkins University', 'Pediatrics', 10, 'h2', '{"rating": 4.7, "count": 189}', 100, array['In-person', 'Online'], array['English'], array['Blue Cross', 'Cigna', 'Medicaid'], array['08:30 - 11:30', '13:00 - 16:30'], array['Compassionate Care Award 2025'], 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300', 'marcus.vance@medigi.com', '+1-555-0191', 'approved'),
 ('d3', 'Dr. Sarah Lin', 'MD, D.D.V - Stanford School of Medicine', 'Dermatology', 8, 'h2', '{"rating": 4.8, "count": 312}', 120, array['In-person', 'Online'], array['Hindi'], array['Aetna', 'UnitedHealth', 'Humana'], array['10:00 - 13:00', '15:00 - 18:00'], array['Young Investigator Fellowship 2023'], 'https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300', 'sarah.lin@medigi.com', '+1-555-0192', 'approved'),
 ('d4', 'Dr. Jonathan Reyes', 'MD, PhD - Yale School of Medicine', 'Neurology', 18, 'h1', '{"rating": 4.9, "count": 420}', 200, array['In-person'], array['English', 'Hindi'], array['Aetna', 'Blue Cross', 'Medicare'], array['09:00 - 13:00'], array['National Neurological Society Lifetime Fellow'], 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300', 'jonathan.reyes@medigi.com', '+1-555-0193', 'approved')
-on conflict (id) do nothing;
+on conflict (id) do update set
+status = excluded.status,
+email = excluded.email,
+phone = excluded.phone;
 
--- Trigger to automatically create profile on signup
+
+-- 7. Trigger to automatically create profile on signup
 create or replace function public.handle_new_user()
 returns trigger as $$
 declare
@@ -234,7 +272,6 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- Recreate trigger if exists
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
     after insert on auth.users
