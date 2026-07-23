@@ -33,6 +33,10 @@ class HealthcareApp {
 
         this.setupFilterChips();
         this.renderHealthTip();
+
+        // Check family notifications periodically
+        this.checkNotifications();
+        setInterval(() => this.checkNotifications(), 15000);
     }
 
     updateClock() {
@@ -187,7 +191,9 @@ class HealthcareApp {
         }
     }
 
-    handleSupabaseUserLoggedIn(user) {
+    async handleSupabaseUserLoggedIn(user) {
+        // Sync user clinical data from Supabase
+        await db.syncUserData(user.id);
         let patient = db.data.patients[user.id];
         let needsCompletion = false;
         
@@ -244,6 +250,9 @@ class HealthcareApp {
                 healthScore: 80
             };
             db.data.patients[user.id] = patient;
+            
+            // Upload newly created profile to Supabase
+            await db.saveProfileToSupabase(patient);
         } else {
             if (!patient.dob || patient.gender === "Unspecified") {
                 needsCompletion = true;
@@ -282,6 +291,9 @@ class HealthcareApp {
             db.save();
             
             try {
+                // Sync profile to Supabase
+                await db.saveProfileToSupabase(patient);
+
                 await supabaseClient.auth.updateUser({
                     data: {
                         phone: phone,
@@ -293,7 +305,7 @@ class HealthcareApp {
                     }
                 });
             } catch (err) {
-                console.error("Failed to update Supabase user metadata:", err);
+                console.error("Failed to update Supabase profile details:", err);
             }
 
             alert("Profile setup completed successfully!");
@@ -377,6 +389,7 @@ class HealthcareApp {
         if (user) {
             this.syncTheme(user.settings.darkMode);
         }
+        this.checkNotifications();
         this.navigateTab('home-screen');
     }
 
@@ -613,6 +626,11 @@ class HealthcareApp {
 
         document.getElementById('profileName').innerText = user.name;
         document.getElementById('profileEmail').innerText = user.email;
+        
+        const healthIdEl = document.getElementById('profileHealthId');
+        if (healthIdEl) {
+            healthIdEl.innerText = `Health ID: ${user.health_id || 'Not Assigned'}`;
+        }
         document.getElementById('profileHeight').innerText = `${user.height} cm`;
         document.getElementById('profileWeight').innerText = `${user.weight} kg`;
         document.getElementById('profileBMI').innerText = user.bmi;
@@ -724,8 +742,7 @@ class HealthcareApp {
                 file: fileUrl
             };
 
-            db.data.labReports.push(newReport);
-            db.save();
+            db.addLabReport(newReport);
 
             statusSpan.innerText = "Uploaded!";
             statusSpan.style.color = "hsl(var(--success-hsl))";
@@ -852,37 +869,192 @@ class HealthcareApp {
         alert("Insurance details portal is coming soon!");
     }
 
-    openFamilyProfiles() {
+    async openFamilyProfiles() {
         this.openModal('familyModal');
         const container = document.getElementById('familyModalContent');
+        container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">Loading family profiles...</p>`;
+
+        const userId = db.data.currentUser;
+        const members = await db.fetchFamilyMembersFromSupabase(userId);
         container.innerHTML = '';
 
-        const members = db.getFamilyMembers();
         if (members.length === 0) {
-            container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">No linked family members found.</p>`;
+            container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 20px;">No linked family members found.</p>`;
+        } else {
+            members.forEach(m => {
+                const age = m.dob ? new Date().getFullYear() - new Date(m.dob).getFullYear() : 'N/A';
+                const statusBadgeColor = m.status === 'approved' ? 'rgba(20, 184, 166, 0.1)' : 'rgba(245, 158, 11, 0.1)';
+                const statusTextColor = m.status === 'approved' ? 'hsl(var(--accent-hsl))' : 'hsl(var(--warning-hsl, 35, 92%, 47%))';
+                const statusLabel = m.status === 'approved' ? `Approved (${m.permission})` : 'Pending Approval';
+                
+                const onClickAttr = m.status === 'approved' ? `onclick="app.openFamilyMemberDetails('${m.id}')"` : '';
+                const cursorStyle = m.status === 'approved' ? 'cursor: pointer;' : '';
+                
+                container.innerHTML += `
+                    <div class="card" style="margin-bottom: 12px; ${cursorStyle}" ${onClickAttr}>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="font-size: 0.9rem;">${m.name} (${m.relation})</h4>
+                                <p style="font-size: 0.75rem; color: var(--text-secondary);">Health ID: ${m.health_id} | Age: ${age}</p>
+                            </div>
+                            <span class="chip" style="background-color: ${statusBadgeColor}; color: ${statusTextColor}; border: none; font-size: 0.65rem;">
+                                ${statusLabel}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        container.innerHTML += `
+            <button class="btn btn-secondary" onclick="app.closeModal('familyModal'); app.openModal('addFamilyMemberModal');">
+                <i class="fa-solid fa-user-plus"></i> Add Family Member
+            </button>
+        `;
+    }
+
+    async handleAddFamilyMember(e) {
+        e.preventDefault();
+        const healthId = document.getElementById('familyHealthId').value.trim();
+        const relation = document.getElementById('familyRelation').value;
+        const permission = document.getElementById('familyPermission').value;
+
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const origText = submitBtn.innerText;
+        submitBtn.innerText = "Sending Request...";
+        submitBtn.disabled = true;
+
+        try {
+            const res = await db.sendFamilyRequest(healthId, relation, permission);
+            if (res.error) {
+                alert(`Failed to add family member: ${res.error}`);
+            } else {
+                alert(`Family link request sent successfully to ${res.targetName}! They must approve this addition from their Notifications.`);
+                document.getElementById('addFamilyMemberForm').reset();
+                this.closeModal('addFamilyMemberModal');
+                this.openFamilyProfiles();
+            }
+        } catch (err) {
+            console.error(err);
+            alert(`An unexpected error occurred: ${err.message}`);
+        } finally {
+            submitBtn.innerText = origText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    async checkNotifications() {
+        const userId = db.data.currentUser;
+        if (!userId) return;
+
+        try {
+            const pending = await db.fetchPendingRequests(userId);
+            const badge = document.getElementById('notifBadge');
+            if (badge) {
+                if (pending.length > 0) {
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        } catch (e) {
+            console.error("Failed to check notifications:", e);
+        }
+    }
+
+    async openFamilyMemberDetails(memberId) {
+        const userId = db.data.currentUser;
+        const members = await db.fetchFamilyMembersFromSupabase(userId);
+        const member = members.find(m => m.id === memberId);
+        
+        if (!member) {
+            alert("Family member details not found or not approved.");
             return;
         }
 
-        members.forEach(m => {
-            container.innerHTML += `
-                <div class="card" style="margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h4 style="font-size: 0.9rem;">${m.name} (${m.relation})</h4>
-                            <p style="font-size: 0.75rem; color: var(--text-secondary);">DOB: ${m.dob} | Age: ${new Date().getFullYear() - new Date(m.dob).getFullYear()}</p>
-                        </div>
-                        <span class="chip" style="background-color: rgba(20, 184, 166, 0.1); color: hsl(var(--accent-hsl)); border: none; font-size: 0.65rem;">
-                            Permissions: ${m.permission}
-                        </span>
+        this.openModal('familyMemberDetailsModal');
+        const title = document.getElementById('familyMemberDetailsTitle');
+        const container = document.getElementById('familyMemberDetailsContent');
+        
+        title.innerText = `${member.name}'s Health Records`;
+        
+        const chronicStr = member.medicalHistory.chronicDiseases.join(', ') || 'None';
+        const allergyStr = member.medicalHistory.allergies.join(', ') || 'None';
+        
+        let medicinesHtml = '';
+        if (member.medicalHistory.currentMedicines && member.medicalHistory.currentMedicines.length > 0) {
+            member.medicalHistory.currentMedicines.forEach(med => {
+                medicinesHtml += `
+                    <div style="border-left: 2px solid hsl(var(--accent-hsl)); padding-left: 10px; margin-bottom: 8px;">
+                        <strong style="font-size: 0.8rem; display: block;">${med.name} (${med.dose})</strong>
+                        <span style="font-size: 0.7rem; color: var(--text-secondary); display: block;">${med.foodInstructions} | ${med.duration}</span>
+                    </div>
+                `;
+            });
+        } else {
+            medicinesHtml = '<p style="font-size: 0.75rem; color: var(--text-muted);">No current medications.</p>';
+        }
+
+        container.innerHTML = `
+            <div class="card" style="text-align: center; margin-bottom: 15px;">
+                <h4 style="font-size: 0.9rem; margin-bottom: 2px;">Health ID: ${member.health_id}</h4>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Relation: ${member.relation} (${member.permission === 'edit' ? 'Read/Write Access' : 'Read-Only Access'})</p>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                    <div>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Height</span>
+                        <strong style="font-size: 0.8rem;">${member.height} cm</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Weight</span>
+                        <strong style="font-size: 0.8rem;">${member.weight} kg</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">BMI</span>
+                        <strong style="font-size: 0.8rem; color: hsl(var(--accent-hsl));">${member.bmi}</strong>
                     </div>
                 </div>
-            `;
-        });
-        
-        container.innerHTML += `
-            <button class="btn btn-secondary" onclick="alert('HIPAA guidelines require verifying verification credentials to link a new minor child or spouse profile.')">
-                <i class="fa-solid fa-user-plus"></i> Add Family Member
-            </button>
+            </div>
+            
+            <h4 class="section-title" style="margin-top: 15px;">Clinical Bio Info</h4>
+            <div class="card" style="margin-bottom: 15px;">
+                <div class="detail-row">
+                    <span class="detail-label">Blood Group:</span>
+                    <span class="detail-value">${member.bloodGroup}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Chronic Conditions:</span>
+                    <span class="detail-value">${chronicStr}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Allergies:</span>
+                    <span class="detail-value">${allergyStr}</span>
+                </div>
+            </div>
+
+            <h4 class="section-title">Active Medications</h4>
+            <div class="card" style="margin-bottom: 15px;">
+                ${medicinesHtml}
+            </div>
+
+            <h4 class="section-title">Lifestyle Habits</h4>
+            <div class="card" style="margin-bottom: 15px;">
+                <div class="detail-row">
+                    <span class="detail-label">Smoking:</span>
+                    <span class="detail-value">${member.lifestyle.smoking}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Alcohol:</span>
+                    <span class="detail-value">${member.lifestyle.alcohol}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Exercise:</span>
+                    <span class="detail-value">${member.lifestyle.exercise}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Sleep:</span>
+                    <span class="detail-value">${member.lifestyle.sleep}</span>
+                </div>
+            </div>
         `;
     }
 
@@ -1075,12 +1247,61 @@ class HealthcareApp {
         }
     }
 
-    triggerNotification() {
+    async triggerNotification() {
         const notifBadge = document.getElementById('notifBadge');
         if (notifBadge) {
             notifBadge.style.display = 'none';
         }
-        alert("Notification Center: All clinical systems are green. No new alerts.");
+        
+        this.openModal('notificationsModal');
+        const container = document.getElementById('notificationsModalContent');
+        container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">Loading notifications...</p>`;
+
+        const userId = db.data.currentUser;
+        const pending = await db.fetchPendingRequests(userId);
+        container.innerHTML = '';
+
+        if (pending.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <i class="fa-regular fa-bell-slash" style="font-size: 1.8rem; color: var(--text-muted); margin-bottom: 10px;"></i>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">No new notifications at this time.</p>
+                </div>
+            `;
+            return;
+        }
+
+        pending.forEach(p => {
+            container.innerHTML += `
+                <div class="card" style="margin-bottom: 12px; border-left: 4px solid hsl(var(--accent-hsl));">
+                    <div style="margin-bottom: 10px;">
+                        <h4 style="font-size: 0.85rem; margin-bottom: 4px;">Family Request</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: left;">
+                            <strong>${p.requesterName}</strong> (${p.requesterHealthId}) wants to add you to their family list as <strong>${p.relation}</strong> (Permission: ${p.permission === 'edit' ? 'Read & Edit' : 'Read Only'}).
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" onclick="app.handleFamilyResponse('${p.id}', true)" style="padding: 6px 12px; font-size: 0.75rem; margin: 0; flex: 1;">
+                            Approve
+                        </button>
+                        <button class="btn btn-secondary" onclick="app.handleFamilyResponse('${p.id}', false)" style="padding: 6px 12px; font-size: 0.75rem; margin: 0; flex: 1; border: 1px solid hsl(var(--danger-hsl)); color: hsl(var(--danger-hsl)); background: transparent;">
+                            Decline
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    async handleFamilyResponse(requestId, approve) {
+        const res = await db.respondToFamilyRequest(requestId, approve);
+        if (res.error) {
+            alert(`Failed: ${res.error}`);
+        } else {
+            alert(approve ? "Request approved successfully!" : "Request declined.");
+            this.triggerNotification();
+            this.checkNotifications();
+        }
     }
 
     simulateRoomAlert() {

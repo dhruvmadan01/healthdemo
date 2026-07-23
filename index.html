@@ -493,6 +493,21 @@
                             <div id="selectedFilesList" style="margin-top: 15px;">
                                 <!-- Uploaded list goes here -->
                             </div>
+
+                            <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px;">
+                                <h5 style="font-size: 0.8rem; margin-bottom: 10px; color: var(--text-secondary); text-align: left;">Or select from your existing records:</h5>
+                                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                                    <button type="button" class="btn" onclick="bookingFlow.toggleRecordsTab('reports')" id="btnTabReports" style="padding: 6px 10px; font-size: 0.7rem; margin: 0; background: var(--bg-card); flex: 1; border: 1px solid var(--border-color);">
+                                        My Reports
+                                    </button>
+                                    <button type="button" class="btn" onclick="bookingFlow.toggleRecordsTab('prescriptions')" id="btnTabPrescriptions" style="padding: 6px 10px; font-size: 0.7rem; margin: 0; background: transparent; flex: 1; border: 1px solid var(--border-color); color: var(--text-secondary);">
+                                        My Prescriptions
+                                    </button>
+                                </div>
+                                <div id="existingRecordsList" style="max-height: 120px; overflow-y: auto; background: var(--bg-secondary); border-radius: 12px; padding: 10px; border: 1px solid var(--border-color); text-align: left;">
+                                    <!-- Existing files render here -->
+                                </div>
+                            </div>
                         </div>
 
                         <!-- STEP 4: INSURANCE & PAYMENT -->
@@ -958,7 +973,8 @@
                     <div class="card" style="text-align: center;">
                         <div class="user-avatar" style="width: 65px; height: 65px; font-size: 1.6rem; margin: 0 auto 10px auto;" id="profileAvatar">AM</div>
                         <h4 id="profileName">Alex Mercer</h4>
-                        <p style="font-size: 0.75rem; color: var(--text-muted);" id="profileEmail">alex.mercer@email.com</p>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2px;" id="profileEmail">alex.mercer@email.com</p>
+                        <p style="font-size: 0.8rem; font-weight: bold; color: hsl(var(--accent-hsl)); margin: 2px 0 6px 0;" id="profileHealthId">Health ID: Loading...</p>
                         
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
                             <div>
@@ -1153,6 +1169,74 @@
             </div>
             <div id="familyModalContent">
                 <!-- Family members list with granular edit permissions -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4A: Add Family Member by Health ID -->
+    <div class="modal-overlay" id="addFamilyMemberModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Family Member</h3>
+                <div class="back-btn" onclick="app.closeModal('addFamilyMemberModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <form id="addFamilyMemberForm" onsubmit="app.handleAddFamilyMember(event)">
+                <div class="input-group">
+                    <label class="input-label" for="familyHealthId">Health ID (e.g. MED-123456)</label>
+                    <input class="input-field" type="text" id="familyHealthId" placeholder="Enter Member's Health ID" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="familyRelation">Relationship</label>
+                    <select class="input-field" id="familyRelation" required style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); width: 100%; padding: 12px; border-radius: 8px;">
+                        <option value="Spouse">Spouse</option>
+                        <option value="Daughter">Daughter</option>
+                        <option value="Son">Son</option>
+                        <option value="Father">Father</option>
+                        <option value="Mother">Mother</option>
+                        <option value="Sibling">Sibling</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="familyPermission">Permission Level</label>
+                    <select class="input-field" id="familyPermission" required style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); width: 100%; padding: 12px; border-radius: 8px;">
+                        <option value="view">View Only (Read clinical records)</option>
+                        <option value="edit">View & Edit (Manage details)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Send Family Request</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 4B: Notification Center -->
+    <div class="modal-overlay" id="notificationsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Notifications</h3>
+                <div class="back-btn" onclick="app.closeModal('notificationsModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="notificationsModalContent" style="max-height: 400px; overflow-y: auto;">
+                <!-- Notifications render dynamically here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4C: Family Member Details -->
+    <div class="modal-overlay" id="familyMemberDetailsModal">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 id="familyMemberDetailsTitle">Family Member Profile</h3>
+                <div class="back-btn" onclick="app.closeModal('familyMemberDetailsModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="familyMemberDetailsContent">
+                <!-- Render detailed profile here -->
             </div>
         </div>
     </div>

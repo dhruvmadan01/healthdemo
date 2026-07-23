@@ -366,20 +366,20 @@ class HealthcareDB {
     addPatient(patient) {
         this.data.patients[patient.id] = patient;
         this.save();
+        this.saveProfileToSupabase(patient);
     }
 
     addAppointment(app) {
         this.data.appointments.push(app);
         this.save();
+        this.uploadAppointment(app);
     }
 
     addPrescription(prescription) {
         this.data.prescriptions.push(prescription);
-        // Also add the newly prescribed medicine to current medicines list of patient
         const patient = this.data.patients[prescription.patientId];
         if (patient) {
             prescription.medicines.forEach(med => {
-                // check if already exists
                 const exists = patient.medicalHistory.currentMedicines.find(m => m.name.toLowerCase() === med.name.toLowerCase());
                 if (!exists) {
                     patient.medicalHistory.currentMedicines.push(med);
@@ -387,6 +387,14 @@ class HealthcareDB {
             });
         }
         this.save();
+        this.uploadPrescription(prescription);
+        if (patient) this.saveProfileToSupabase(patient);
+    }
+
+    addLabReport(lr) {
+        this.data.labReports.push(lr);
+        this.save();
+        this.uploadLabReport(lr);
     }
 
     updateAppointmentStatus(id, status, checkInStatus = null, queueData = null) {
@@ -396,6 +404,7 @@ class HealthcareDB {
             if (checkInStatus) this.data.appointments[idx].checkInStatus = checkInStatus;
             if (queueData) this.data.appointments[idx].queue = { ...this.data.appointments[idx].queue, ...queueData };
             this.save();
+            this.updateAppointmentStatusInSupabase(id, status, checkInStatus, this.data.appointments[idx].queue);
         }
     }
 
@@ -462,6 +471,538 @@ class HealthcareDB {
 
         // Bound between 50 and 100
         return Math.max(50, Math.min(100, score));
+    }
+
+    async syncProfileWithSupabase(userId) {
+        if (!userId) return null;
+        try {
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .maybeSingle();
+
+            if (error) {
+                console.error("Error fetching profile from Supabase:", error);
+                return null;
+            }
+
+            if (data) {
+                const patient = {
+                    id: data.id,
+                    health_id: data.health_id,
+                    name: data.name,
+                    dob: data.dob || "",
+                    gender: data.gender || "Unspecified",
+                    bloodGroup: data.blood_group || "O+",
+                    height: parseFloat(data.height || 170),
+                    weight: parseFloat(data.weight || 70),
+                    bmi: parseFloat(data.bmi || 24.2),
+                    email: data.email || "",
+                    phone: data.phone || "",
+                    emergencyContact: data.emergency_contact || { name: "", relation: "", phone: "" },
+                    settings: data.settings || { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
+                    medicalHistory: data.medical_history || { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
+                    lifestyle: data.lifestyle || { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
+                    healthScore: data.health_score || 80
+                };
+                this.data.patients[userId] = patient;
+                this.save();
+                return patient;
+            } else {
+                // Profile does not exist in Supabase yet. Let's create it.
+                let localPat = this.data.patients[userId];
+                if (!localPat) {
+                    localPat = {
+                        id: userId,
+                        health_id: 'MED-' + Math.floor(100000 + Math.random() * 900000),
+                        name: "New User",
+                        dob: "",
+                        gender: "Unspecified",
+                        bloodGroup: "O+",
+                        height: 170,
+                        weight: 70,
+                        bmi: 24.2,
+                        email: "",
+                        phone: "",
+                        emergencyContact: { name: "", relation: "", phone: "" },
+                        settings: { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
+                        medicalHistory: { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
+                        lifestyle: { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
+                        healthScore: 80
+                    };
+                }
+                const { data: newProfile, error: insertError } = await supabaseClient
+                    .from('profiles')
+                    .insert({
+                        id: userId,
+                        health_id: localPat.health_id || 'MED-' + Math.floor(100000 + Math.random() * 900000),
+                        name: localPat.name,
+                        email: localPat.email || "",
+                        phone: localPat.phone || "",
+                        dob: localPat.dob || null,
+                        gender: localPat.gender || 'Unspecified',
+                        blood_group: localPat.bloodGroup || 'O+',
+                        height: localPat.height || 170,
+                        weight: localPat.weight || 70,
+                        bmi: localPat.bmi || 24.2,
+                        emergency_contact: localPat.emergencyContact,
+                        settings: localPat.settings,
+                        medical_history: localPat.medicalHistory,
+                        lifestyle: localPat.lifestyle,
+                        health_score: localPat.healthScore
+                    })
+                    .select()
+                    .maybeSingle();
+
+                if (insertError) {
+                    console.error("Error inserting missing profile to Supabase:", insertError);
+                    return null;
+                }
+                if (newProfile) {
+                    localPat.health_id = newProfile.health_id;
+                    this.data.patients[userId] = localPat;
+                    this.save();
+                    return localPat;
+                }
+            }
+        } catch (e) {
+            console.error("Exception in syncProfileWithSupabase:", e);
+        }
+        return null;
+    }
+
+    async saveProfileToSupabase(patient) {
+        if (!patient || !patient.id) return;
+        try {
+            const { error } = await supabaseClient
+                .from('profiles')
+                .update({
+                    name: patient.name,
+                    email: patient.email,
+                    phone: patient.phone,
+                    dob: patient.dob || null,
+                    gender: patient.gender || 'Unspecified',
+                    blood_group: patient.bloodGroup || 'O+',
+                    height: patient.height || 170,
+                    weight: patient.weight || 70,
+                    bmi: patient.bmi || 24.2,
+                    emergency_contact: patient.emergencyContact || {},
+                    settings: patient.settings || {},
+                    medical_history: patient.medicalHistory || {},
+                    lifestyle: patient.lifestyle || {},
+                    health_score: patient.healthScore || 80
+                })
+                .eq('id', patient.id);
+            if (error) console.error("Error saving profile to Supabase:", error);
+        } catch (err) {
+            console.error("Failed to save profile to Supabase:", err);
+        }
+    }
+
+    async sendFamilyRequest(healthId, relation, permission) {
+        const currentUser = this.getCurrentUser();
+        if (!currentUser) return { error: "You are not logged in." };
+
+        const { data: targetProfile, error: searchError } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('health_id', healthId)
+            .maybeSingle();
+
+        if (searchError) return { error: searchError.message };
+        if (!targetProfile) return { error: "No user found with this Health ID." };
+
+        if (targetProfile.id === currentUser.id) {
+            return { error: "You cannot add yourself as a family member." };
+        }
+
+        const { data: existingRelation, error: checkError } = await supabaseClient
+            .from('family_members')
+            .select('*')
+            .eq('primary_user_id', currentUser.id)
+            .eq('member_user_id', targetProfile.id)
+            .maybeSingle();
+
+        if (checkError) return { error: checkError.message };
+        if (existingRelation) {
+            return { error: `Relationship or request already exists. Status: ${existingRelation.status}` };
+        }
+
+        const { error: insertError } = await supabaseClient
+            .from('family_members')
+            .insert({
+                primary_user_id: currentUser.id,
+                member_user_id: targetProfile.id,
+                relation: relation,
+                permission: permission,
+                status: 'pending'
+            });
+
+        if (insertError) return { error: insertError.message };
+        return { success: true, targetName: targetProfile.name };
+    }
+
+    async fetchFamilyMembersFromSupabase(userId) {
+        if (!userId) return [];
+        try {
+            const { data: relations, error: relError } = await supabaseClient
+                .from('family_members')
+                .select('*')
+                .eq('primary_user_id', userId);
+
+            if (relError) {
+                console.error("Error fetching family relationships:", relError);
+                return [];
+            }
+
+            if (!relations || relations.length === 0) return [];
+
+            const memberIds = relations.map(r => r.member_user_id);
+            const { data: profiles, error: profError } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .in('id', memberIds);
+
+            if (profError) {
+                console.error("Error fetching family profiles:", profError);
+                return [];
+            }
+
+            return relations.map(r => {
+                const profile = profiles.find(p => p.id === r.member_user_id);
+                if (!profile) return null;
+                return {
+                    id: profile.id,
+                    health_id: profile.health_id,
+                    name: profile.name,
+                    dob: profile.dob || "",
+                    gender: profile.gender || "Unspecified",
+                    bloodGroup: profile.blood_group || "O+",
+                    height: parseFloat(profile.height || 170),
+                    weight: parseFloat(profile.weight || 70),
+                    bmi: parseFloat(profile.bmi || 24.2),
+                    email: profile.email || "",
+                    phone: profile.phone || "",
+                    emergencyContact: profile.emergency_contact || { name: "", relation: "", phone: "" },
+                    settings: profile.settings || { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
+                    medicalHistory: profile.medical_history || { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
+                    lifestyle: profile.lifestyle || { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
+                    healthScore: profile.health_score || 80,
+                    relation: r.relation,
+                    permission: r.permission,
+                    status: r.status,
+                    relationshipId: r.id
+                };
+            }).filter(Boolean);
+        } catch (e) {
+            console.error("Exception in fetchFamilyMembersFromSupabase:", e);
+        }
+        return [];
+    }
+
+    async fetchPendingRequests(userId) {
+        if (!userId) return [];
+        try {
+            const { data: relations, error: relError } = await supabaseClient
+                .from('family_members')
+                .select('*')
+                .eq('member_user_id', userId)
+                .eq('status', 'pending');
+
+            if (relError) {
+                console.error("Error fetching pending requests:", relError);
+                return [];
+            }
+
+            if (!relations || relations.length === 0) return [];
+
+            const requesterIds = relations.map(r => r.primary_user_id);
+            const { data: profiles, error: profError } = await supabaseClient
+                .from('profiles')
+                .select('id, name, health_id, email')
+                .in('id', requesterIds);
+
+            if (profError) {
+                console.error("Error fetching requester profiles:", profError);
+                return [];
+            }
+
+            return relations.map(r => {
+                const requester = profiles.find(p => p.id === r.primary_user_id);
+                return {
+                    id: r.id,
+                    relation: r.relation,
+                    permission: r.permission,
+                    requesterName: requester ? requester.name : "Unknown User",
+                    requesterHealthId: requester ? requester.health_id : "",
+                    requesterEmail: requester ? requester.email : ""
+                };
+            });
+        } catch (e) {
+            console.error("Exception in fetchPendingRequests:", e);
+        }
+        return [];
+    }
+
+    async respondToFamilyRequest(requestId, approve) {
+        try {
+            if (approve) {
+                const { error } = await supabaseClient
+                    .from('family_members')
+                    .update({ status: 'approved' })
+                    .eq('id', requestId);
+                if (error) return { error: error.message };
+                return { success: true };
+            } else {
+                const { error } = await supabaseClient
+                    .from('family_members')
+                    .delete()
+                    .eq('id', requestId);
+                if (error) return { error: error.message };
+                return { success: true };
+            }
+        } catch (e) {
+            return { error: e.message };
+        }
+    }
+
+    async syncUserData(userId) {
+        if (!userId) return;
+        await this.syncProfileWithSupabase(userId);
+        await this.syncAppointmentsFromSupabase(userId);
+        await this.syncPrescriptionsFromSupabase(userId);
+        await this.syncLabReportsFromSupabase(userId);
+        await this.loadHospitalsAndDoctorsFromSupabase();
+    }
+
+    async uploadAppointment(app) {
+        try {
+            const { error } = await supabaseClient
+                .from('appointments')
+                .insert({
+                    id: app.id,
+                    patient_id: app.patientId,
+                    doctor_id: app.doctorId,
+                    hospital_id: app.hospitalId,
+                    date: app.date,
+                    time: app.time,
+                    symptoms: app.symptoms,
+                    reports: app.reports || [],
+                    insurance: app.insurance,
+                    payment_status: app.paymentStatus,
+                    payment_amount: app.paymentAmount,
+                    qr_code: app.qrCode,
+                    visit_token: app.visitToken,
+                    status: app.status,
+                    check_in_status: app.checkInStatus,
+                    queue: app.queue
+                });
+            if (error) console.error("Error uploading appointment to Supabase:", error);
+        } catch (err) {
+            console.error("Failed to upload appointment:", err);
+        }
+    }
+
+    async uploadPrescription(p) {
+        try {
+            const { error } = await supabaseClient
+                .from('prescriptions')
+                .insert({
+                    id: p.id,
+                    appointment_id: p.appointmentId || null,
+                    patient_id: p.patientId,
+                    doctor_id: p.doctorId || null,
+                    doctor: p.doctor || "Self-Uploaded",
+                    date: p.date,
+                    notes: p.notes,
+                    medicines: p.medicines || [],
+                    file: p.file || null
+                });
+            if (error) console.error("Error uploading prescription to Supabase:", error);
+        } catch (err) {
+            console.error("Failed to upload prescription:", err);
+        }
+    }
+
+    async uploadLabReport(lr) {
+        try {
+            const { error } = await supabaseClient
+                .from('lab_reports')
+                .insert({
+                    id: lr.id,
+                    patient_id: lr.patientId,
+                    test_name: lr.testName,
+                    date: lr.date,
+                    status: lr.status,
+                    doctor: lr.doctor,
+                    file: lr.file
+                });
+            if (error) console.error("Error uploading lab report to Supabase:", error);
+        } catch (err) {
+            console.error("Failed to upload lab report:", err);
+        }
+    }
+
+    async updateAppointmentStatusInSupabase(id, status, checkInStatus, queue) {
+        try {
+            const updates = {};
+            if (status) updates.status = status;
+            if (checkInStatus) updates.check_in_status = checkInStatus;
+            if (queue) updates.queue = queue;
+
+            const { error } = await supabaseClient
+                .from('appointments')
+                .update(updates)
+                .eq('id', id);
+            if (error) console.error("Error updating appointment in Supabase:", error);
+        } catch (err) {
+            console.error("Failed to update appointment in Supabase:", err);
+        }
+    }
+
+    async syncAppointmentsFromSupabase(userId) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('appointments')
+                .select('*')
+                .eq('patient_id', userId);
+            if (!error && data) {
+                data.forEach(a => {
+                    const localIdx = this.data.appointments.findIndex(la => la.id === a.id);
+                    const mappedAppt = {
+                        id: a.id,
+                        patientId: a.patient_id,
+                        doctorId: a.doctor_id,
+                        hospitalId: a.hospital_id,
+                        date: a.date,
+                        time: a.time,
+                        symptoms: a.symptoms,
+                        reports: a.reports || [],
+                        insurance: a.insurance,
+                        paymentStatus: a.payment_status,
+                        paymentAmount: parseFloat(a.payment_amount || 0),
+                        qrCode: a.qr_code,
+                        visitToken: a.visit_token,
+                        status: a.status,
+                        checkInStatus: a.check_in_status,
+                        queue: a.queue || {}
+                    };
+                    if (localIdx !== -1) {
+                        this.data.appointments[localIdx] = mappedAppt;
+                    } else {
+                        this.data.appointments.push(mappedAppt);
+                    }
+                });
+                this.save();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async syncPrescriptionsFromSupabase(userId) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('prescriptions')
+                .select('*')
+                .eq('patient_id', userId);
+            if (!error && data) {
+                data.forEach(p => {
+                    const localIdx = this.data.prescriptions.findIndex(lp => lp.id === p.id);
+                    const mappedPresc = {
+                        id: p.id,
+                        appointmentId: p.appointment_id,
+                        patientId: p.patient_id,
+                        doctorId: p.doctor_id,
+                        doctor: p.doctor,
+                        date: p.date,
+                        notes: p.notes,
+                        medicines: p.medicines || [],
+                        file: p.file
+                    };
+                    if (localIdx !== -1) {
+                        this.data.prescriptions[localIdx] = mappedPresc;
+                    } else {
+                        this.data.prescriptions.push(mappedPresc);
+                    }
+                });
+                this.save();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async syncLabReportsFromSupabase(userId) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('lab_reports')
+                .select('*')
+                .eq('patient_id', userId);
+            if (!error && data) {
+                data.forEach(lr => {
+                    const localIdx = this.data.labReports.findIndex(llr => llr.id === lr.id);
+                    const mappedReport = {
+                        id: lr.id,
+                        patientId: lr.patient_id,
+                        testName: lr.test_name,
+                        date: lr.date,
+                        status: lr.status,
+                        doctor: lr.doctor,
+                        file: lr.file
+                    };
+                    if (localIdx !== -1) {
+                        this.data.labReports[localIdx] = mappedReport;
+                    } else {
+                        this.data.labReports.push(mappedReport);
+                    }
+                });
+                this.save();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async loadHospitalsAndDoctorsFromSupabase() {
+        try {
+            const { data: hospitals, error: hError } = await supabaseClient
+                .from('hospitals')
+                .select('*');
+            if (!hError && hospitals && hospitals.length > 0) {
+                hospitals.forEach(h => {
+                    this.data.hospitals[h.id] = h;
+                });
+            }
+            
+            const { data: doctors, error: dError } = await supabaseClient
+                .from('doctors')
+                .select('*');
+            if (!dError && doctors && doctors.length > 0) {
+                doctors.forEach(d => {
+                    this.data.doctors[d.id] = {
+                        id: d.id,
+                        name: d.name,
+                        qualification: d.qualification,
+                        specialty: d.specialty,
+                        experience: parseInt(d.experience || 0),
+                        hospitalId: d.hospital_id,
+                        reviews: d.reviews || { rating: 4.8, count: 100 },
+                        consultingFee: parseFloat(d.consulting_fee || 0),
+                        consultationTypes: d.consultation_types || [],
+                        languages: d.languages || [],
+                        acceptedInsurance: d.accepted_insurance || [],
+                        availability: d.availability || [],
+                        awards: d.awards || [],
+                        image: d.image
+                    };
+                });
+            }
+            this.save();
+        } catch (e) {
+            console.error("Failed to load hospitals/doctors from database:", e);
+        }
     }
 }
 

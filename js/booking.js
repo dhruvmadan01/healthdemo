@@ -14,11 +14,13 @@ class BookingFlow {
         this.canvas = null;
         this.ctx = null;
         this.hasSignature = false;
+        this.recordsTab = 'reports';
     }
 
     startBooking() {
         this.currentStep = 1;
         this.uploadedFiles = [];
+        this.recordsTab = 'reports';
         document.getElementById('bookingForm').reset();
         document.getElementById('selectedFilesList').innerHTML = '';
         
@@ -131,19 +133,127 @@ class BookingFlow {
     handleUploadedFiles(files) {
         const list = document.getElementById('selectedFilesList');
         for (let file of files) {
-            this.uploadedFiles.push(file.name);
-            list.innerHTML += `
-                <div class="medicine-pill-tag" style="width: 100%; justify-content: space-between; border-radius: 8px; margin-bottom: 6px;">
-                    <span><i class="fa-solid fa-file-pdf"></i> ${file.name}</span>
-                    <i class="fa-solid fa-trash-can" onclick="bookingFlow.removeFile('${file.name}', this)"></i>
-                </div>
-            `;
+            if (!this.uploadedFiles.includes(file.name)) {
+                this.uploadedFiles.push(file.name);
+                list.innerHTML += `
+                    <div class="medicine-pill-tag" style="width: 100%; justify-content: space-between; border-radius: 8px; margin-bottom: 6px;">
+                        <span><i class="fa-solid fa-file-pdf"></i> ${file.name}</span>
+                        <i class="fa-solid fa-trash-can" onclick="bookingFlow.removeFile('${file.name}', this)"></i>
+                    </div>
+                `;
+            }
+        }
+        if (this.currentStep === 3) {
+            this.renderExistingRecordsList();
         }
     }
 
     removeFile(name, element) {
         this.uploadedFiles = this.uploadedFiles.filter(f => f !== name);
         element.parentElement.remove();
+        if (this.currentStep === 3) {
+            this.renderExistingRecordsList();
+        }
+    }
+
+    toggleRecordsTab(tab) {
+        this.recordsTab = tab;
+        const btnReports = document.getElementById('btnTabReports');
+        const btnPresc = document.getElementById('btnTabPrescriptions');
+        
+        if (tab === 'reports') {
+            btnReports.style.background = 'var(--bg-card)';
+            btnReports.style.color = 'var(--text-primary)';
+            btnPresc.style.background = 'transparent';
+            btnPresc.style.color = 'var(--text-secondary)';
+        } else {
+            btnPresc.style.background = 'var(--bg-card)';
+            btnPresc.style.color = 'var(--text-primary)';
+            btnReports.style.background = 'transparent';
+            btnReports.style.color = 'var(--text-secondary)';
+        }
+        
+        this.renderExistingRecordsList();
+    }
+
+    renderExistingRecordsList() {
+        const container = document.getElementById('existingRecordsList');
+        if (!container) return;
+        
+        const patientId = document.getElementById('bookingPatient').value;
+        const currentTab = this.recordsTab || 'reports';
+        
+        container.innerHTML = '';
+        
+        if (currentTab === 'reports') {
+            const reports = db.getLabReports(patientId);
+            if (reports.length === 0) {
+                container.innerHTML = `<p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin: 10px 0;">No lab reports found.</p>`;
+                return;
+            }
+            
+            reports.forEach(r => {
+                const isAdded = this.uploadedFiles.includes(r.file || r.testName);
+                const btnLabel = isAdded ? 'Added' : '+ Add';
+                const btnStyle = isAdded ? 'background-color: var(--border-color); color: var(--text-secondary); pointer-events: none;' : 'background-color: hsl(var(--accent-hsl)); color: white; cursor: pointer;';
+                const fileRef = r.file || r.testName;
+                const displayName = r.testName;
+                
+                container.innerHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <span style="font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; text-align: left;"><i class="fa-solid fa-file-medical"></i> ${displayName}</span>
+                        <button type="button" class="btn" style="padding: 4px 8px; font-size: 0.65rem; margin: 0; width: auto; min-width: 50px; ${btnStyle}" onclick="bookingFlow.addExistingRecord('${fileRef}')">${btnLabel}</button>
+                    </div>
+                `;
+            });
+        } else {
+            const prescriptions = db.getPrescriptions(patientId);
+            const validPrescriptions = prescriptions.filter(p => p.file);
+            
+            if (validPrescriptions.length === 0) {
+                container.innerHTML = `<p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin: 10px 0;">No prescription files found.</p>`;
+                return;
+            }
+            
+            validPrescriptions.forEach(p => {
+                let fileName = p.file.split('/').pop().split('-').pop();
+                if (fileName.startsWith('blob:')) {
+                    fileName = 'Prescription_Local.pdf';
+                }
+                const displayName = `Rx: ${p.doctor || 'Prescription'} (${fileName})`;
+                const isAdded = this.uploadedFiles.includes(p.file);
+                const btnLabel = isAdded ? 'Added' : '+ Add';
+                const btnStyle = isAdded ? 'background-color: var(--border-color); color: var(--text-secondary); pointer-events: none;' : 'background-color: hsl(var(--accent-hsl)); color: white; cursor: pointer;';
+                
+                container.innerHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <span style="font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; text-align: left;"><i class="fa-solid fa-prescription-bottle-medical"></i> ${displayName}</span>
+                        <button type="button" class="btn" style="padding: 4px 8px; font-size: 0.65rem; margin: 0; width: auto; min-width: 50px; ${btnStyle}" onclick="bookingFlow.addExistingRecord('${p.file}')">${btnLabel}</button>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    addExistingRecord(fileRef) {
+        if (!fileRef) return;
+        if (!this.uploadedFiles.includes(fileRef)) {
+            this.uploadedFiles.push(fileRef);
+            
+            const list = document.getElementById('selectedFilesList');
+            let cleanName = fileRef.split('/').pop().split('-').pop();
+            if (cleanName.startsWith('blob:')) {
+                cleanName = 'Prescription_Local.pdf';
+            }
+            list.innerHTML += `
+                <div class="medicine-pill-tag" style="width: 100%; justify-content: space-between; border-radius: 8px; margin-bottom: 6px;">
+                    <span style="font-size: 0.75rem;"><i class="fa-solid fa-file-invoice"></i> ${cleanName}</span>
+                    <i class="fa-solid fa-trash-can" onclick="bookingFlow.removeFile('${fileRef}', this)"></i>
+                </div>
+            `;
+            
+            this.renderExistingRecordsList();
+        }
     }
 
     // Step navigation controller
@@ -185,6 +295,10 @@ class BookingFlow {
         const progressLine = document.getElementById('bookingProgressLine');
         const percentage = ((this.currentStep - 1) / (this.totalSteps - 1)) * 100;
         progressLine.style.width = `${percentage}%`;
+
+        if (this.currentStep === 3) {
+            this.renderExistingRecordsList();
+        }
     }
 
     nextStep() {
@@ -264,7 +378,7 @@ class BookingFlow {
                 insurance: insurance,
                 paymentStatus: "Paid",
                 paymentAmount: parseFloat(document.getElementById('bookingTotalPayable').innerText.replace('$', '')),
-                qrCode: `MEDIGI-MOCK-QR-${apptId}`,
+                qrCode: `${window.location.origin}/doctor.html?appt=${apptId}`,
                 visitToken: `T-${tokenNum}`,
                 status: "Upcoming",
                 checkInStatus: "Not Checked In",
@@ -286,7 +400,7 @@ class BookingFlow {
 
             // Generate Mock QR SVG/HTML
             const qrHolder = document.getElementById('confirmQRHolder');
-            const qrAPIUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${newApp.qrCode}`;
+            const qrAPIUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(newApp.qrCode)}`;
             qrHolder.innerHTML = `<img src="${qrAPIUrl}" alt="QR" style="width: 120px; height: 120px;">`;
 
             app.navigateTo('booking-confirm-screen');
