@@ -335,18 +335,37 @@ class HealthcareApp {
     }
 
     triggerBiometricLogin() {
-        const user = db.getCurrentUser();
-        if (user && !user.settings.biometricsEnabled) {
-            alert("Biometric login is disabled in settings. Please login with Email / Password.");
-            return;
+        // Find last active profile or fallback to Alex Mercer (p1)
+        let userId = db.data.currentUser || "p1";
+        let targetPatient = db.getPatient(userId);
+        
+        if (!targetPatient) {
+            targetPatient = {
+                id: "p1",
+                name: "Alex Mercer",
+                image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150"
+            };
+            userId = "p1";
         }
         
         this.navigateTo('biometrics-screen');
+
+        // Populate card content
+        const avatar = document.getElementById('biometricUserAvatar');
+        const nameText = document.getElementById('biometricUserName');
+        if (avatar) {
+            avatar.src = targetPatient.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150";
+        }
+        if (nameText) {
+            nameText.innerText = targetPatient.name;
+        }
+        
         const icon = document.getElementById('biometricIcon');
         const title = document.getElementById('biometricScanTitle');
         const desc = document.getElementById('biometricScanDesc');
         
         icon.className = "fa-solid fa-face-id";
+        icon.style.color = "";
         title.innerText = "Scanning Face ID...";
         desc.innerText = "Please look at the front camera of your device.";
         
@@ -357,14 +376,10 @@ class HealthcareApp {
             desc.innerText = "Secure login successful.";
             
             setTimeout(() => {
-                if (user) {
-                    this.loginUser(user.id);
-                } else {
-                    this.loginUser("p1"); // fallback
-                }
+                this.loginUser(userId);
                 icon.style.color = "";
             }, 1000);
-        }, 2000);
+        }, 1500);
     }
 
     cancelBiometric() {

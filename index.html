@@ -218,6 +218,13 @@
             <!-- 6. BIOMETRIC SCAN SCREEN -->
             <section id="biometrics-screen" class="screen">
                 <div class="screen-content" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <!-- User Profile Avatar/Name display area -->
+                    <div id="biometricUserCard" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; text-align: center;">
+                        <img id="biometricUserAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid hsl(var(--accent-hsl)); object-fit: cover; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+                        <span id="biometricUserName" style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Alex Mercer</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">Securing Authentication</span>
+                    </div>
+
                     <div class="biometrics-trigger-area scanning">
                         <div class="biometrics-ring" style="width: 100px; height: 100px; font-size: 3rem;">
                             <i class="fa-solid fa-face-id" id="biometricIcon"></i>
@@ -227,7 +234,7 @@
                             Please align your face inside the indicator ring to authenticate.
                         </p>
                     </div>
-                    <button class="btn btn-secondary" onclick="app.cancelBiometric()" style="width: auto; margin-top: 40px;">
+                    <button class="btn btn-secondary" onclick="app.cancelBiometric()" style="width: auto; margin-top: 40px; border: 1px solid var(--border-color); background: transparent; cursor: pointer;">
                         Cancel
                     </button>
                 </div>
