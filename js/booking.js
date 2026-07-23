@@ -17,7 +17,7 @@ class BookingFlow {
         this.recordsTab = 'reports';
     }
 
-    startBooking() {
+    async startBooking() {
         this.currentStep = 1;
         this.uploadedFiles = [];
         this.recordsTab = 'reports';
@@ -42,13 +42,49 @@ class BookingFlow {
         dateInput.min = `${yyyy}-${mm}-${dd}`;
         dateInput.value = `${yyyy}-${mm}-${dd}`;
 
+        // Populate patient dropdown options dynamically
+        const patientSelect = document.getElementById('bookingPatient');
+        if (patientSelect) {
+            patientSelect.innerHTML = '';
+            
+            const currentUserId = db.data.currentUser;
+            const currentUser = db.getPatient(currentUserId);
+            if (currentUser) {
+                patientSelect.innerHTML += `<option value="${currentUser.id}">Myself (${currentUser.name})</option>`;
+            } else {
+                patientSelect.innerHTML += `<option value="p1">Myself (Alex Mercer)</option>`;
+            }
+
+            // Load approved family members from Supabase
+            try {
+                const familyMembers = await db.fetchFamilyMembersFromSupabase(currentUserId);
+                if (familyMembers && familyMembers.length > 0) {
+                    familyMembers.forEach(fm => {
+                        if (fm.status === 'approved') {
+                            patientSelect.innerHTML += `<option value="${fm.id}">${fm.name} (${fm.relation})</option>`;
+                        }
+                    });
+                } else if (currentUserId === 'p1') {
+                    // Demo fallback
+                    patientSelect.innerHTML += `<option value="p2">Lily Mercer (Daughter)</option>`;
+                    patientSelect.innerHTML += `<option value="p3">Sarah Mercer (Spouse)</option>`;
+                }
+            } catch (err) {
+                console.error("Failed to populate family members in booking dropdown:", err);
+                if (currentUserId === 'p1') {
+                    patientSelect.innerHTML += `<option value="p2">Lily Mercer (Daughter)</option>`;
+                    patientSelect.innerHTML += `<option value="p3">Sarah Mercer (Spouse)</option>`;
+                }
+            }
+        }
+
         this.syncStepView();
         app.navigateTo('booking-screen');
         this.setupDropZone();
     }
 
-    startBookingWithDoctor(doctorId) {
-        this.startBooking();
+    async startBookingWithDoctor(doctorId) {
+        await this.startBooking();
         document.getElementById('bookingDoctor').value = doctorId;
         this.onDoctorChange();
     }
