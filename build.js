@@ -22,10 +22,13 @@ if (fs.existsSync('www')) {
 }
 fs.mkdirSync('www');
 
-// Copy index.html and doctor.html
+// Copy index.html, doctor.html and admin.html
 fs.copyFileSync('index.html', 'www/index.html');
 if (fs.existsSync('doctor.html')) {
     fs.copyFileSync('doctor.html', 'www/doctor.html');
+}
+if (fs.existsSync('admin.html')) {
+    fs.copyFileSync('admin.html', 'www/admin.html');
 }
 
 // Copy css and js folders

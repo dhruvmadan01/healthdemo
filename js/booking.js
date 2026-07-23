@@ -28,7 +28,9 @@ class BookingFlow {
         const docSelect = document.getElementById('bookingDoctor');
         docSelect.innerHTML = '<option value="">-- Choose Physician --</option>';
         Object.values(db.data.doctors).forEach(d => {
-            docSelect.innerHTML += `<option value="${d.id}">${d.name} (${d.specialty})</option>`;
+            if (d.status === 'approved') {
+                docSelect.innerHTML += `<option value="${d.id}">${d.name} (${d.specialty})</option>`;
+            }
         });
 
         // Set default minimum date to today

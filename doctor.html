@@ -334,6 +334,17 @@
                     <label class="input-label" for="regName">Full Name</label>
                     <input type="text" id="regName" class="input-field" placeholder="e.g. Dr. Jane Foster" required>
                 </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="input-group">
+                        <label class="input-label" for="regEmail">Email Address</label>
+                        <input type="email" id="regEmail" class="input-field" placeholder="e.g. doctor@clinic.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="regPhone">Phone Number</label>
+                        <input type="tel" id="regPhone" class="input-field" placeholder="e.g. +1-555-0199" required>
+                    </div>
+                </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="input-group">
@@ -598,6 +609,20 @@
                 }
             } catch (err) {
                 console.error("Failed to fetch doctor appointments from Supabase:", err);
+            }
+
+            const activeDoc = db.data.doctors[docId];
+            if (activeDoc && activeDoc.status !== 'approved') {
+                queueContainer.innerHTML = `
+                    <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid hsl(var(--warning-hsl)); color: hsl(var(--warning-hsl)); padding: 15px; border-radius: 12px; font-size: 0.8rem; text-align: center; margin-top: 10px;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.4rem; margin-bottom: 6px; display: block;"></i>
+                        <strong>Verification Pending</strong>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.3;">
+                            Your clinical registration is awaiting review. Admin approval is required before patients can book or view your queue.
+                        </p>
+                    </div>
+                `;
+                return;
             }
 
             const appts = db.data.appointments.filter(a => a.doctorId === docId);
@@ -1085,6 +1110,8 @@
             event.preventDefault();
             
             const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
             const specialty = document.getElementById('regSpecialty').value;
             const qualification = document.getElementById('regQualification').value.trim();
             const experience = parseInt(document.getElementById('regExperience').value);
@@ -1165,7 +1192,10 @@
                 accepted_insurance: ['Aetna', 'Blue Cross', 'Cigna', 'UnitedHealth'],
                 availability: ['09:00 - 12:00', '14:00 - 17:00'],
                 awards: ['Registered board clinical practitioner'],
-                image
+                image,
+                email,
+                phone,
+                status: 'pending'
             };
             
             // Upload to Supabase doctors table
@@ -1199,7 +1229,10 @@
                 acceptedInsurance: newDoctor.accepted_insurance,
                 availability: newDoctor.availability,
                 awards: newDoctor.awards,
-                image: newDoctor.image
+                image: newDoctor.image,
+                email: newDoctor.email,
+                phone: newDoctor.phone,
+                status: newDoctor.status
             };
             db.save();
             
@@ -1214,7 +1247,7 @@
             closeModal('doctorRegisterModal');
             document.getElementById('doctorRegisterForm').reset();
             
-            alert(`Physician registration successful! Welcome, ${name}.`);
+            alert(`Physician registration submitted! Welcome, ${name}. Your application is pending administrator verification.`);
             
             // Reload queue
             loadDoctorQueue();

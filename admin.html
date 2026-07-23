@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MediGi Clinical - Administration Control Panel">
+    <title>MediGi Clinical - Admin Portal</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            padding: 20px;
+            margin: 0;
+            display: block;
+        }
+        .admin-dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 25px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-area i {
+            font-size: 1.8rem;
+            color: hsl(var(--accent-hsl));
+        }
+        .logo-area span {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .admin-tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            width: fit-content;
+            gap: 5px;
+        }
+        .tab-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 8px 18px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .doctor-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        @media (max-width: 768px) {
+            .doctor-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        .doc-avatar {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border-color);
+        }
+        .doc-info {
+            flex: 1;
+        }
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 150px;
+        }
+        @media (max-width: 768px) {
+            .action-area {
+                flex-direction: row;
+                width: 100%;
+            }
+            .action-area button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-dashboard-container">
+        
+        <!-- Admin Header -->
+        <header class="admin-header">
+            <div class="logo-area">
+                <i class="fa-solid fa-screwdriver-wrench"></i>
+                <span>MediGi Clinical Administration</span>
+            </div>
+            <div>
+                <button class="btn btn-secondary" onclick="toggleTheme()" style="margin:0; padding: 6px 12px; width:auto; font-size:0.8rem; background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer;">
+                    <i class="fa-solid fa-moon"></i> Theme
+                </button>
+            </div>
+        </header>
+
+        <!-- Admin Workspace Tabs -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" id="tabPending" onclick="switchTab('pending')">
+                <i class="fa-solid fa-hourglass-half"></i> Pending Applications (<span id="pendingCount">0</span>)
+            </button>
+            <button class="tab-btn" id="tabApproved" onclick="switchTab('approved')">
+                <i class="fa-solid fa-circle-check"></i> Approved Physicians
+            </button>
+        </div>
+
+        <!-- Application Cards List -->
+        <div id="applicationsList">
+            <p style="text-align: center; color: var(--text-muted); padding: 40px;">Fetching doctor list...</p>
+        </div>
+
+    </div>
+
+    <!-- Supabase CDN Script -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase Initialization
+        const supabaseUrl = "https://utpiqcvwwypxqmeeqere.supabase.co";
+        const supabaseKey = "sb_publishable_UHh-NROwE8idyhPSR_CKKg_6tmUMCd8";
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        let activeTab = 'pending';
+        let doctorsList = [];
+        let hospitalsMap = {};
+
+        // Fetch doctors and hospitals from Supabase
+        async function fetchAdminData() {
+            try {
+                // Fetch hospitals first to resolve clinic references
+                const { data: hospData, error: hErr } = await supabaseClient
+                    .from('hospitals')
+                    .select('id, name');
+                if (!hErr && hospData) {
+                    hospData.forEach(h => {
+                        hospitalsMap[h.id] = h.name;
+                    });
+                }
+
+                // Fetch all doctors
+                const { data: docData, error: dErr } = await supabaseClient
+                    .from('doctors')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (!dErr && docData) {
+                    doctorsList = docData;
+                }
+            } catch (err) {
+                console.error("Failed to query Supabase admin records:", err);
+            }
+            
+            renderDoctorList();
+        }
+
+        // Render listings based on tab state
+        function renderDoctorList() {
+            const container = document.getElementById('applicationsList');
+            const pendingCountSpan = document.getElementById('pendingCount');
+            
+            const filteredDocs = doctorsList.filter(d => d.status === activeTab);
+            const pendingDocs = doctorsList.filter(d => d.status === 'pending');
+            
+            pendingCountSpan.innerText = pendingDocs.length;
+            container.innerHTML = '';
+
+            if (filteredDocs.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 50px; color: var(--text-muted);">
+                        <i class="fa-solid fa-inbox" style="font-size: 4rem; opacity: 0.2; margin-bottom: 15px;"></i>
+                        <h3>No applications found</h3>
+                        <p style="font-size: 0.85rem;">All medical registrations in this state have been processed.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredDocs.forEach(d => {
+                const hospitalName = hospitalsMap[d.hospital_id] || "Unknown Hospital/Clinic";
+                const actionButtons = activeTab === 'pending' ? `
+                    <button class="btn btn-primary" onclick="updateDoctorStatus('${d.id}', 'approved')" style="margin: 0; background: hsl(var(--success-hsl)); color: white; cursor: pointer;"><i class="fa-solid fa-check"></i> Approve</button>
+                    <button class="btn btn-secondary" onclick="updateDoctorStatus('${d.id}', 'rejected')" style="margin: 0; background: hsl(var(--danger-hsl)); color: white; border: none; cursor: pointer;"><i class="fa-solid fa-xmark"></i> Reject</button>
+                ` : `
+                    <button class="btn btn-secondary" onclick="updateDoctorStatus('${d.id}', 'pending')" style="margin: 0; border: 1px solid var(--border-color); color: var(--text-secondary); cursor: pointer;"><i class="fa-solid fa-rotate-left"></i> Revoke Approval</button>
+                `;
+
+                container.innerHTML += `
+                    <div class="doctor-card">
+                        <img src="${d.image}" class="doc-avatar" alt="${d.name}">
+                        <div class="doc-info">
+                            <span style="font-size: 0.65rem; background: var(--bg-primary); padding: 2px 8px; border-radius: 6px; font-weight:700; color: hsl(var(--accent-hsl));">Specialty: ${d.specialty}</span>
+                            <h3 style="margin: 4px 0; font-family: var(--font-heading); color: var(--text-primary); font-size: 1.25rem;">${d.name}</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; margin-bottom: 8px;">
+                                ${d.qualification} | ${d.experience} Years Experience
+                            </p>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); display: grid; grid-template-columns: 1fr 1fr; gap: 6px; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 8px;">
+                                <span><i class="fa-solid fa-hospital"></i> ${hospitalName}</span>
+                                <span><i class="fa-solid fa-envelope"></i> <strong>${d.email || 'N/A'}</strong></span>
+                                <span><i class="fa-solid fa-phone"></i> <strong>${d.phone || 'N/A'}</strong></span>
+                                <span><i class="fa-solid fa-money-bill-wave"></i> Consultation Fee: $${d.consulting_fee}</span>
+                            </div>
+                        </div>
+                        <div class="action-area">
+                            ${actionButtons}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Approve or Reject status update
+        async function updateDoctorStatus(docId, newStatus) {
+            try {
+                const { error } = await supabaseClient
+                    .from('doctors')
+                    .update({ status: newStatus })
+                    .eq('id', docId);
+
+                if (error) {
+                    alert("Failed to update status in cloud: " + error.message);
+                    return;
+                }
+
+                alert(`Application status updated to ${newStatus.toUpperCase()} successfully.`);
+                
+                // Refresh local caching database inside browser localStorage (if on the same device)
+                const storageKey = 'healthcare_patient_db';
+                const stored = localStorage.getItem(storageKey);
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    if (data.doctors && data.doctors[docId]) {
+                        data.doctors[docId].status = newStatus;
+                        localStorage.setItem(storageKey, JSON.stringify(data));
+                    }
+                }
+
+                await fetchAdminData();
+            } catch (err) {
+                console.error("Failed to submit status update:", err);
+            }
+        }
+
+        // Tab switcher
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('tabPending').classList.toggle('active', tab === 'pending');
+            document.getElementById('tabApproved').classList.toggle('active', tab === 'approved');
+            renderDoctorList();
+        }
+
+        // Toggle dark mode
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme_dark_admin', isDark ? 'true' : 'false');
+        }
+
+        // On load
+        window.onload = async function() {
+            const isDark = localStorage.getItem('theme_dark_admin') === 'true';
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+            }
+            await fetchAdminData();
+        };
+    </script>
+</body>
+</html>

@@ -1151,7 +1151,7 @@ class HealthcareApp {
 
         if (this.searchTab === 'doctors') {
             // Filter Doctors
-            let doctors = Object.values(db.data.doctors);
+            let doctors = Object.values(db.data.doctors).filter(d => d.status === 'approved');
 
             // Filter keyword matching Name, Specialty, Languages, and Awards
             if (query) {

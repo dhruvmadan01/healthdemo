@@ -84,6 +84,9 @@ create table if not exists public.doctors (
     availability text[],
     awards text[],
     image text,
+    email text,
+    phone text,
+    status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
     created_at timestamptz default timezone('utc'::text, now()) not null
 );
 
@@ -91,6 +94,7 @@ create table if not exists public.doctors (
 alter table public.doctors enable row level security;
 create policy "Doctors are viewable by everyone" on public.doctors for select using (true);
 create policy "Anyone can register as a doctor" on public.doctors for insert with check (true);
+create policy "Admins can update doctors" on public.doctors for update using (true);
 
 -- Create appointments table
 create table if not exists public.appointments (
@@ -165,12 +169,12 @@ values
 ('h3', 'Apex Cardiology & Rehabilitation Clinic', 'https://images.unsplash.com/photo-1586773860418-d3b3de97e663?auto=format&fit=crop&q=80&w=400', '95 Cardiovascular Blvd, Heights District', '{"lat": 40.7010, "lng": -73.9980}', array['Cardiology', 'Physical Rehab', 'Sports Medicine'], 'No ICU (Specialty Clinic)', array['Valet Parking', 'Wheelchair Accessible', 'Rehab Gym'], 4.9, 310)
 on conflict (id) do nothing;
 
-insert into public.doctors (id, name, qualification, specialty, experience, hospital_id, reviews, consulting_fee, consultation_types, languages, accepted_insurance, availability, awards, image)
+insert into public.doctors (id, name, qualification, specialty, experience, hospital_id, reviews, consulting_fee, consultation_types, languages, accepted_insurance, availability, awards, image, email, phone, status)
 values
-('d1', 'Dr. Elizabeth Vance', 'MD, FACC - Harvard Medical School', 'Cardiology', 14, 'h1', '{"rating": 4.9, "count": 245}', 150, array['In-person', 'Online'], array['English', 'Hindi'], array['Aetna', 'Blue Cross', 'Cigna', 'UnitedHealth'], array['09:00 - 12:00', '14:00 - 17:00'], array['Top Cardiologist Metro Area 2024', 'AMA Research Award'], 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300'),
-('d2', 'Dr. Marcus Vance', 'MD, FAAP - Johns Hopkins University', 'Pediatrics', 10, 'h2', '{"rating": 4.7, "count": 189}', 100, array['In-person', 'Online'], array['English'], array['Blue Cross', 'Cigna', 'Medicaid'], array['08:30 - 11:30', '13:00 - 16:30'], array['Compassionate Care Award 2025'], 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300'),
-('d3', 'Dr. Sarah Lin', 'MD, D.D.V - Stanford School of Medicine', 'Dermatology', 8, 'h2', '{"rating": 4.8, "count": 312}', 120, array['In-person', 'Online'], array['Hindi'], array['Aetna', 'UnitedHealth', 'Humana'], array['10:00 - 13:00', '15:00 - 18:00'], array['Young Investigator Fellowship 2023'], 'https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300'),
-('d4', 'Dr. Jonathan Reyes', 'MD, PhD - Yale School of Medicine', 'Neurology', 18, 'h1', '{"rating": 4.9, "count": 420}', 200, array['In-person'], array['English', 'Hindi'], array['Aetna', 'Blue Cross', 'Medicare'], array['09:00 - 13:00'], array['National Neurological Society Lifetime Fellow'], 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300')
+('d1', 'Dr. Elizabeth Vance', 'MD, FACC - Harvard Medical School', 'Cardiology', 14, 'h1', '{"rating": 4.9, "count": 245}', 150, array['In-person', 'Online'], array['English', 'Hindi'], array['Aetna', 'Blue Cross', 'Cigna', 'UnitedHealth'], array['09:00 - 12:00', '14:00 - 17:00'], array['Top Cardiologist Metro Area 2024', 'AMA Research Award'], 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300', 'elizabeth.vance@medigi.com', '+1-555-0190', 'approved'),
+('d2', 'Dr. Marcus Vance', 'MD, FAAP - Johns Hopkins University', 'Pediatrics', 10, 'h2', '{"rating": 4.7, "count": 189}', 100, array['In-person', 'Online'], array['English'], array['Blue Cross', 'Cigna', 'Medicaid'], array['08:30 - 11:30', '13:00 - 16:30'], array['Compassionate Care Award 2025'], 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300', 'marcus.vance@medigi.com', '+1-555-0191', 'approved'),
+('d3', 'Dr. Sarah Lin', 'MD, D.D.V - Stanford School of Medicine', 'Dermatology', 8, 'h2', '{"rating": 4.8, "count": 312}', 120, array['In-person', 'Online'], array['Hindi'], array['Aetna', 'UnitedHealth', 'Humana'], array['10:00 - 13:00', '15:00 - 18:00'], array['Young Investigator Fellowship 2023'], 'https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300', 'sarah.lin@medigi.com', '+1-555-0192', 'approved'),
+('d4', 'Dr. Jonathan Reyes', 'MD, PhD - Yale School of Medicine', 'Neurology', 18, 'h1', '{"rating": 4.9, "count": 420}', 200, array['In-person'], array['English', 'Hindi'], array['Aetna', 'Blue Cross', 'Medicare'], array['09:00 - 13:00'], array['National Neurological Society Lifetime Fellow'], 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300', 'jonathan.reyes@medigi.com', '+1-555-0193', 'approved')
 on conflict (id) do nothing;
 
 -- Trigger to automatically create profile on signup
