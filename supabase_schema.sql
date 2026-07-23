@@ -66,6 +66,7 @@ create table if not exists public.hospitals (
 -- Enable RLS on hospitals
 alter table public.hospitals enable row level security;
 create policy "Hospitals are viewable by everyone" on public.hospitals for select using (true);
+create policy "Anyone can register a hospital or clinic" on public.hospitals for insert with check (true);
 
 -- Create doctors table
 create table if not exists public.doctors (
