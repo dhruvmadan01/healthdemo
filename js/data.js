@@ -191,7 +191,10 @@ class HealthcareDB {
                     acceptedInsurance: ["Aetna", "Blue Cross", "Cigna", "UnitedHealth"],
                     availability: ["09:00 - 12:00", "14:00 - 17:00"],
                     awards: ["Top Cardiologist Metro Area 2024", "AMA Research Award"],
-                    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300"
+                    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300",
+                    email: "elizabeth.vance@medigi.com",
+                    phone: "+1-555-0190",
+                    status: "approved"
                 },
                 "d2": {
                     id: "d2",
@@ -207,7 +210,10 @@ class HealthcareDB {
                     acceptedInsurance: ["Blue Cross", "Cigna", "Medicaid"],
                     availability: ["08:30 - 11:30", "13:00 - 16:30"],
                     awards: ["Compassionate Care Award 2025"],
-                    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300"
+                    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300",
+                    email: "marcus.vance@medigi.com",
+                    phone: "+1-555-0191",
+                    status: "approved"
                 },
                 "d3": {
                     id: "d3",
@@ -223,7 +229,10 @@ class HealthcareDB {
                     acceptedInsurance: ["Aetna", "UnitedHealth", "Humana"],
                     availability: ["10:00 - 13:00", "15:00 - 18:00"],
                     awards: ["Young Investigator Fellowship 2023"],
-                    image: "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300"
+                    image: "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300",
+                    email: "sarah.lin@medigi.com",
+                    phone: "+1-555-0192",
+                    status: "approved"
                 },
                 "d4": {
                     id: "d4",
@@ -239,7 +248,67 @@ class HealthcareDB {
                     acceptedInsurance: ["Aetna", "Blue Cross", "Medicare"],
                     availability: ["09:00 - 13:00"],
                     awards: ["National Neurological Society Lifetime Fellow"],
-                    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300"
+                    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300",
+                    email: "jonathan.reyes@medigi.com",
+                    phone: "+1-555-0193",
+                    status: "approved"
+                },
+                "d5": {
+                    id: "d5",
+                    name: "Dr. Clara Oswald",
+                    qualification: "MD - London School of Medicine",
+                    specialty: "General Medicine",
+                    experience: 12,
+                    hospitalId: "h2",
+                    reviews: { rating: 4.8, count: 140 },
+                    consultingFee: 90,
+                    consultationTypes: ["In-person", "Online"],
+                    languages: ["English"],
+                    acceptedInsurance: ["Aetna", "Blue Cross", "Cigna"],
+                    availability: ["10:00 - 13:00", "14:00 - 16:00"],
+                    awards: ["Excellence in Primary Care"],
+                    image: "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300",
+                    email: "clara.oswald@medigi.com",
+                    phone: "+1-555-0194",
+                    status: "approved"
+                },
+                "d6": {
+                    id: "d6",
+                    name: "Dr. Raj Patel",
+                    qualification: "MS (Ortho) - AIIMS Delhi",
+                    specialty: "Orthopedics",
+                    experience: 15,
+                    hospitalId: "h1",
+                    reviews: { rating: 4.9, count: 210 },
+                    consultingFee: 140,
+                    consultationTypes: ["In-person"],
+                    languages: ["English", "Hindi"],
+                    acceptedInsurance: ["Blue Cross", "Cigna", "UnitedHealth"],
+                    availability: ["09:00 - 12:00", "15:00 - 18:00"],
+                    awards: ["Best Orthopedic Surgeon 2024"],
+                    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300",
+                    email: "raj.patel@medigi.com",
+                    phone: "+1-555-0195",
+                    status: "approved"
+                },
+                "d7": {
+                    id: "d7",
+                    name: "Dr. Elena Rostova",
+                    qualification: "MD, PhD - Saint Petersburg State University",
+                    specialty: "Cardiology",
+                    experience: 20,
+                    hospitalId: "h3",
+                    reviews: { rating: 5.0, count: 95 },
+                    consultingFee: 180,
+                    consultationTypes: ["In-person", "Online"],
+                    languages: ["English"],
+                    acceptedInsurance: ["Aetna", "Blue Cross", "UnitedHealth"],
+                    availability: ["11:00 - 14:00"],
+                    awards: ["Global Cardiology Fellowship Recipient"],
+                    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300",
+                    email: "elena.rostova@medigi.com",
+                    phone: "+1-555-0196",
+                    status: "approved"
                 }
             },
             appointments: [
