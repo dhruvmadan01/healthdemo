@@ -28,7 +28,7 @@ class BookingFlow {
         const docSelect = document.getElementById('bookingDoctor');
         docSelect.innerHTML = '<option value="">-- Choose Physician --</option>';
         Object.values(db.data.doctors).forEach(d => {
-            if (d.status === 'approved') {
+            if (d.status === 'approved' || !d.status) {
                 docSelect.innerHTML += `<option value="${d.id}">${d.name} (${d.specialty})</option>`;
             }
         });

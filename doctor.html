@@ -612,7 +612,7 @@
             }
 
             const activeDoc = db.data.doctors[docId];
-            if (activeDoc && activeDoc.status !== 'approved') {
+            if (activeDoc && activeDoc.status && activeDoc.status !== 'approved') {
                 queueContainer.innerHTML = `
                     <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid hsl(var(--warning-hsl)); color: hsl(var(--warning-hsl)); padding: 15px; border-radius: 12px; font-size: 0.8rem; text-align: center; margin-top: 10px;">
                         <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.4rem; margin-bottom: 6px; display: block;"></i>
