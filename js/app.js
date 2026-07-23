@@ -866,7 +866,246 @@ class HealthcareApp {
     }
 
     openInsurance() {
-        alert("Insurance details portal is coming soon!");
+        this.openModal('insuranceModal');
+        this.renderInsurance();
+    }
+
+    renderInsurance() {
+        const container = document.getElementById('insuranceModalContent');
+        const patient = db.data.patients[db.data.currentUser];
+        if (!patient) {
+            container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); text-align:center;">Please log in to view insurance coverage.</p>`;
+            return;
+        }
+
+        const ins = patient.settings.insurance || null;
+        container.innerHTML = '';
+
+        if (ins) {
+            // Render beautiful digital insurance card
+            container.innerHTML += `
+                <div class="card" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 20px; border-radius: 16px; border: none; margin-bottom: 15px; position: relative; box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3); text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                        <div>
+                            <span style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; color: rgba(255,255,255,0.9);">Digital Health Coverage</span>
+                            <h3 style="margin: 2px 0 0 0; font-size: 1.2rem; font-weight: 700; color: white; font-family: var(--font-heading);">${ins.provider}</h3>
+                        </div>
+                        <i class="fa-solid fa-shield-halved" style="font-size: 1.8rem; color: rgba(255,255,255,0.95);"></i>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <span style="font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; display: block; color: rgba(255,255,255,0.8);">Policy ID</span>
+                        <span style="font-family: monospace; font-size: 1.1rem; letter-spacing: 1px; font-weight: 600;">${ins.policyId}</span>
+                    </div>
+                    <div style="display: flex; gap: 40px; font-size: 0.75rem;">
+                        <div>
+                            <span style="font-size: 0.55rem; text-transform: uppercase; opacity: 0.7; display: block; color: rgba(255,255,255,0.8);">Group No</span>
+                            <span style="font-weight: 600;">${ins.groupNo || 'N/A'}</span>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.55rem; text-transform: uppercase; opacity: 0.7; display: block; color: rgba(255,255,255,0.8);">Expires</span>
+                            <span style="font-weight: 600;">${ins.expiry}</span>
+                        </div>
+                    </div>
+                    ${ins.document ? `
+                        <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: space-between; font-size: 0.7rem;">
+                            <span><i class="fa-solid fa-file-pdf"></i> Card Copy Attached</span>
+                            <a href="${ins.document}" target="_blank" style="color: white; text-decoration: underline; font-weight: 600;">View File</a>
+                        </div>
+                    ` : ''}
+                </div>
+                <button class="btn btn-secondary" onclick="app.removeInsuranceCard()" style="margin-bottom: 20px; border: 1px solid hsl(var(--danger-hsl)); color: hsl(var(--danger-hsl)); background: transparent; cursor: pointer;">
+                    <i class="fa-solid fa-trash-can"></i> Remove Insurance Details
+                </button>
+            `;
+        } else {
+            // Render placeholder + Import Trigger
+            container.innerHTML += `
+                <div class="card" style="margin-bottom: 20px; border: 1.5px dashed var(--border-color); background: rgba(255,255,255,0.01); text-align: center; padding: 25px 15px;">
+                    <i class="fa-solid fa-shield-cat" style="font-size: 2.2rem; color: var(--text-muted); margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;"></i>
+                    <h4 style="margin: 0 0 5px 0; font-size: 0.95rem; font-family: var(--font-heading);">No Active Insurance Linked</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 15px; line-height: 1.4;">
+                        Link your health policy card details to automatically apply copay waivers and discounts when booking doctor appointments.
+                    </p>
+                    <button class="btn btn-primary" onclick="document.getElementById('insuranceFormArea').style.display='block'; this.style.display='none';" style="margin:0 auto; width:auto; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <i class="fa-solid fa-plus"></i> Import Insurance Details
+                    </button>
+                </div>
+            `;
+        }
+
+        // Render Collapsible Import Form
+        container.innerHTML += `
+            <div id="insuranceFormArea" style="display: none; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; text-align: left;">
+                <h4 style="margin-top: 0; margin-bottom: 12px; font-size: 0.9rem; font-family: var(--font-heading);">Import Policy Details</h4>
+                <form id="insuranceUploadForm" onsubmit="app.handleInsuranceSubmit(event)">
+                    <div class="input-group">
+                        <label class="input-label" for="insProvider">Insurance Provider</label>
+                        <select id="insProvider" class="input-field" required>
+                            <option value="Blue Cross Blue Shield">Blue Cross Blue Shield</option>
+                            <option value="UnitedHealthcare">UnitedHealthcare</option>
+                            <option value="Aetna">Aetna</option>
+                            <option value="Cigna">Cigna</option>
+                            <option value="Kaiser Permanente">Kaiser Permanente</option>
+                            <option value="Humana">Humana</option>
+                        </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="input-group">
+                            <label class="input-label" for="insPolicyId">Policy ID</label>
+                            <input type="text" id="insPolicyId" class="input-field" placeholder="e.g. BC-99421" required>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label" for="insGroupNo">Group Number</label>
+                            <input type="text" id="insGroupNo" class="input-field" placeholder="e.g. GR-7729">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="insExpiry">Expiration Date</label>
+                        <input type="date" id="insExpiry" class="input-field" required>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 15px;">
+                        <label class="input-label">Upload Policy / Card Copy</label>
+                        <div onclick="document.getElementById('insFileInput').click()" style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; background: rgba(255,255,255,0.02); transition: background 0.2s;">
+                            <i class="fa-solid fa-cloud-arrow-up" style="color: var(--text-muted); font-size: 1.4rem; margin-bottom: 6px; display:block; margin-left:auto; margin-right:auto;"></i>
+                            <span id="insFileStatus" style="font-size: 0.7rem; color: var(--text-secondary); display: block;">Tap to select PDF or Image</span>
+                        </div>
+                        <input type="file" id="insFileInput" onchange="app.handleInsuranceFileSelect(event)" style="display: none;" accept="image/*,application/pdf">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" style="margin: 0; flex: 1; cursor: pointer;">Save Details</button>
+                        <button type="button" class="btn btn-secondary" onclick="app.renderInsurance()" style="margin: 0; flex: 1; border: 1px solid var(--border-color); background:transparent; cursor: pointer;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        // Render Partner Policy Listings (If you don't have insurance, explore these)
+        container.innerHTML += `
+            <div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 15px; text-align: left;">
+                <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; font-family: var(--font-heading); color: var(--text-primary);">Looking for Coverage?</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 15px; line-height: 1.35;">
+                    Compare partner plans and get immediate digital approval for premium copay options.
+                </p>
+                
+                <!-- Plan 1 -->
+                <div class="card" style="margin-bottom: 12px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 10px; padding: 15px; border-radius: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h5 style="margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">BCBS Premium Shield</h5>
+                            <p style="margin: 2px 0 0 0; font-size: 0.65rem; color: var(--text-muted);">Blue Cross Blue Shield Partner</p>
+                        </div>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: hsl(var(--accent-hsl));">$120<span style="font-size: 0.6rem; font-weight: 500; color: var(--text-muted);">/mo</span></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px;">
+                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> $15 Copay/visit</span>
+                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> 90% Diagnostics</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.applyForInsurance('BCBS Premium Shield')" style="margin: 0; padding: 6px; font-size: 0.75rem; background: rgba(20, 184, 166, 0.1); color: hsl(var(--accent-hsl)); border: none; font-weight: 600; cursor: pointer; width: 100%;">
+                        Get Quote & Apply
+                    </button>
+                </div>
+
+                <!-- Plan 2 -->
+                <div class="card" style="margin-bottom: 12px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 10px; padding: 15px; border-radius: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h5 style="margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">UHC Family Core</h5>
+                            <p style="margin: 2px 0 0 0; font-size: 0.65rem; color: var(--text-muted);">UnitedHealthcare Partner</p>
+                        </div>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: hsl(var(--accent-hsl));">$190<span style="font-size: 0.6rem; font-weight: 500; color: var(--text-muted);">/mo</span></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px;">
+                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> $25 Copay/visit</span>
+                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> 100% Pediatric</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.applyForInsurance('UHC Family Core')" style="margin: 0; padding: 6px; font-size: 0.75rem; background: rgba(20, 184, 166, 0.1); color: hsl(var(--accent-hsl)); border: none; font-weight: 600; cursor: pointer; width: 100%;">
+                        Get Quote & Apply
+                    </button>
+                </div>
+
+                <!-- Plan 3 -->
+                <div class="card" style="margin-bottom: 12px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 10px; padding: 15px; border-radius: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h5 style="margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">Aetna Prime Health</h5>
+                            <p style="margin: 2px 0 0 0; font-size: 0.65rem; color: var(--text-muted);">Aetna Insurance Partner</p>
+                        </div>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: hsl(var(--accent-hsl));">$85<span style="font-size: 0.6rem; font-weight: 500; color: var(--text-muted);">/mo</span></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px;">
+                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> $35 Copay/visit</span>
+                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> 100% Telehealth</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.applyForInsurance('Aetna Prime Health')" style="margin: 0; padding: 6px; font-size: 0.75rem; background: rgba(20, 184, 166, 0.1); color: hsl(var(--accent-hsl)); border: none; font-weight: 600; cursor: pointer; width: 100%;">
+                        Get Quote & Apply
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    handleInsuranceFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const status = document.getElementById('insFileStatus');
+            status.innerText = `${file.name} (${Math.round(file.size / 1024)} KB) Selected`;
+            status.style.color = 'hsl(var(--success-hsl))';
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.uploadedInsuranceDoc = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async handleInsuranceSubmit(e) {
+        e.preventDefault();
+        const provider = document.getElementById('insProvider').value;
+        const policyId = document.getElementById('insPolicyId').value.trim();
+        const groupNo = document.getElementById('insGroupNo').value.trim();
+        const expiry = document.getElementById('insExpiry').value;
+        
+        const patient = db.data.patients[db.data.currentUser];
+        if (!patient) return;
+
+        if (!patient.settings) {
+            patient.settings = {};
+        }
+        
+        patient.settings.insurance = {
+            provider,
+            policyId,
+            groupNo,
+            expiry,
+            document: this.uploadedInsuranceDoc || ""
+        };
+        
+        db.save();
+        await db.saveProfileToSupabase(patient);
+        
+        alert("Insurance card details successfully imported!");
+        this.uploadedInsuranceDoc = "";
+        this.renderInsurance();
+    }
+
+    async removeInsuranceCard() {
+        if (!confirm("Are you sure you want to delete your linked insurance card?")) return;
+        
+        const patient = db.data.patients[db.data.currentUser];
+        if (patient && patient.settings) {
+            delete patient.settings.insurance;
+            db.save();
+            await db.saveProfileToSupabase(patient);
+        }
+        this.uploadedInsuranceDoc = "";
+        alert("Insurance card successfully removed.");
+        this.renderInsurance();
+    }
+
+    applyForInsurance(planName) {
+        const patient = db.data.patients[db.data.currentUser];
+        alert(`Application for ${planName} submitted successfully! Our insurance partners will reach out to you at ${patient ? patient.email : 'your email'} within 24 hours.`);
     }
 
     async openFamilyProfiles() {

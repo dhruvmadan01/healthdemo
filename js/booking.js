@@ -79,6 +79,17 @@ class BookingFlow {
                 }
             }
         }
+        // Auto-select insurance provider if saved in profile settings
+        if (currentUser && currentUser.settings && currentUser.settings.insurance) {
+            const savedIns = currentUser.settings.insurance.provider;
+            const insSelect = document.getElementById('bookingInsurance');
+            if (insSelect) {
+                if (savedIns.includes('Blue Cross')) insSelect.value = 'Blue Cross';
+                else if (savedIns.includes('UnitedHealthcare')) insSelect.value = 'UnitedHealth';
+                else if (savedIns.includes('Aetna')) insSelect.value = 'Aetna';
+                else if (savedIns.includes('Cigna')) insSelect.value = 'Cigna';
+            }
+        }
 
         this.syncStepView();
         app.navigateTo('booking-screen');
