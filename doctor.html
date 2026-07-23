@@ -151,6 +151,18 @@
             padding: 20px;
             box-shadow: var(--card-shadow);
         }
+
+        /* Scan Animations */
+        @keyframes scanAnimation {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.05); opacity: 0.4; }
+            100% { transform: scale(1); opacity: 0.2; }
+        }
     </style>
 </head>
 <body>
@@ -183,7 +195,7 @@
                 <div class="card" style="text-align: left;">
                     <h3 style="font-size: 1.1rem; margin-bottom: 12px; font-family: var(--font-heading);"><i class="fa-solid fa-qrcode"></i> Patient QR Verification</h3>
                     <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 15px;">
-                        Paste the patient's check-in QR Code URL below or click verify on a queue item to simulate a scan.
+                        Paste the patient's check-in QR Code URL below or select from queue to view clinical info.
                     </p>
                     
                     <div style="display: flex; gap: 8px; margin-bottom: 15px;">
@@ -191,10 +203,10 @@
                         <button class="btn btn-primary" onclick="verifyQRManual()" style="margin: 0; padding: 10px 15px; width: auto;"><i class="fa-solid fa-circle-check"></i> Verify</button>
                     </div>
 
-                    <div class="scanner-box" id="simulateScannerBox">
+                    <div class="scanner-box" id="simulateScannerBox" onclick="triggerManualCamera()">
                         <i class="fa-solid fa-camera" style="font-size: 2rem; color: hsl(var(--accent-hsl)); margin-bottom: 8px;"></i>
                         <h4 style="font-size: 0.85rem; font-weight: 600;">Simulated Scanning Chamber</h4>
-                        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Click any patient queue card below to mock scanning their QR code.</p>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; cursor: pointer;">Click to launch camera simulator scanner.</p>
                     </div>
                 </div>
 
@@ -239,6 +251,34 @@
 
     </div>
 
+    <!-- Mock Scanner Modal -->
+    <div class="modal-overlay" id="scannerModal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h3>QR Code Scanner</h3>
+                <div class="back-btn" onclick="closeModal('scannerModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div style="background: black; height: 240px; border-radius: 12px; position: relative; margin: 15px 0; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border-color);">
+                <!-- Animated red scanning line -->
+                <div style="position: absolute; width: 100%; height: 2px; background: red; top: 0; left: 0; animation: scanAnimation 2s linear infinite; box-shadow: 0 0 8px red;"></div>
+                
+                <!-- Mock camera preview icon -->
+                <i class="fa-solid fa-qrcode" style="font-size: 6rem; color: rgba(255,255,255,0.2); animation: pulse 1.5s ease-in-out infinite;"></i>
+                
+                <!-- Loading text overlay -->
+                <div id="scannerStatus" style="position: absolute; bottom: 15px; color: white; font-size: 0.85rem; font-weight: 500; background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 20px;">
+                    Positioning camera...
+                </div>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 20px;">
+                Align the patient's MediGi check-in QR code inside the camera box to verify identity.
+            </p>
+            <button class="btn btn-primary" id="btnSimulateScan" onclick="executeSimulatedScan()" style="width: 100%;">Simulate Successful Scan</button>
+        </div>
+    </div>
+
     <!-- Supabase CDN Script -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -264,6 +304,17 @@
         const db = new HealthcareDB();
 
         let activeAppointmentId = null;
+        let scannerTargetApptId = null;
+
+        // Modal triggers
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.add('open');
+        }
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.remove('open');
+        }
 
         // Load doctors for selector dropdown
         function initDoctors() {
@@ -283,12 +334,50 @@
         }
 
         // Render queue for selected doctor
-        function loadDoctorQueue() {
+        async function loadDoctorQueue() {
             const docId = document.getElementById('doctorSelect').value;
             const queueContainer = document.getElementById('queueList');
-            queueContainer.innerHTML = '';
 
-            // Filter appointments by selected doctor
+            // Try fetching latest appointments from Supabase for this doctor
+            try {
+                const { data: dbAppts, error } = await supabaseClient
+                    .from('appointments')
+                    .select('*')
+                    .eq('doctor_id', docId);
+
+                if (!error && dbAppts && dbAppts.length > 0) {
+                    dbAppts.forEach(a => {
+                        const localIdx = db.data.appointments.findIndex(la => la.id === a.id);
+                        const mapped = {
+                            id: a.id,
+                            patientId: a.patient_id,
+                            doctorId: a.doctor_id,
+                            hospitalId: a.hospital_id,
+                            date: a.date,
+                            time: a.time,
+                            symptoms: a.symptoms,
+                            reports: a.reports || [],
+                            insurance: a.insurance,
+                            paymentStatus: a.payment_status,
+                            paymentAmount: parseFloat(a.payment_amount || 0),
+                            qrCode: a.qr_code,
+                            visitToken: a.visit_token,
+                            status: a.status,
+                            checkInStatus: a.check_in_status,
+                            queue: a.queue || {}
+                        };
+                        if (localIdx !== -1) {
+                            db.data.appointments[localIdx] = mapped;
+                        } else {
+                            db.data.appointments.push(mapped);
+                        }
+                    });
+                    db.save();
+                }
+            } catch (err) {
+                console.error("Failed to fetch doctor appointments from Supabase:", err);
+            }
+
             const appts = db.data.appointments.filter(a => a.doctorId === docId);
 
             if (appts.length === 0) {
@@ -296,15 +385,58 @@
                 return;
             }
 
+            // Sync missing profiles from Supabase
+            const missingPatientIds = [];
             appts.forEach(a => {
-                const patient = db.data.patients[a.patientId] || { name: 'Unknown Patient', health_id: 'N/A' };
-                const isVerified = a.checkInStatus === 'Verified' || a.checkInStatus === 'Checked In';
+                if (!db.data.patients[a.patientId]) {
+                    missingPatientIds.push(a.patientId);
+                }
+            });
+
+            if (missingPatientIds.length > 0) {
+                try {
+                    const { data: profiles, error } = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .in('id', missingPatientIds);
+                    if (!error && profiles) {
+                        profiles.forEach(data => {
+                            db.data.patients[data.id] = {
+                                id: data.id,
+                                health_id: data.health_id,
+                                name: data.name,
+                                dob: data.dob || "",
+                                gender: data.gender || "Unspecified",
+                                bloodGroup: data.blood_group || "O+",
+                                height: parseFloat(data.height || 170),
+                                weight: parseFloat(data.weight || 70),
+                                bmi: parseFloat(data.bmi || 24.2),
+                                email: data.email || "",
+                                phone: data.phone || "",
+                                emergencyContact: data.emergency_contact || { name: "", relation: "", phone: "" },
+                                settings: data.settings || { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
+                                medicalHistory: data.medical_history || { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
+                                lifestyle: data.lifestyle || { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
+                                healthScore: data.health_score || 80
+                            };
+                        });
+                        db.save();
+                    }
+                } catch (err) {
+                    console.error("Failed to prefetch missing patient profiles:", err);
+                }
+            }
+
+            queueContainer.innerHTML = '';
+            appts.forEach(a => {
+                const patient = db.data.patients[a.patientId] || { name: 'Loading Profile...', health_id: 'N/A' };
+                const isVerified = a.checkInStatus === 'Verified';
                 const badgeClass = isVerified ? 'status-verified' : 'status-pending';
                 const badgeLabel = isVerified ? 'Verified ✅' : 'Pending Check-In';
                 const activeClass = a.id === activeAppointmentId ? 'active' : '';
 
                 queueContainer.innerHTML += `
-                    <div class="queue-item ${activeClass}" onclick="verifyFromQueue('${a.id}')">
+                    <div class="queue-item ${activeClass}" onclick="selectFromQueue('${a.id}')">
                         <div>
                             <strong style="font-size: 0.85rem; display: block; color: var(--text-primary);">${patient.name}</strong>
                             <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-clock"></i> ${a.time} | Token: ${a.visitToken}</span>
@@ -315,30 +447,119 @@
             });
         }
 
-        // When doctor clicks on a queue item to verify
-        async function verifyFromQueue(apptId) {
+        // When doctor clicks on an appointment item to view (without auto-verification)
+        async function selectFromQueue(apptId) {
             activeAppointmentId = apptId;
+            
+            // Hide previous session banners
+            const banner = document.getElementById('verificationSuccessBanner');
+            if (banner) banner.style.display = 'none';
+
             loadDoctorQueue();
 
             const appt = db.data.appointments.find(a => a.id === apptId);
             if (!appt) return;
 
-            // Mark checked-in status as verified
-            appt.checkInStatus = 'Verified';
-            db.save();
-            loadDoctorQueue(); // update badges
-
-            // Render Success banner
-            const banner = document.getElementById('verificationSuccessBanner');
-            const bannerMsg = document.getElementById('verificationBannerMsg');
-            bannerMsg.innerText = `Token ${appt.visitToken} verified successfully. Checked medical consent signature.`;
-            banner.style.display = 'block';
-
-            // Load and render patient info
+            // Load and render patient details
             await loadPatientDetails(appt.patientId, appt);
         }
 
-        // Verify patient manually using QR text input
+        // Trigger camera simulator scan
+        function openQRScanner(apptId) {
+            scannerTargetApptId = apptId;
+            openModal('scannerModal');
+            document.getElementById('scannerStatus').innerText = "Starting scanner camera...";
+            
+            setTimeout(() => {
+                const status = document.getElementById('scannerStatus');
+                if (status) status.innerText = "Align check-in QR inside camera window...";
+            }, 800);
+        }
+
+        // Simulate scanning camera
+        function triggerManualCamera() {
+            if (!activeAppointmentId) {
+                alert("Please select a patient appointment from the queue first to simulate scanning.");
+                return;
+            }
+            openQRScanner(activeAppointmentId);
+        }
+
+        // Execute scanner verification matching
+        async function executeSimulatedScan() {
+            closeModal('scannerModal');
+            if (!scannerTargetApptId) return;
+
+            const apptId = scannerTargetApptId;
+            let appt = db.data.appointments.find(a => a.id === apptId);
+
+            if (!appt) {
+                // Fetch from Supabase
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('appointments')
+                        .select('*')
+                        .eq('id', apptId)
+                        .maybeSingle();
+
+                    if (!error && data) {
+                        appt = {
+                            id: data.id,
+                            patientId: data.patient_id,
+                            doctorId: data.doctor_id,
+                            hospitalId: data.hospital_id,
+                            date: data.date,
+                            time: data.time,
+                            symptoms: data.symptoms,
+                            reports: data.reports || [],
+                            insurance: data.insurance,
+                            paymentStatus: data.payment_status,
+                            paymentAmount: parseFloat(data.payment_amount || 0),
+                            qrCode: data.qr_code,
+                            visitToken: data.visit_token,
+                            status: data.status,
+                            checkInStatus: data.check_in_status,
+                            queue: data.queue || {}
+                        };
+                        db.data.appointments.push(appt);
+                        db.save();
+                    }
+                } catch (e) {
+                    console.error("Supabase fetch failed during scan:", e);
+                }
+            }
+
+            if (appt) {
+                // Verify
+                appt.checkInStatus = 'Verified';
+                db.save();
+
+                // Sync status back to Supabase
+                try {
+                    await supabaseClient
+                        .from('appointments')
+                        .update({ check_in_status: 'Verified' })
+                        .eq('id', appt.id);
+                } catch (err) {
+                    console.error("Failed to sync verification status to Supabase:", err);
+                }
+
+                loadDoctorQueue();
+
+                // Show success banner
+                const banner = document.getElementById('verificationSuccessBanner');
+                const bannerMsg = document.getElementById('verificationBannerMsg');
+                bannerMsg.innerText = `Token ${appt.visitToken} verified successfully. Checked signature logs.`;
+                banner.style.display = 'block';
+
+                // Refresh details card
+                await loadPatientDetails(appt.patientId, appt);
+            } else {
+                alert("Verification error: appointment record missing.");
+            }
+        }
+
+        // Verify patient manually using QR text input / URL
         async function verifyQRManual() {
             const input = document.getElementById('qrInput').value.trim();
             if (!input) {
@@ -355,9 +576,46 @@
                 apptId = input.replace('MEDIGI-MOCK-QR-', '');
             }
 
-            const appt = db.data.appointments.find(a => a.id === apptId);
+            let appt = db.data.appointments.find(a => a.id === apptId);
+            
             if (!appt) {
-                alert("No appointment found matching this QR code token.");
+                // Fetch from Supabase
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('appointments')
+                        .select('*')
+                        .eq('id', apptId)
+                        .maybeSingle();
+
+                    if (!error && data) {
+                        appt = {
+                            id: data.id,
+                            patientId: data.patient_id,
+                            doctorId: data.doctor_id,
+                            hospitalId: data.hospital_id,
+                            date: data.date,
+                            time: data.time,
+                            symptoms: data.symptoms,
+                            reports: data.reports || [],
+                            insurance: data.insurance,
+                            paymentStatus: data.payment_status,
+                            paymentAmount: parseFloat(data.payment_amount || 0),
+                            qrCode: data.qr_code,
+                            visitToken: data.visit_token,
+                            status: data.status,
+                            checkInStatus: data.check_in_status,
+                            queue: data.queue || {}
+                        };
+                        db.data.appointments.push(appt);
+                        db.save();
+                    }
+                } catch (err) {
+                    console.error("Supabase appointment fetch failed:", err);
+                }
+            }
+
+            if (!appt) {
+                alert("No appointment found matching this QR code token in cloud or local cache.");
                 return;
             }
 
@@ -365,6 +623,16 @@
             activeAppointmentId = apptId;
             appt.checkInStatus = 'Verified';
             db.save();
+
+            // Sync verification status to Supabase
+            try {
+                await supabaseClient
+                    .from('appointments')
+                    .update({ check_in_status: 'Verified' })
+                    .eq('id', appt.id);
+            } catch (err) {
+                console.error("Failed to sync verification to Supabase:", err);
+            }
 
             // Set doctor select dropdown to match appointment doctor
             document.getElementById('doctorSelect').value = appt.doctorId;
@@ -539,6 +807,20 @@
                         <h4 style="font-size: 0.9rem; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">Active Prescriptions</h4>
                         ${medsHtml}
                     </div>
+                </div>
+
+                <!-- Identity Verification Trigger -->
+                <div style="border-top: 1px solid var(--border-color); margin-top: 20px; padding-top: 15px;">
+                    ${appt.checkInStatus === 'Verified' ? `
+                        <div class="verification-success-alert" style="margin: 0; text-align: left;">
+                            <i class="fa-solid fa-circle-check" style="font-size: 1.2rem;"></i>
+                            <span style="font-size: 0.8rem; font-weight: 600;">Patient Verified ✅ Check-In Completed.</span>
+                        </div>
+                    ` : `
+                        <button type="button" class="btn btn-primary" onclick="openQRScanner('${appt.id}')" style="margin: 0; width: 100%;">
+                            <i class="fa-solid fa-camera"></i> Verify Patient Check-In (Scan QR)
+                        </button>
+                    `}
                 </div>
             `;
         }
