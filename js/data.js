@@ -1064,7 +1064,10 @@ class HealthcareDB {
                         acceptedInsurance: d.accepted_insurance || [],
                         availability: d.availability || [],
                         awards: d.awards || [],
-                        image: d.image
+                        image: d.image,
+                        email: d.email || "",
+                        phone: d.phone || "",
+                        status: d.status || "approved"
                     };
                 });
             }

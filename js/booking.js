@@ -83,7 +83,7 @@ class BookingFlow {
         if (currentUser && currentUser.settings && currentUser.settings.insurance) {
             const savedIns = currentUser.settings.insurance.provider;
             const insSelect = document.getElementById('bookingInsurance');
-            if (insSelect) {
+            if (insSelect && savedIns && typeof savedIns === 'string') {
                 if (savedIns.includes('Blue Cross')) insSelect.value = 'Blue Cross';
                 else if (savedIns.includes('UnitedHealthcare')) insSelect.value = 'UnitedHealth';
                 else if (savedIns.includes('Aetna')) insSelect.value = 'Aetna';
@@ -98,12 +98,18 @@ class BookingFlow {
 
     async startBookingWithDoctor(doctorId) {
         await this.startBooking();
-        document.getElementById('bookingDoctor').value = doctorId;
+        const docSelect = document.getElementById('bookingDoctor');
+        if (docSelect) {
+            docSelect.value = doctorId;
+        }
         this.onDoctorChange();
     }
 
     onDoctorChange() {
-        const docId = document.getElementById('bookingDoctor').value;
+        const docSelect = document.getElementById('bookingDoctor');
+        if (!docSelect) return;
+        
+        const docId = docSelect.value;
         const timeSelect = document.getElementById('bookingTime');
         timeSelect.innerHTML = '';
 
@@ -113,12 +119,19 @@ class BookingFlow {
         }
 
         const doc = db.getDoctor(docId);
-        doc.availability.forEach(slot => {
-            timeSelect.innerHTML += `<option value="${slot}">${slot}</option>`;
-        });
+        if (!doc) {
+            console.error("Doctor profile not found in local DB:", docId);
+            return;
+        }
+        
+        if (doc.availability && Array.isArray(doc.availability)) {
+            doc.availability.forEach(slot => {
+                timeSelect.innerHTML += `<option value="${slot}">${slot}</option>`;
+            });
+        }
 
         // Update fee displays
-        const fee = doc.consultingFee;
+        const fee = doc.consultingFee || 0;
         document.getElementById('bookingFeeAmt').innerText = `$${fee.toFixed(2)}`;
         this.updatePaymentDetails();
     }

@@ -1426,6 +1426,7 @@ class HealthcareApp {
 
             doctors.forEach(d => {
                 const hospital = db.getHospital(d.hospitalId);
+                const hospitalName = hospital ? hospital.name : "Independent Clinic / Center";
                 container.innerHTML += `
                     <div class="card" onclick="bookingFlow.startBookingWithDoctor('${d.id}')">
                         <div class="entity-card">
@@ -1433,7 +1434,7 @@ class HealthcareApp {
                             <div class="entity-info">
                                 <div class="entity-name">${d.name}</div>
                                 <div class="entity-sub">${d.specialty} | ${d.qualification}</div>
-                                <div class="entity-sub" style="font-weight: 500;">Hospital: ${hospital.name}</div>
+                                <div class="entity-sub" style="font-weight: 500;">Hospital: ${hospitalName}</div>
                                 <div class="entity-rating">
                                     <i class="fa-solid fa-star"></i> <span>${d.reviews.rating} (${d.reviews.count} reviews)</span>
                                 </div>
