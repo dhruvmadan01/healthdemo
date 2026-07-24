@@ -866,6 +866,26 @@ class HealthcareApp {
         if (modal) modal.classList.remove('open');
     }
 
+    showOTPVerificationModal(email, phone, callback) {
+        document.getElementById('otpTargetContact').innerHTML = `<br>Email: <b>${email}</b><br>Phone: <b>${phone}</b>`;
+        document.getElementById('otpInput').value = '';
+        document.getElementById('otpErrorMsg').style.display = 'none';
+        this.otpSuccessCallback = callback;
+        this.openModal('otpVerificationModal');
+    }
+
+    verifyOTP() {
+        const otpVal = document.getElementById('otpInput').value.trim();
+        if (otpVal === '1234') {
+            this.closeModal('otpVerificationModal');
+            if (this.otpSuccessCallback) {
+                this.otpSuccessCallback();
+            }
+        } else {
+            document.getElementById('otpErrorMsg').style.display = 'block';
+        }
+    }
+
     // Quick Action Dialog Modals
     openMyReports() {
         this.openModal('reportsModal');
@@ -1890,6 +1910,16 @@ class HealthcareApp {
             }
 
             if (!allValid) return;
+
+            if (this.currentRegisterStep === 1) {
+                const registerEmail = document.getElementById('registerEmail').value.trim();
+                const registerPhone = document.getElementById('registerPhone').value.trim();
+                this.showOTPVerificationModal(registerEmail, registerPhone, () => {
+                    this.currentRegisterStep++;
+                    this.updateRegisterWizardUI();
+                });
+                return;
+            }
 
             this.currentRegisterStep++;
             this.updateRegisterWizardUI();
