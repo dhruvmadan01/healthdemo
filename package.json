@@ -1,7 +1,7 @@
 {
-  "name": "medigi-patient-portal",
+  "name": "oneminute-patient-portal",
   "version": "1.0.0",
-  "description": "MediGi Patient Portal App",
+  "description": "One Minute Patient Portal App",
   "main": "index.html",
   "scripts": {
     "dev": "npx http-server . -p 3000",

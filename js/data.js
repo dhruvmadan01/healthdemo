@@ -192,7 +192,7 @@ class HealthcareDB {
                     availability: ["09:00 - 12:00", "14:00 - 17:00"],
                     awards: ["Top Cardiologist Metro Area 2024", "AMA Research Award"],
                     image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300",
-                    email: "elizabeth.vance@medigi.com",
+                    email: "elizabeth.vance@oneminute.com",
                     phone: "+1-555-0190",
                     status: "approved"
                 },
@@ -211,7 +211,7 @@ class HealthcareDB {
                     availability: ["08:30 - 11:30", "13:00 - 16:30"],
                     awards: ["Compassionate Care Award 2025"],
                     image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300",
-                    email: "marcus.vance@medigi.com",
+                    email: "marcus.vance@oneminute.com",
                     phone: "+1-555-0191",
                     status: "approved"
                 },
@@ -230,7 +230,7 @@ class HealthcareDB {
                     availability: ["10:00 - 13:00", "15:00 - 18:00"],
                     awards: ["Young Investigator Fellowship 2023"],
                     image: "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300",
-                    email: "sarah.lin@medigi.com",
+                    email: "sarah.lin@oneminute.com",
                     phone: "+1-555-0192",
                     status: "approved"
                 },
@@ -249,7 +249,7 @@ class HealthcareDB {
                     availability: ["09:00 - 13:00"],
                     awards: ["National Neurological Society Lifetime Fellow"],
                     image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300",
-                    email: "jonathan.reyes@medigi.com",
+                    email: "jonathan.reyes@oneminute.com",
                     phone: "+1-555-0193",
                     status: "approved"
                 },
@@ -268,7 +268,7 @@ class HealthcareDB {
                     availability: ["10:00 - 13:00", "14:00 - 16:00"],
                     awards: ["Excellence in Primary Care"],
                     image: "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300",
-                    email: "clara.oswald@medigi.com",
+                    email: "clara.oswald@oneminute.com",
                     phone: "+1-555-0194",
                     status: "approved"
                 },
@@ -287,7 +287,7 @@ class HealthcareDB {
                     availability: ["09:00 - 12:00", "15:00 - 18:00"],
                     awards: ["Best Orthopedic Surgeon 2024"],
                     image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300",
-                    email: "raj.patel@medigi.com",
+                    email: "raj.patel@oneminute.com",
                     phone: "+1-555-0195",
                     status: "approved"
                 },
@@ -306,7 +306,7 @@ class HealthcareDB {
                     availability: ["11:00 - 14:00"],
                     awards: ["Global Cardiology Fellowship Recipient"],
                     image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300",
-                    email: "elena.rostova@medigi.com",
+                    email: "elena.rostova@oneminute.com",
                     phone: "+1-555-0196",
                     status: "approved"
                 }
@@ -569,12 +569,18 @@ class HealthcareDB {
                     bmi: parseFloat(data.bmi || 24.2),
                     email: data.email || "",
                     phone: data.phone || "",
+                    image: data.image || data.settings?.image || "",
+                    address: data.address || data.settings?.address || "",
                     emergencyContact: data.emergency_contact || { name: "", relation: "", phone: "" },
                     settings: data.settings || { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
                     medicalHistory: data.medical_history || { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
                     lifestyle: data.lifestyle || { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
                     healthScore: data.health_score || 80
                 };
+                // Make sure fallback is also synced back locally if needed
+                if (!patient.image && patient.settings?.image) patient.image = patient.settings.image;
+                if (!patient.address && patient.settings?.address) patient.address = patient.settings.address;
+                
                 this.data.patients[userId] = patient;
                 this.save();
                 return patient;
@@ -594,6 +600,8 @@ class HealthcareDB {
                         bmi: 24.2,
                         email: "",
                         phone: "",
+                        image: "",
+                        address: "",
                         emergencyContact: { name: "", relation: "", phone: "" },
                         settings: { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
                         medicalHistory: { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
@@ -601,28 +609,51 @@ class HealthcareDB {
                         healthScore: 80
                     };
                 }
-                const { data: newProfile, error: insertError } = await supabaseClient
+                
+                // Store image/address inside settings JSONB structure as a fallback
+                if (!localPat.settings) localPat.settings = {};
+                localPat.settings.image = localPat.image || "";
+                localPat.settings.address = localPat.address || "";
+
+                const insertData = {
+                    id: userId,
+                    health_id: localPat.health_id || 'MED-' + Math.floor(100000 + Math.random() * 900000),
+                    name: localPat.name,
+                    email: localPat.email || "",
+                    phone: localPat.phone || "",
+                    dob: localPat.dob || null,
+                    gender: localPat.gender || 'Unspecified',
+                    blood_group: localPat.bloodGroup || 'O+',
+                    height: localPat.height || 170,
+                    weight: localPat.weight || 70,
+                    bmi: localPat.bmi || 24.2,
+                    image: localPat.image || "",
+                    address: localPat.address || "",
+                    emergency_contact: localPat.emergencyContact,
+                    settings: localPat.settings,
+                    medical_history: localPat.medicalHistory,
+                    lifestyle: localPat.lifestyle,
+                    health_score: localPat.healthScore
+                };
+
+                let { data: newProfile, error: insertError } = await supabaseClient
                     .from('profiles')
-                    .insert({
-                        id: userId,
-                        health_id: localPat.health_id || 'MED-' + Math.floor(100000 + Math.random() * 900000),
-                        name: localPat.name,
-                        email: localPat.email || "",
-                        phone: localPat.phone || "",
-                        dob: localPat.dob || null,
-                        gender: localPat.gender || 'Unspecified',
-                        blood_group: localPat.bloodGroup || 'O+',
-                        height: localPat.height || 170,
-                        weight: localPat.weight || 70,
-                        bmi: localPat.bmi || 24.2,
-                        emergency_contact: localPat.emergencyContact,
-                        settings: localPat.settings,
-                        medical_history: localPat.medicalHistory,
-                        lifestyle: localPat.lifestyle,
-                        health_score: localPat.healthScore
-                    })
+                    .insert(insertData)
                     .select()
                     .maybeSingle();
+
+                if (insertError) {
+                    console.warn("Error inserting profile with columns. Retrying fallback insertion...", insertError);
+                    delete insertData.image;
+                    delete insertData.address;
+                    const { data: fallbackProfile, error: retryError } = await supabaseClient
+                        .from('profiles')
+                        .insert(insertData)
+                        .select()
+                        .maybeSingle();
+                    newProfile = fallbackProfile;
+                    insertError = retryError;
+                }
 
                 if (insertError) {
                     console.error("Error inserting missing profile to Supabase:", insertError);
@@ -644,26 +675,47 @@ class HealthcareDB {
     async saveProfileToSupabase(patient) {
         if (!patient || !patient.id) return;
         try {
+            // Store image/address inside settings JSONB structure as a fallback
+            if (!patient.settings) patient.settings = {};
+            patient.settings.image = patient.image || "";
+            patient.settings.address = patient.address || "";
+
+            const updateData = {
+                name: patient.name,
+                email: patient.email,
+                phone: patient.phone,
+                dob: patient.dob || null,
+                gender: patient.gender || 'Unspecified',
+                blood_group: patient.bloodGroup || 'O+',
+                height: patient.height || 170,
+                weight: patient.weight || 70,
+                bmi: patient.bmi || 24.2,
+                image: patient.image || "",
+                address: patient.address || "",
+                emergency_contact: patient.emergencyContact || {},
+                settings: patient.settings || {},
+                medical_history: patient.medicalHistory || {},
+                lifestyle: patient.lifestyle || {},
+                health_score: patient.healthScore || 80
+            };
+
             const { error } = await supabaseClient
                 .from('profiles')
-                .update({
-                    name: patient.name,
-                    email: patient.email,
-                    phone: patient.phone,
-                    dob: patient.dob || null,
-                    gender: patient.gender || 'Unspecified',
-                    blood_group: patient.bloodGroup || 'O+',
-                    height: patient.height || 170,
-                    weight: patient.weight || 70,
-                    bmi: patient.bmi || 24.2,
-                    emergency_contact: patient.emergencyContact || {},
-                    settings: patient.settings || {},
-                    medical_history: patient.medicalHistory || {},
-                    lifestyle: patient.lifestyle || {},
-                    health_score: patient.healthScore || 80
-                })
+                .update(updateData)
                 .eq('id', patient.id);
-            if (error) console.error("Error saving profile to Supabase:", error);
+
+            if (error) {
+                console.warn("Error updating profile with columns. Retrying fallback update...", error);
+                delete updateData.image;
+                delete updateData.address;
+                const { error: retryError } = await supabaseClient
+                    .from('profiles')
+                    .update(updateData)
+                    .eq('id', patient.id);
+                if (retryError) {
+                    console.error("Failed fallback save profile to Supabase:", retryError);
+                }
+            }
         } catch (err) {
             console.error("Failed to save profile to Supabase:", err);
         }

@@ -30,6 +30,9 @@ if (fs.existsSync('doctor.html')) {
 if (fs.existsSync('admin.html')) {
     fs.copyFileSync('admin.html', 'www/admin.html');
 }
+if (fs.existsSync('logo.jpg')) {
+    fs.copyFileSync('logo.jpg', 'www/logo.jpg');
+}
 
 // Copy css and js folders
 if (fs.existsSync('css')) copyFolderSync('css', 'www/css');

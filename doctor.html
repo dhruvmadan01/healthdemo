@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MediGi Clinical - Patient Verification and Doctor Portal">
-    <title>MediGi Clinical - Doctor Portal</title>
+    <meta name="description" content="One Minute Clinical - Patient Verification and Doctor Portal">
+    <title>One Minute Clinical - Doctor Portal</title>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Main Stylesheet -->
@@ -200,7 +200,7 @@
         <header class="doctor-header">
             <div class="logo-area">
                 <i class="fa-solid fa-square-h"></i>
-                <span>MediGi Clinical</span>
+                <span>One Minute Clinical</span>
             </div>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <select id="doctorSelect" onchange="loadDoctorQueue()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 8px; font-weight: 500; cursor: pointer;">
@@ -269,7 +269,7 @@
                         <i class="fa-solid fa-circle-check" style="font-size: 1.4rem;"></i>
                         <div>
                             <strong style="display: block; font-size: 0.85rem;">Patient Verification Successful</strong>
-                            <span style="font-size: 0.75rem;" id="verificationBannerMsg">Patient identity and clinical consents checked via MediGi token.</span>
+                            <span style="font-size: 0.75rem;" id="verificationBannerMsg">Patient identity and clinical consents checked via One Minute token.</span>
                         </div>
                     </div>
                 </div>
@@ -313,7 +313,7 @@
                 </div>
             </div>
             <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 20px;">
-                Align the patient's MediGi check-in QR code inside the camera box to verify identity.
+                Align the patient's One Minute check-in QR code inside the camera box to verify identity.
             </p>
             <button class="btn btn-primary" id="btnSimulateScan" onclick="executeSimulatedScan()" style="width: 100%;">Simulate Successful Scan</button>
         </div>
@@ -829,8 +829,8 @@
             // If it is a full URL, extract the query param
             if (input.includes('?appt=')) {
                 apptId = input.split('?appt=').pop();
-            } else if (input.includes('MEDIGI-MOCK-QR-')) {
-                apptId = input.replace('MEDIGI-MOCK-QR-', '');
+            } else if (input.includes('ONEMINUTE-MOCK-QR-')) {
+                apptId = input.replace('ONEMINUTE-MOCK-QR-', '');
             }
 
             let appt = db.data.appointments.find(a => a.id === apptId);

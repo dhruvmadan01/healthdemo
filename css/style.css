@@ -1161,3 +1161,163 @@ h1, h2, h3, h4, h5 {
 .back-btn:active {
     background-color: var(--bg-tertiary);
 }
+
+/* Registration Multi-step Wizard Styles */
+.step-indicator-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 15px 0 25px 0;
+    padding: 0 10px;
+}
+
+.step-node {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    position: relative;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.step-node.active {
+    background-color: hsl(var(--accent-hsl));
+    border-color: hsl(var(--accent-hsl));
+    color: white;
+    box-shadow: 0 0 10px rgba(20, 184, 166, 0.4);
+}
+
+.step-node.completed {
+    background-color: var(--bg-secondary);
+    border-color: hsl(var(--accent-hsl));
+    color: hsl(var(--accent-hsl));
+}
+
+.step-line {
+    flex: 1;
+    height: 3px;
+    background-color: var(--border-color);
+    margin: 0 -2px;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.step-line.filled {
+    background-color: hsl(var(--accent-hsl));
+}
+
+.register-step {
+    display: none;
+    animation: fadeInStep 0.4s ease forwards;
+}
+
+.register-step.active {
+    display: block;
+}
+
+@keyframes fadeInStep {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Photo Upload Circle */
+.photo-picker-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.photo-preview-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
+    border: 3px dashed var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.photo-preview-circle:hover {
+    border-color: hsl(var(--accent-hsl));
+    background-color: rgba(20, 184, 166, 0.05);
+}
+
+.photo-preview-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-picker-label {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* BMI Badges */
+.bmi-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.bmi-underweight {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+}
+
+.bmi-normal {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.bmi-overweight {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+}
+
+.bmi-obese {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+
+/* Wizard Button Group */
+.wizard-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.wizard-buttons .btn {
+    flex: 1;
+    margin: 0;
+}
+

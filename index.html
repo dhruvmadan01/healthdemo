@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="A comprehensive Healthcare and Patient Management Mobile App">
-    <title>MediGi - Patient Portal</title>
+    <title>One Minute - Patient Portal</title>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Main Stylesheet -->
@@ -28,20 +28,19 @@
         <!-- Screens Holder -->
         <div class="screen-container">
 
-            <!-- 1. SPLASH SCREEN -->
             <section id="splash-screen" class="screen active">
-                <div class="splash-logo">
-                    <i class="fa-solid fa-heart-pulse"></i>
-                    <span>MediGi</span>
+                <div class="splash-logo" style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                    <img src="logo.jpg" alt="One Minute" style="width: 140px; height: 140px; border-radius: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+                    <span style="font-family: var(--font-heading); font-weight: 800; font-size: 1.8rem; color: hsl(var(--accent-hsl));">One Minute</span>
                 </div>
             </section>
 
             <!-- 2. WELCOME SCREEN -->
             <section id="welcome-screen" class="screen">
                 <div class="screen-content" style="display: flex; flex-direction: column; justify-content: space-between; padding-top: 50px;">
-                    <div class="auth-logo-area">
-                        <i class="fa-solid fa-house-medical-flag"></i>
-                        <h2>Welcome to MediGi</h2>
+                    <div class="auth-logo-area" style="text-align: center;">
+                        <img src="logo.jpg" alt="One Minute" style="width: 90px; height: 90px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <h2>Welcome to One Minute</h2>
                         <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">
                             Your secure, real-time clinical assistant and healthcare partner.
                         </p>
@@ -106,62 +105,228 @@
                     <h3>Create Account</h3>
                 </div>
                 <div class="screen-content">
+                    <!-- Progress Stepper Indicator -->
+                    <div class="step-indicator-container">
+                        <div class="step-node active" id="registerStepNode1">1</div>
+                        <div class="step-line" id="registerStepLine1"></div>
+                        <div class="step-node" id="registerStepNode2">2</div>
+                        <div class="step-line" id="registerStepLine2"></div>
+                        <div class="step-node" id="registerStepNode3">3</div>
+                        <div class="step-line" id="registerStepLine3"></div>
+                        <div class="step-node" id="registerStepNode4">4</div>
+                    </div>
+
                     <form id="registerForm" onsubmit="app.handleEmailRegister(event)">
-                        <div class="input-group">
-                            <label class="input-label" for="registerName">Full Name</label>
-                            <input class="input-field" type="text" id="registerName" placeholder="John Doe" required>
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label" for="registerEmail">Email Address</label>
-                            <input class="input-field" type="email" id="registerEmail" placeholder="name@example.com" required>
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label" for="registerPassword">Password</label>
-                            <input class="input-field" type="password" id="registerPassword" placeholder="Enter secure password (min 6 chars)" required>
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label" for="registerPhone">Phone Number</label>
-                            <input class="input-field" type="tel" id="registerPhone" placeholder="+1 (555) 019-XXXX" required>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <div class="input-group" style="flex: 1;">
-                                <label class="input-label" for="registerDOB">Date of Birth</label>
-                                <input class="input-field" type="date" id="registerDOB" required>
+                        
+                        <!-- STEP 1: Account Credentials -->
+                        <div class="register-step active" id="registerStep1">
+                            <div style="margin-bottom: 20px; text-align: center;">
+                                <h4 style="font-family: var(--font-heading); color: hsl(var(--accent-hsl));">Account Credentials</h4>
+                                <p style="font-size: 0.8rem; color: var(--text-muted);">Let's set up your basic login info.</p>
                             </div>
-                            <div class="input-group" style="flex: 1;">
-                                <label class="input-label" for="registerGender">Gender</label>
-                                <select class="input-field" id="registerGender" required>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
+                            <div class="input-group">
+                                <label class="input-label" for="registerName">Full Name</label>
+                                <input class="input-field" type="text" id="registerName" placeholder="John Doe" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerEmail">Email Address</label>
+                                <input class="input-field" type="email" id="registerEmail" placeholder="name@example.com" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerPassword">Password</label>
+                                <input class="input-field" type="password" id="registerPassword" placeholder="Secure password (min 6 chars)" required minlength="6">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerPhone">Phone Number</label>
+                                <input class="input-field" type="tel" id="registerPhone" placeholder="+1 (555) 019-XXXX" required>
+                            </div>
+                        </div>
+
+                        <!-- STEP 2: Personal Profile & Photo -->
+                        <div class="register-step" id="registerStep2">
+                            <div style="margin-bottom: 20px; text-align: center;">
+                                <h4 style="font-family: var(--font-heading); color: hsl(var(--accent-hsl));">Personal Profile</h4>
+                                <p style="font-size: 0.8rem; color: var(--text-muted);">Add your identity details and photo.</p>
+                            </div>
+
+                            <!-- Photo Picker -->
+                            <div class="photo-picker-container">
+                                <input type="file" id="registerPhotoInput" accept="image/*" style="display: none;" onchange="app.handleRegisterPhotoSelect(event)">
+                                <div class="photo-preview-circle" id="registerPhotoPreview" onclick="document.getElementById('registerPhotoInput').click()">
+                                    <i class="fa-solid fa-camera" style="font-size: 1.5rem; color: var(--text-muted);" id="registerPhotoPlaceholderIcon"></i>
+                                    <img id="registerPhotoPreviewImg" src="" style="display: none;">
+                                </div>
+                                <span class="photo-picker-label">Upload Profile Photo</span>
+                            </div>
+
+                            <div style="display: flex; gap: 10px;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerDOB">Date of Birth <span id="registerAgeDisplay" style="font-weight: bold; color: hsl(var(--accent-hsl)); margin-left: 4px;"></span></label>
+                                    <input class="input-field" type="date" id="registerDOB" onchange="app.calculateRegisterAge()" required>
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerGender">Gender</label>
+                                    <select class="input-field" id="registerGender" required>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                        <option value="Prefer not to say">Prefer not to say</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerLanguage">Preferred Language</label>
+                                <select class="input-field" id="registerLanguage" required>
+                                    <option value="English">English</option>
+                                    <option value="Spanish">Spanish</option>
+                                    <option value="Hindi">Hindi</option>
+                                    <option value="French">French</option>
+                                    <option value="German">German</option>
+                                    <option value="Arabic">Arabic</option>
                                 </select>
                             </div>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <div class="input-group" style="flex: 1;">
-                                <label class="input-label" for="registerBloodGroup">Blood Group</label>
-                                <select class="input-field" id="registerBloodGroup" required>
-                                    <option value="A+">A+</option>
-                                    <option value="A-">A-</option>
-                                    <option value="B+">B+</option>
-                                    <option value="B-">B-</option>
-                                    <option value="AB+">AB+</option>
-                                    <option value="AB-">AB-</option>
-                                    <option value="O+">O+</option>
-                                    <option value="O-">O-</option>
-                                </select>
-                            </div>
-                            <div class="input-group" style="flex: 1;">
-                                <label class="input-label" for="registerHeight">Height (cm)</label>
-                                <input class="input-field" type="number" id="registerHeight" placeholder="175" required min="30" max="300">
-                            </div>
-                            <div class="input-group" style="flex: 1;">
-                                <label class="input-label" for="registerWeight">Weight (kg)</label>
-                                <input class="input-field" type="number" id="registerWeight" placeholder="70" required min="10" max="500">
+                            <div class="input-group">
+                                <label class="input-label" for="registerAddress">Residential Address</label>
+                                <textarea class="input-field" id="registerAddress" placeholder="123 Health Ave, Metro City" style="resize: none; height: 75px;" required></textarea>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Sign Up</button>
+
+                        <!-- STEP 3: Vitals & Emergency Contact -->
+                        <div class="register-step" id="registerStep3">
+                            <div style="margin-bottom: 20px; text-align: center;">
+                                <h4 style="font-family: var(--font-heading); color: hsl(var(--accent-hsl));">Vitals & Emergency</h4>
+                                <p style="font-size: 0.8rem; color: var(--text-muted);">Provide health metrics and emergency contacts.</p>
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerHeight">Height (cm)</label>
+                                    <input class="input-field" type="number" id="registerHeight" placeholder="175" required min="30" max="300" oninput="app.calculateRegisterBMI()">
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerWeight">Weight (kg)</label>
+                                    <input class="input-field" type="number" id="registerWeight" placeholder="70" required min="10" max="500" oninput="app.calculateRegisterBMI()">
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 16px; text-align: center;">
+                                <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Calculated BMI: </span>
+                                <span id="registerBMIDisplay" style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Enter Height & Weight</span>
+                            </div>
+
+                            <div style="display: flex; gap: 10px;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerBloodGroup">Blood Group</label>
+                                    <select class="input-field" id="registerBloodGroup" required>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                        <option value="O+">O+</option>
+                                        <option value="O-">O-</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerOrganDonor">Organ Donor</label>
+                                    <select class="input-field" id="registerOrganDonor" required>
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 10px;">
+                                <span class="input-label" style="font-weight: bold; color: var(--text-primary);">Emergency Contact Details</span>
+                                <div class="input-group">
+                                    <label class="input-label" for="registerEmergencyName">Contact Name</label>
+                                    <input class="input-field" type="text" id="registerEmergencyName" placeholder="Sarah Doe" required>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="input-group" style="flex: 1;">
+                                        <label class="input-label" for="registerEmergencyRelation">Relation</label>
+                                        <input class="input-field" type="text" id="registerEmergencyRelation" placeholder="Spouse" required>
+                                    </div>
+                                    <div class="input-group" style="flex: 1.5;">
+                                        <label class="input-label" for="registerEmergencyPhone">Contact Phone</label>
+                                        <input class="input-field" type="tel" id="registerEmergencyPhone" placeholder="+1 (555) 019-XXXX" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 4: Medical History & Lifestyle -->
+                        <div class="register-step" id="registerStep4">
+                            <div style="margin-bottom: 20px; text-align: center;">
+                                <h4 style="font-family: var(--font-heading); color: hsl(var(--accent-hsl));">Medical History & Lifestyle</h4>
+                                <p style="font-size: 0.8rem; color: var(--text-muted);">Almost done! Let's fill out your health history.</p>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label" for="registerAllergies">Allergies (comma-separated)</label>
+                                <input class="input-field" type="text" id="registerAllergies" placeholder="Penicillin, Peanuts, Pollen (or None)">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerChronic">Chronic Diseases (comma-separated)</label>
+                                <input class="input-field" type="text" id="registerChronic" placeholder="Asthma, Hypertension, Diabetes (or None)">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerSurgeries">Surgeries (comma-separated)</label>
+                                <input class="input-field" type="text" id="registerSurgeries" placeholder="Appendectomy (2018), Knee Surgery (or None)">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerMedicines">Current Medicines (comma-separated)</label>
+                                <input class="input-field" type="text" id="registerMedicines" placeholder="Albuterol Inhaler, Metformin (or None)">
+                            </div>
+
+                            <div style="display: flex; gap: 10px;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerSmoking">Smoking</label>
+                                    <select class="input-field" id="registerSmoking" required>
+                                        <option value="Never">Never</option>
+                                        <option value="Occasional">Occasional</option>
+                                        <option value="Regular">Regular</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerAlcohol">Alcohol</label>
+                                    <select class="input-field" id="registerAlcohol" required>
+                                        <option value="Never">Never</option>
+                                        <option value="Socially">Socially</option>
+                                        <option value="Regular">Regular</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 10px;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerExercise">Exercise</label>
+                                    <select class="input-field" id="registerExercise" required>
+                                        <option value="None">None</option>
+                                        <option value="1-2 times a week">1-2 times/week</option>
+                                        <option value="3-4 times a week">3-4 times/week</option>
+                                        <option value="Active daily">Active daily</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerSleep">Sleep</label>
+                                    <select class="input-field" id="registerSleep" required>
+                                        <option value="5-6 hours">5-6 hours</option>
+                                        <option value="7-8 hours">7-8 hours</option>
+                                        <option value="9+ hours">9+ hours</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Wizard Footer Buttons -->
+                        <div class="wizard-buttons">
+                            <button type="button" class="btn btn-secondary" id="registerPrevBtn" onclick="app.prevRegisterStep()" style="display: none; padding: 12px; margin-top: 10px;">Back</button>
+                            <button type="button" class="btn btn-primary" id="registerNextBtn" onclick="app.nextRegisterStep()" style="padding: 12px; margin-top: 10px;">Next</button>
+                        </div>
                     </form>
+
                     <div style="text-align: center; margin-top: 30px; color: var(--text-muted); font-size: 0.8rem;">
                         <span>Already have an account? <b style="color: hsl(var(--accent-hsl)); cursor: pointer;" onclick="app.navigateTo('login-screen')">Sign In</b></span>
                     </div>
@@ -648,7 +813,7 @@
 
                         <div class="card" style="padding: 12px; font-size: 0.75rem; line-height: 1.4; max-height: 140px; overflow-y: auto; margin-bottom: 14px; background-color: var(--bg-tertiary);">
                             <strong>HIPAA Privacy & Disclosure Terms</strong><br>
-                            I hereby authorize MediGi and its medical networks to transmit patient clinical data, symptoms descriptions, and uploaded diagnostic files securely to the assigned physician. I acknowledge that I have been provided with the HIPAA Privacy Notice outlining how my diagnostic files, lab report records, and prescriptions will be handled under strict privacy standards. I declare that the details provided are accurate to the best of my knowledge.
+                            I hereby authorize One Minute and its medical networks to transmit patient clinical data, symptoms descriptions, and uploaded diagnostic files securely to the assigned physician. I acknowledge that I have been provided with the HIPAA Privacy Notice outlining how my diagnostic files, lab report records, and prescriptions will be handled under strict privacy standards. I declare that the details provided are accurate to the best of my knowledge.
                         </div>
 
                         <div class="input-group">
@@ -1015,11 +1180,52 @@
                             <span class="detail-value" id="profileAllergies">Penicillin, Peanuts</span>
                         </div>
                         <div class="detail-row">
+                            <span class="detail-label">Surgeries:</span>
+                            <span class="detail-value" id="profileSurgeries">None</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Current Medicines:</span>
+                            <span class="detail-value" id="profileMedicines">None</span>
+                        </div>
+                        <div class="detail-row">
                             <span class="detail-label">Organ Donor Status:</span>
                             <label style="display: flex; align-items: center; gap: 6px;">
                                 <input type="checkbox" id="profileOrganDonor" onchange="app.updateOrganDonor(this)">
                                 <span style="font-size: 0.85rem; font-weight: 600;">Donor</span>
                             </label>
+                        </div>
+                    </div>
+
+                    <!-- Personal Bio & Lifestyle -->
+                    <h4 class="section-title">Personal Bio & Lifestyle</h4>
+                    <div class="card">
+                        <div class="detail-row">
+                            <span class="detail-label">Age:</span>
+                            <span class="detail-value" id="profileAge">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Address:</span>
+                            <span class="detail-value" id="profileAddress" style="text-align: right; max-width: 60%; word-break: break-word;">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Emergency Contact:</span>
+                            <span class="detail-value" id="profileEmergency" style="text-align: right; max-width: 60%; word-break: break-word;">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Smoking Status:</span>
+                            <span class="detail-value" id="profileSmoking">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Alcohol Intake:</span>
+                            <span class="detail-value" id="profileAlcohol">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Exercise Habit:</span>
+                            <span class="detail-value" id="profileExercise">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Sleep Schedule:</span>
+                            <span class="detail-value" id="profileSleep">--</span>
                         </div>
                     </div>
 

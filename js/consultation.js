@@ -480,7 +480,7 @@ class ConsultationModule {
 
     sharePrescription() {
         const user = db.getCurrentUser();
-        alert(`Transmitting digital prescription to MediGi Network Partner Pharmacies for ${user.name}. Auto-coordinating insurance approvals...`);
+        alert(`Transmitting digital prescription to One Minute Network Partner Pharmacies for ${user.name}. Auto-coordinating insurance approvals...`);
     }
 }
 

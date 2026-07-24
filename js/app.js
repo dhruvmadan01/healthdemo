@@ -13,6 +13,8 @@ class HealthcareApp {
             availability: [],
             language: []
         };
+        this.currentRegisterStep = 1;
+        this.uploadedRegisterPhoto = '';
         
         this.init();
     }
@@ -70,6 +72,8 @@ class HealthcareApp {
                 this.handleSearch();
             } else if (screenId === 'profile-screen') {
                 this.renderProfileScreen();
+            } else if (screenId === 'register-screen') {
+                this.resetRegisterWizard();
             }
         }
     }
@@ -125,15 +129,54 @@ class HealthcareApp {
 
     async handleEmailRegister(e) {
         e.preventDefault();
+        
+        // Gather ALL inputs!
         const name = document.getElementById('registerName').value;
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
         const phone = document.getElementById('registerPhone').value;
+        
         const dob = document.getElementById('registerDOB').value;
         const gender = document.getElementById('registerGender').value;
+        const language = document.getElementById('registerLanguage').value;
+        const address = document.getElementById('registerAddress').value;
+        
+        const height = parseFloat(document.getElementById('registerHeight').value) || 170;
+        const weight = parseFloat(document.getElementById('registerWeight').value) || 70;
+        const bmi = parseFloat((weight / ((height / 100) * (height / 100))).toFixed(1)) || 24.2;
         const bloodGroup = document.getElementById('registerBloodGroup').value;
-        const height = parseFloat(document.getElementById('registerHeight').value);
-        const weight = parseFloat(document.getElementById('registerWeight').value);
+        const organDonor = document.getElementById('registerOrganDonor').value === 'Yes';
+        
+        const emName = document.getElementById('registerEmergencyName').value;
+        const emRelation = document.getElementById('registerEmergencyRelation').value;
+        const emPhone = document.getElementById('registerEmergencyPhone').value;
+        
+        const allergiesStr = document.getElementById('registerAllergies').value.trim();
+        const chronicStr = document.getElementById('registerChronic').value.trim();
+        const surgeriesStr = document.getElementById('registerSurgeries').value.trim();
+        const medicinesStr = document.getElementById('registerMedicines').value.trim();
+        
+        const smoking = document.getElementById('registerSmoking').value;
+        const alcohol = document.getElementById('registerAlcohol').value;
+        const exercise = document.getElementById('registerExercise').value;
+        const sleep = document.getElementById('registerSleep').value;
+
+        // Parse comma-separated text into arrays
+        const parseArray = (str) => {
+            if (!str || str.toLowerCase() === 'none') return [];
+            return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        };
+        
+        const allergies = parseArray(allergiesStr);
+        const chronicDiseases = parseArray(chronicStr);
+        const surgeries = parseArray(surgeriesStr);
+        const currentMedicines = parseArray(medicinesStr).map(med => ({
+            name: med,
+            dose: "As prescribed",
+            duration: "Ongoing",
+            foodInstructions: "Take as directed",
+            warnings: "Consult doctor"
+        }));
 
         const submitBtn = e.target.querySelector('button[type="submit"]');
         const origText = submitBtn.innerText;
@@ -141,6 +184,58 @@ class HealthcareApp {
         submitBtn.disabled = true;
 
         try {
+            // Build structures
+            const emergencyContact = {
+                name: emName,
+                relation: emRelation,
+                phone: emPhone
+            };
+
+            const settings = {
+                language: language,
+                organDonor: organDonor,
+                darkMode: false,
+                biometricsEnabled: false,
+                image: this.uploadedRegisterPhoto || ""
+            };
+
+            const medicalHistory = {
+                allergies: allergies,
+                chronicDiseases: chronicDiseases,
+                surgeries: surgeries,
+                currentMedicines: currentMedicines
+            };
+
+            const lifestyle = {
+                smoking: smoking,
+                alcohol: alcohol,
+                exercise: exercise,
+                sleep: sleep
+            };
+
+            // Create temporary cache in localStorage
+            const pendingReg = {
+                name: name,
+                email: email,
+                phone: phone,
+                dob: dob,
+                gender: gender,
+                bloodGroup: bloodGroup,
+                height: height,
+                weight: weight,
+                bmi: bmi,
+                image: this.uploadedRegisterPhoto || "",
+                address: address,
+                emergencyContact: emergencyContact,
+                settings: settings,
+                medicalHistory: medicalHistory,
+                lifestyle: lifestyle,
+                healthScore: 85
+            };
+            
+            localStorage.setItem('pending_registration_' + email.toLowerCase(), JSON.stringify(pendingReg));
+
+            // Call Supabase SignUp
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password,
@@ -152,13 +247,21 @@ class HealthcareApp {
                         gender: gender,
                         blood_group: bloodGroup,
                         height: height,
-                        weight: weight
+                        weight: weight,
+                        bmi: bmi,
+                        image: this.uploadedRegisterPhoto || "",
+                        address: address,
+                        emergency_contact: emergencyContact,
+                        settings: settings,
+                        medical_history: medicalHistory,
+                        lifestyle: lifestyle
                     }
                 }
             });
 
             if (error) {
                 alert(`Registration failed: ${error.message}`);
+                localStorage.removeItem('pending_registration_' + email.toLowerCase());
             } else {
                 if (data.session) {
                     alert("Registration successful! Logging you in...");
@@ -170,6 +273,7 @@ class HealthcareApp {
         } catch (err) {
             console.error(err);
             alert(`An unexpected error occurred during registration: ${err.message}`);
+            localStorage.removeItem('pending_registration_' + email.toLowerCase());
         } finally {
             submitBtn.innerText = origText;
             submitBtn.disabled = false;
@@ -222,11 +326,30 @@ class HealthcareApp {
             }
         }
 
+        // Check if there is a pending registration cache in localStorage
+        const pendingStr = localStorage.getItem('pending_registration_' + user.email.toLowerCase());
+        if (pendingStr) {
+            try {
+                const pending = JSON.parse(pendingStr);
+                patient = {
+                    ...pending,
+                    id: user.id
+                };
+                db.data.patients[user.id] = patient;
+                localStorage.removeItem('pending_registration_' + user.email.toLowerCase());
+                
+                // Upload merged profile to Supabase (authenticated user can update)
+                await db.saveProfileToSupabase(patient);
+            } catch (err) {
+                console.error("Error merging pending registration data:", err);
+            }
+        }
+
         if (!patient) {
             const meta = user.user_metadata || {};
             const h = parseFloat(meta.height || 170);
             const w = parseFloat(meta.weight || 70);
-            const bmi = parseFloat((w / ((h / 100) * (h / 100))).toFixed(1));
+            const bmi = parseFloat((w / ((h / 100) * (h / 100))).toFixed(1)) || 24.2;
 
             if (!meta.dob || !meta.gender) {
                 needsCompletion = true;
@@ -241,19 +364,27 @@ class HealthcareApp {
                 height: h,
                 weight: w,
                 bmi: bmi,
+                image: meta.image || meta.settings?.image || "",
+                address: meta.address || meta.settings?.address || "",
                 email: user.email,
                 phone: meta.phone || user.phone || "",
-                emergencyContact: { name: "", relation: "", phone: "" },
-                settings: { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
-                medicalHistory: { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
-                lifestyle: { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
+                emergencyContact: meta.emergency_contact || { name: "", relation: "", phone: "" },
+                settings: meta.settings || { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
+                medicalHistory: meta.medical_history || { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
+                lifestyle: meta.lifestyle || { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
                 healthScore: 80
             };
+            
+            // Map fallback values
+            if (!patient.image && patient.settings?.image) patient.image = patient.settings.image;
+            if (!patient.address && patient.settings?.address) patient.address = patient.settings.address;
+
             db.data.patients[user.id] = patient;
             
             // Upload newly created profile to Supabase
             await db.saveProfileToSupabase(patient);
         } else {
+            // Check if synced profile has been filled out or is default
             if (!patient.dob || patient.gender === "Unspecified") {
                 needsCompletion = true;
             }
@@ -426,9 +557,16 @@ class HealthcareApp {
 
         // Header Name
         document.getElementById('userNameHeading').innerText = user.name;
-        // Avatar initials
+        // Avatar initials or image
         const initials = user.name.split(' ').map(n => n[0]).join('');
-        document.getElementById('avatarBadge').innerText = initials;
+        const avatarBadgeEl = document.getElementById('avatarBadge');
+        if (avatarBadgeEl) {
+            if (user.image) {
+                avatarBadgeEl.innerHTML = `<img src="${user.image}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            } else {
+                avatarBadgeEl.innerText = initials;
+            }
+        }
 
         // BMI Card info
         document.getElementById('healthScoreBMI').innerText = user.bmi;
@@ -652,13 +790,69 @@ class HealthcareApp {
         document.getElementById('profileBlood').innerText = user.bloodGroup;
         document.getElementById('profileChronic').innerText = user.medicalHistory.chronicDiseases.join(', ') || 'None';
         document.getElementById('profileAllergies').innerText = user.medicalHistory.allergies.join(', ') || 'None';
+        
+        // Surgeries & current medicines
+        const surgeriesVal = user.medicalHistory.surgeries?.join(', ') || 'None';
+        const surgeriesEl = document.getElementById('profileSurgeries');
+        if (surgeriesEl) surgeriesEl.innerText = surgeriesVal;
+
+        const medicinesVal = user.medicalHistory.currentMedicines?.map(m => m.name).join(', ') || 'None';
+        const medicinesEl = document.getElementById('profileMedicines');
+        if (medicinesEl) medicinesEl.innerText = medicinesVal;
+
         document.getElementById('profileOrganDonor').checked = user.settings.organDonor;
         document.getElementById('settingsLanguage').value = user.settings.language;
         document.getElementById('settingsDarkMode').checked = user.settings.darkMode;
         document.getElementById('settingsBiometrics').checked = user.settings.biometricsEnabled;
         
+        // Age calculation
+        let ageStr = '--';
+        if (user.dob) {
+            const birthDate = new Date(user.dob);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            ageStr = `${age} years`;
+        }
+        const ageEl = document.getElementById('profileAge');
+        if (ageEl) ageEl.innerText = ageStr;
+
+        // Personal bio
+        const addressEl = document.getElementById('profileAddress');
+        if (addressEl) addressEl.innerText = user.address || 'Not Provided';
+
+        const emContactEl = document.getElementById('profileEmergency');
+        if (emContactEl) {
+            const em = user.emergencyContact;
+            emContactEl.innerText = em && em.name ? `${em.name} (${em.relation}) - ${em.phone}` : 'Not Provided';
+        }
+
+        // Lifestyle
+        const smokingEl = document.getElementById('profileSmoking');
+        if (smokingEl) smokingEl.innerText = user.lifestyle?.smoking || 'Unspecified';
+
+        const alcoholEl = document.getElementById('profileAlcohol');
+        if (alcoholEl) alcoholEl.innerText = user.lifestyle?.alcohol || 'Unspecified';
+
+        const exerciseEl = document.getElementById('profileExercise');
+        if (exerciseEl) exerciseEl.innerText = user.lifestyle?.exercise || 'Unspecified';
+
+        const sleepEl = document.getElementById('profileSleep');
+        if (sleepEl) sleepEl.innerText = user.lifestyle?.sleep || 'Unspecified';
+
+        // Avatar (Photo or initials)
         const initials = user.name.split(' ').map(n => n[0]).join('');
-        document.getElementById('profileAvatar').innerText = initials;
+        const profileAvatarEl = document.getElementById('profileAvatar');
+        if (profileAvatarEl) {
+            if (user.image) {
+                profileAvatarEl.innerHTML = `<img src="${user.image}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            } else {
+                profileAvatarEl.innerHTML = initials; // Clear any img element
+            }
+        }
     }
 
     // Modals Core Functions
@@ -1605,6 +1799,187 @@ class HealthcareApp {
         } else {
             alert(`You are already being called to Room ${app.queue.room}. Go ahead and launch Doctor Portal simulation below.`);
         }
+    }
+
+    // ==========================================
+    // Registration Wizard Helper Methods
+    // ==========================================
+
+    resetRegisterWizard() {
+        this.currentRegisterStep = 1;
+        this.uploadedRegisterPhoto = '';
+        
+        const imgEl = document.getElementById('registerPhotoPreviewImg');
+        if (imgEl) {
+            imgEl.src = '';
+            imgEl.style.display = 'none';
+        }
+        const iconEl = document.getElementById('registerPhotoPlaceholderIcon');
+        if (iconEl) iconEl.style.display = 'block';
+
+        const ageEl = document.getElementById('registerAgeDisplay');
+        if (ageEl) ageEl.innerText = '';
+        const bmiEl = document.getElementById('registerBMIDisplay');
+        if (bmiEl) {
+            bmiEl.innerText = 'Enter Height & Weight';
+            bmiEl.className = '';
+        }
+
+        const form = document.getElementById('registerForm');
+        if (form) form.reset();
+
+        this.updateRegisterWizardUI();
+    }
+
+    updateRegisterWizardUI() {
+        for (let i = 1; i <= 4; i++) {
+            const stepPanel = document.getElementById(`registerStep${i}`);
+            if (stepPanel) {
+                stepPanel.classList.toggle('active', i === this.currentRegisterStep);
+            }
+
+            const stepNode = document.getElementById(`registerStepNode${i}`);
+            if (stepNode) {
+                stepNode.classList.toggle('active', i === this.currentRegisterStep);
+                stepNode.classList.toggle('completed', i < this.currentRegisterStep);
+            }
+
+            if (i < 4) {
+                const stepLine = document.getElementById(`registerStepLine${i}`);
+                if (stepLine) {
+                    stepLine.classList.toggle('filled', i < this.currentRegisterStep);
+                }
+            }
+        }
+
+        const prevBtn = document.getElementById('registerPrevBtn');
+        const nextBtn = document.getElementById('registerNextBtn');
+
+        if (prevBtn) {
+            prevBtn.style.display = this.currentRegisterStep === 1 ? 'none' : 'block';
+        }
+
+        if (nextBtn) {
+            if (this.currentRegisterStep === 4) {
+                nextBtn.innerText = 'Sign Up';
+                nextBtn.type = 'submit';
+            } else {
+                nextBtn.innerText = 'Next';
+                nextBtn.type = 'button';
+            }
+        }
+    }
+
+    nextRegisterStep() {
+        if (this.currentRegisterStep < 4) {
+            const currentStepEl = document.getElementById(`registerStep${this.currentRegisterStep}`);
+            const inputs = currentStepEl.querySelectorAll('input, select, textarea');
+            let allValid = true;
+
+            for (const input of inputs) {
+                if (input.hasAttribute('required') && !input.value.trim()) {
+                    input.reportValidity();
+                    allValid = false;
+                    break;
+                }
+                if (!input.checkValidity()) {
+                    input.reportValidity();
+                    allValid = false;
+                    break;
+                }
+            }
+
+            if (!allValid) return;
+
+            this.currentRegisterStep++;
+            this.updateRegisterWizardUI();
+        } else {
+            const form = document.getElementById('registerForm');
+            if (form) {
+                form.requestSubmit();
+            }
+        }
+    }
+
+    prevRegisterStep() {
+        if (this.currentRegisterStep > 1) {
+            this.currentRegisterStep--;
+            this.updateRegisterWizardUI();
+        }
+    }
+
+    calculateRegisterAge() {
+        const dobVal = document.getElementById('registerDOB').value;
+        const display = document.getElementById('registerAgeDisplay');
+        if (!dobVal) {
+            if (display) display.innerText = '';
+            return;
+        }
+        const birthDate = new Date(dobVal);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        if (display) {
+            display.innerText = `(${age} years)`;
+        }
+    }
+
+    calculateRegisterBMI() {
+        const heightVal = parseFloat(document.getElementById('registerHeight').value);
+        const weightVal = parseFloat(document.getElementById('registerWeight').value);
+        const display = document.getElementById('registerBMIDisplay');
+
+        if (!heightVal || !weightVal || heightVal <= 0 || weightVal <= 0) {
+            if (display) {
+                display.innerText = 'Enter Height & Weight';
+                display.className = '';
+            }
+            return;
+        }
+
+        const bmi = parseFloat((weightVal / ((heightVal / 100) ** 2)).toFixed(1));
+        let category = 'Normal';
+        let className = 'bmi-badge bmi-normal';
+
+        if (bmi < 18.5) {
+            category = 'Underweight';
+            className = 'bmi-badge bmi-underweight';
+        } else if (bmi >= 18.5 && bmi < 25) {
+            category = 'Normal';
+            className = 'bmi-badge bmi-normal';
+        } else if (bmi >= 25 && bmi < 30) {
+            category = 'Overweight';
+            className = 'bmi-badge bmi-overweight';
+        } else {
+            category = 'Obese';
+            className = 'bmi-badge bmi-obese';
+        }
+
+        if (display) {
+            display.innerText = `BMI: ${bmi} (${category})`;
+            display.className = className;
+        }
+    }
+
+    handleRegisterPhotoSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            this.uploadedRegisterPhoto = event.target.result;
+            const imgEl = document.getElementById('registerPhotoPreviewImg');
+            if (imgEl) {
+                imgEl.src = this.uploadedRegisterPhoto;
+                imgEl.style.display = 'block';
+            }
+            const iconEl = document.getElementById('registerPhotoPlaceholderIcon');
+            if (iconEl) iconEl.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
     }
 }
 
