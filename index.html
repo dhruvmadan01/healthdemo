@@ -1164,6 +1164,12 @@
                         </div>
                     </div>
 
+                    <div style="text-align: center; margin-top: 12px; margin-bottom: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="app.openEditProfileModal()" style="width: 100%; max-width: 250px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 16px; font-size: 0.8rem; font-weight: 600;">
+                            <i class="fa-solid fa-user-pen"></i> Edit Profile & Settings
+                        </button>
+                    </div>
+
                     <!-- Medical Bio Records -->
                     <h4 class="section-title">Medical Credentials</h4>
                     <div class="card">
@@ -1576,6 +1582,196 @@
                 <button type="button" class="btn btn-secondary" onclick="app.closeModal('otpVerificationModal')" style="flex: 1; margin: 0;">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="app.verifyOTP()" style="flex: 1; margin: 0;">Verify & Proceed</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile & Settings Modal -->
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal-content" style="max-width: 500px; padding: 20px;">
+            <div class="modal-header">
+                <h3>Edit Profile & Settings</h3>
+                <div class="back-btn" onclick="app.closeModal('editProfileModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            
+            <!-- Modal Tabs Navigation -->
+            <div style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; border-bottom: 1px solid var(--border-color);">
+                <button type="button" class="tab-btn active" onclick="app.switchEditTab('editTabIdentity')" id="btnEditTabIdentity" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 20px; border: 1px solid var(--border-color); background: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap;">Identity</button>
+                <button type="button" class="tab-btn" onclick="app.switchEditTab('editTabVitals')" id="btnEditTabVitals" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 20px; border: 1px solid var(--border-color); background: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap;">Vitals & Contact</button>
+                <button type="button" class="tab-btn" onclick="app.switchEditTab('editTabMedical')" id="btnEditTabMedical" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 20px; border: 1px solid var(--border-color); background: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap;">Medical</button>
+                <button type="button" class="tab-btn" onclick="app.switchEditTab('editTabLifestyle')" id="btnEditTabLifestyle" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 20px; border: 1px solid var(--border-color); background: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap;">Lifestyle</button>
+            </div>
+
+            <form id="editProfileForm" onsubmit="app.handleUpdateProfile(event)">
+                <!-- Tab 1: Identity -->
+                <div class="edit-tab-content active" id="editTabIdentity">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <div style="position: relative; width: 60px; height: 60px;">
+                            <div class="user-avatar" id="editPhotoPreview" style="width: 100%; height: 100%; font-size: 1.5rem; margin: 0;">AM</div>
+                            <label for="editPhotoInput" style="position: absolute; bottom: 0; right: 0; background: hsl(var(--accent-hsl)); color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.65rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                                <i class="fa-solid fa-camera"></i>
+                            </label>
+                            <input type="file" id="editPhotoInput" accept="image/*" style="display: none;" onchange="app.handleEditPhotoUpload(event)">
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label class="input-label" for="editName">Full Name</label>
+                                <input class="input-field" type="text" id="editName" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="editPhone">Phone Number</label>
+                        <input class="input-field" type="tel" id="editPhone" required>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editDOB">Date of Birth</label>
+                            <input class="input-field" type="date" id="editDOB" required onchange="app.calculateEditAge()">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editGender">Gender</label>
+                            <select class="input-field" id="editGender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="editLanguage">Preferred Language</label>
+                        <input class="input-field" type="text" id="editLanguage" placeholder="e.g. English, Hindi" required>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label class="input-label" for="editAddress">Residential Address</label>
+                        <textarea class="input-field" id="editAddress" rows="2" placeholder="Enter complete address" required></textarea>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Vitals & Emergency Contact -->
+                <div class="edit-tab-content" id="editTabVitals" style="display: none;">
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editHeight">Height (cm)</label>
+                            <input class="input-field" type="number" id="editHeight" required oninput="app.calculateEditBMI()">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editWeight">Weight (kg)</label>
+                            <input class="input-field" type="number" id="editWeight" required oninput="app.calculateEditBMI()">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                        <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                            <label class="input-label" for="editBloodGroup">Blood Group</label>
+                            <select class="input-field" id="editBloodGroup" required>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; text-align: right; padding-top: 20px;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">Calculated BMI:</span>
+                            <div id="editBMIBadge" style="font-weight: 700; font-size: 1.1rem; color: hsl(var(--accent-hsl));">--</div>
+                        </div>
+                    </div>
+                    
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px;">
+                        <h5 style="margin: 0 0 10px 0; color: var(--text-primary); font-size: 0.8rem; font-weight: 700;">Emergency Contact</h5>
+                        <div class="input-group">
+                            <label class="input-label" for="editEmName">Contact Person Name</label>
+                            <input class="input-field" type="text" id="editEmName" required>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                                <label class="input-label" for="editEmRelation">Relation</label>
+                                <input class="input-field" type="text" id="editEmRelation" placeholder="e.g. Spouse, Parent" required>
+                            </div>
+                            <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                                <label class="input-label" for="editEmPhone">Contact Phone</label>
+                                <input class="input-field" type="tel" id="editEmPhone" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Medical History -->
+                <div class="edit-tab-content" id="editTabMedical" style="display: none;">
+                    <div class="input-group">
+                        <label class="input-label" for="editAllergies">Allergies</label>
+                        <input class="input-field" type="text" id="editAllergies" placeholder="e.g. Penicillin, Peanuts (or None)">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="editChronic">Chronic Diseases</label>
+                        <input class="input-field" type="text" id="editChronic" placeholder="e.g. Hypertension, Asthma (or None)">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="editSurgeries">Surgeries (History)</label>
+                        <input class="input-field" type="text" id="editSurgeries" placeholder="e.g. Appendectomy, None">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label class="input-label" for="editMedicines">Current Medicines</label>
+                        <input class="input-field" type="text" id="editMedicines" placeholder="e.g. Metformin 500mg, None">
+                    </div>
+                </div>
+
+                <!-- Tab 4: Lifestyle & Settings -->
+                <div class="edit-tab-content" id="editTabLifestyle" style="display: none;">
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editSmoking">Smoking Status</label>
+                            <select class="input-field" id="editSmoking">
+                                <option value="Non-smoker">Non-smoker</option>
+                                <option value="Occasional">Occasional</option>
+                                <option value="Regular">Regular</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editAlcohol">Alcohol Intake</label>
+                            <select class="input-field" id="editAlcohol">
+                                <option value="Non-drinker">Non-drinker</option>
+                                <option value="Social">Social</option>
+                                <option value="Regular">Regular</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editExercise">Exercise Habit</label>
+                            <select class="input-field" id="editExercise">
+                                <option value="None (Sedentary)">None (Sedentary)</option>
+                                <option value="1-2 times/week">1-2 times/week</option>
+                                <option value="3-5 times/week">3-5 times/week</option>
+                                <option value="Daily">Daily</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editSleep">Sleep Duration</label>
+                            <select class="input-field" id="editSleep">
+                                <option value="< 6 hours">< 6 hours</option>
+                                <option value="6-8 hours">6-8 hours</option>
+                                <option value="> 8 hours">> 8 hours</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label class="input-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 0;">
+                            <input type="checkbox" id="editOrganDonor" style="width: 18px; height: 18px;">
+                            <span style="font-size: 0.85rem; font-weight: 600;">Register as Organ Donor</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('editProfileModal')" style="flex: 1; margin: 0;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; margin: 0;">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 

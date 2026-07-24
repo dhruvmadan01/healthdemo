@@ -1321,3 +1321,10 @@ h1, h2, h3, h4, h5 {
     margin: 0;
 }
 
+/* Edit Profile Tabs Styling */
+.tab-btn.active {
+    background-color: hsl(var(--accent-hsl)) !important;
+    color: white !important;
+    border-color: hsl(var(--accent-hsl)) !important;
+}
+

@@ -2011,6 +2011,229 @@ class HealthcareApp {
         };
         reader.readAsDataURL(file);
     }
+
+    openEditProfileModal() {
+        const user = db.getCurrentUser();
+        if (!user) return;
+
+        // Reset tab view
+        this.switchEditTab('editTabIdentity');
+
+        // Populate fields
+        document.getElementById('editName').value = user.name || '';
+        document.getElementById('editPhone').value = user.phone || '';
+        document.getElementById('editDOB').value = user.dob || '';
+        document.getElementById('editGender').value = user.gender || 'Male';
+        document.getElementById('editLanguage').value = user.language || 'English';
+        document.getElementById('editAddress').value = user.address || '';
+        document.getElementById('editHeight').value = user.height || '';
+        document.getElementById('editWeight').value = user.weight || '';
+        document.getElementById('editBloodGroup').value = user.bloodGroup || 'A+';
+
+        // Emergency Contact
+        const em = user.emergencyContact || {};
+        document.getElementById('editEmName').value = em.name || '';
+        document.getElementById('editEmRelation').value = em.relation || '';
+        document.getElementById('editEmPhone').value = em.phone || '';
+
+        // Medical
+        const med = user.medicalHistory || {};
+        document.getElementById('editAllergies').value = med.allergies || 'None';
+        document.getElementById('editChronic').value = med.chronicDiseases || 'None';
+        document.getElementById('editSurgeries').value = med.surgeries || 'None';
+        document.getElementById('editMedicines').value = med.currentMedicines || 'None';
+
+        // Lifestyle
+        const life = user.lifestyle || {};
+        document.getElementById('editSmoking').value = life.smoking || 'Non-smoker';
+        document.getElementById('editAlcohol').value = life.alcohol || 'Non-drinker';
+        document.getElementById('editExercise').value = life.exercise || 'None (Sedentary)';
+        document.getElementById('editSleep').value = life.sleep || '6-8 hours';
+
+        // Organ Donor
+        document.getElementById('editOrganDonor').checked = !!user.settings?.organDonor;
+
+        // Photo preview
+        this.uploadedEditPhoto = user.image || null;
+        const previewEl = document.getElementById('editPhotoPreview');
+        if (previewEl) {
+            if (user.image) {
+                previewEl.innerHTML = `<img src="${user.image}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            } else {
+                const initials = user.name.split(' ').map(n => n[0]).join('');
+                previewEl.innerText = initials;
+            }
+        }
+
+        this.calculateEditBMI();
+        this.openModal('editProfileModal');
+    }
+
+    switchEditTab(tabId) {
+        // Toggle tab content visibility
+        const tabs = ['editTabIdentity', 'editTabVitals', 'editTabMedical', 'editTabLifestyle'];
+        for (const t of tabs) {
+            const el = document.getElementById(t);
+            if (el) el.style.display = (t === tabId) ? 'block' : 'none';
+        }
+
+        // Toggle tab button active classes
+        const btns = {
+            'editTabIdentity': 'btnEditTabIdentity',
+            'editTabVitals': 'btnEditTabVitals',
+            'editTabMedical': 'btnEditTabMedical',
+            'editTabLifestyle': 'btnEditTabLifestyle'
+        };
+        for (const [key, btnId] of Object.entries(btns)) {
+            const btn = document.getElementById(btnId);
+            if (btn) btn.classList.toggle('active', key === tabId);
+        }
+    }
+
+    handleEditPhotoUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            this.uploadedEditPhoto = event.target.result;
+            const previewEl = document.getElementById('editPhotoPreview');
+            if (previewEl) {
+                previewEl.innerHTML = `<img src="${this.uploadedEditPhoto}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    calculateEditAge() {
+        const dobVal = document.getElementById('editDOB').value;
+        if (!dobVal) return;
+    }
+
+    calculateEditBMI() {
+        const height = parseFloat(document.getElementById('editHeight').value);
+        const weight = parseFloat(document.getElementById('editWeight').value);
+        const display = document.getElementById('editBMIBadge');
+
+        if (!height || !weight) {
+            if (display) {
+                display.innerText = '--';
+                display.className = '';
+            }
+            return;
+        }
+
+        const heightM = height / 100;
+        const bmi = parseFloat((weight / (heightM * heightM)).toFixed(1));
+
+        let category = '';
+        let className = '';
+        if (bmi < 18.5) {
+            category = 'Underweight';
+            className = 'bmi-badge bmi-underweight';
+        } else if (bmi >= 18.5 && bmi < 25) {
+            category = 'Normal';
+            className = 'bmi-badge bmi-normal';
+        } else if (bmi >= 25 && bmi < 30) {
+            category = 'Overweight';
+            className = 'bmi-badge bmi-overweight';
+        } else {
+            category = 'Obese';
+            className = 'bmi-badge bmi-obese';
+        }
+
+        if (display) {
+            display.innerText = `${bmi} (${category})`;
+            display.className = className;
+        }
+    }
+
+    async handleUpdateProfile(event) {
+        event.preventDefault();
+        const user = db.getCurrentUser();
+        if (!user) return;
+
+        // Read all inputs
+        const name = document.getElementById('editName').value.trim();
+        const phone = document.getElementById('editPhone').value.trim();
+        const dob = document.getElementById('editDOB').value;
+        const gender = document.getElementById('editGender').value;
+        const language = document.getElementById('editLanguage').value.trim();
+        const address = document.getElementById('editAddress').value.trim();
+        const height = parseInt(document.getElementById('editHeight').value);
+        const weight = parseInt(document.getElementById('editWeight').value);
+        const bloodGroup = document.getElementById('editBloodGroup').value;
+
+        // Emergency Contact
+        const emName = document.getElementById('editEmName').value.trim();
+        const emRelation = document.getElementById('editEmRelation').value.trim();
+        const emPhone = document.getElementById('editEmPhone').value.trim();
+
+        // Medical
+        const allergies = document.getElementById('editAllergies').value.trim();
+        const chronic = document.getElementById('editChronic').value.trim();
+        const surgeries = document.getElementById('editSurgeries').value.trim();
+        const medicines = document.getElementById('editMedicines').value.trim();
+
+        // Lifestyle
+        const smoking = document.getElementById('editSmoking').value;
+        const alcohol = document.getElementById('editAlcohol').value;
+        const exercise = document.getElementById('editExercise').value;
+        const sleep = document.getElementById('editSleep').value;
+
+        // Organ Donor
+        const organDonor = document.getElementById('editOrganDonor').checked;
+
+        // Calculate BMI
+        const heightM = height / 100;
+        const bmi = parseFloat((weight / (heightM * heightM)).toFixed(1));
+
+        // Update local user object
+        user.name = name;
+        user.phone = phone;
+        user.dob = dob;
+        user.gender = gender;
+        user.language = language;
+        user.address = address;
+        user.height = height;
+        user.weight = weight;
+        user.bmi = bmi;
+        user.bloodGroup = bloodGroup;
+        user.image = this.uploadedEditPhoto || user.image;
+
+        user.emergencyContact = { name: emName, relation: emRelation, phone: emPhone };
+        user.medicalHistory = { allergies, chronicDiseases: chronic, surgeries, currentMedicines: medicines };
+        user.lifestyle = { smoking, alcohol, exercise, sleep };
+
+        if (!user.settings) user.settings = {};
+        user.settings.organDonor = organDonor;
+
+        // Recalculate Health Score based on parameters
+        let healthScore = 75; // Baseline
+        if (bmi >= 18.5 && bmi < 25) healthScore += 10;
+        if (smoking === 'Non-smoker') healthScore += 5;
+        if (alcohol === 'Non-drinker' || alcohol === 'Social') healthScore += 5;
+        if (exercise === '3-5 times/week' || exercise === 'Daily') healthScore += 5;
+        user.healthScore = Math.min(100, healthScore);
+
+        // Update db cache
+        db.data.users[user.id] = user;
+        db.save();
+
+        // Save & Sync with Supabase
+        try {
+            await db.saveProfileToSupabase(user);
+        } catch (e) {
+            console.error('Supabase profile update error, synced locally:', e);
+        }
+
+        // Re-render dashboard and profile
+        this.renderHomeDashboard();
+        this.renderProfileScreen();
+
+        this.closeModal('editProfileModal');
+        alert('Profile and settings updated successfully!');
+    }
 }
 
 const app = new HealthcareApp();
