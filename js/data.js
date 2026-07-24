@@ -185,7 +185,7 @@ class HealthcareDB {
                     experience: 14,
                     hospitalId: "h1",
                     reviews: { rating: 4.9, count: 245 },
-                    consultingFee: 150,
+                    consultingFee: 1500,
                     consultationTypes: ["In-person", "Online"],
                     languages: ["English", "Hindi"],
                     acceptedInsurance: ["Aetna", "Blue Cross", "Cigna", "UnitedHealth"],
@@ -204,7 +204,7 @@ class HealthcareDB {
                     experience: 10,
                     hospitalId: "h2",
                     reviews: { rating: 4.7, count: 189 },
-                    consultingFee: 100,
+                    consultingFee: 1000,
                     consultationTypes: ["In-person", "Online"],
                     languages: ["English"],
                     acceptedInsurance: ["Blue Cross", "Cigna", "Medicaid"],
@@ -223,7 +223,7 @@ class HealthcareDB {
                     experience: 8,
                     hospitalId: "h2",
                     reviews: { rating: 4.8, count: 312 },
-                    consultingFee: 120,
+                    consultingFee: 1200,
                     consultationTypes: ["In-person", "Online"],
                     languages: ["Hindi"],
                     acceptedInsurance: ["Aetna", "UnitedHealth", "Humana"],
@@ -242,7 +242,7 @@ class HealthcareDB {
                     experience: 18,
                     hospitalId: "h1",
                     reviews: { rating: 4.9, count: 420 },
-                    consultingFee: 200,
+                    consultingFee: 2000,
                     consultationTypes: ["In-person"],
                     languages: ["English", "Hindi"],
                     acceptedInsurance: ["Aetna", "Blue Cross", "Medicare"],
@@ -261,7 +261,7 @@ class HealthcareDB {
                     experience: 12,
                     hospitalId: "h2",
                     reviews: { rating: 4.8, count: 140 },
-                    consultingFee: 90,
+                    consultingFee: 900,
                     consultationTypes: ["In-person", "Online"],
                     languages: ["English"],
                     acceptedInsurance: ["Aetna", "Blue Cross", "Cigna"],
@@ -280,7 +280,7 @@ class HealthcareDB {
                     experience: 15,
                     hospitalId: "h1",
                     reviews: { rating: 4.9, count: 210 },
-                    consultingFee: 140,
+                    consultingFee: 1400,
                     consultationTypes: ["In-person"],
                     languages: ["English", "Hindi"],
                     acceptedInsurance: ["Blue Cross", "Cigna", "UnitedHealth"],
@@ -299,7 +299,7 @@ class HealthcareDB {
                     experience: 20,
                     hospitalId: "h3",
                     reviews: { rating: 5.0, count: 95 },
-                    consultingFee: 180,
+                    consultingFee: 1800,
                     consultationTypes: ["In-person", "Online"],
                     languages: ["English"],
                     acceptedInsurance: ["Aetna", "Blue Cross", "UnitedHealth"],
@@ -319,35 +319,31 @@ class HealthcareDB {
                     hospitalId: "h1",
                     date: "2026-07-21",
                     time: "10:30",
-                    symptoms: "Mild chest tightness during light cardio exercises.",
+                    symptoms: "Mild chest tightness and elevated blood pressure.",
                     reports: [],
                     insurance: "Blue Cross",
                     paymentStatus: "Paid",
-                    paymentAmount: 150,
-                    qrCode: "MOCK_QR_a_init_1",
-                    visitToken: "T-804",
+                    paymentAmount: 1500,
+                    qrCode: "MOCK-QR-a_init_1",
+                    visitToken: "T-801",
                     status: "Upcoming",
-                    checkInStatus: "Not Checked In",
-                    queue: {
-                        position: 4,
-                        estWaitTime: 45, // mins
-                        delay: 10,       // mins
-                        room: "Suite 302",
-                        currentSpeaker: "T-801"
-                    }
+                    checkInStatus: "Checked In",
+                    queue: { position: 1, room: "4B", estWaitTime: 10, currentSpeaker: "T-801" }
                 }
             ],
             prescriptions: [
                 {
                     id: "pr_init_1",
-                    appointmentId: "a_prev_1",
+                    appointmentId: "a_init_1",
                     patientId: "p1",
                     doctorId: "d1",
-                    date: "2026-05-12",
-                    notes: "Patient reported occasional wheezing under heavy pollen. Prescribed rescue inhaler. Keep tracking daily triggers.",
+                    doctor: "Dr. Elizabeth Vance",
+                    date: "2026-07-21",
+                    notes: "Patient is recovering well. Keep tracking symptoms daily.",
                     medicines: [
-                        { name: "Albuterol Inhaler", dose: "1-2 puffs", duration: "90 days", foodInstructions: "As needed for wheezing", warnings: "Do not exceed 6 puffs daily" }
-                    ]
+                        { name: "Albuterol Inhaler", dose: "1-2 puffs", duration: "As needed", foodInstructions: "Anytime", warnings: "May cause rapid heartbeat" }
+                    ],
+                    file: "Prescription-a_init_1.pdf"
                 }
             ],
             labReports: [
@@ -355,7 +351,7 @@ class HealthcareDB {
                 { id: "lr_2", patientId: "p1", testName: "Lipid Profile & Glucose", date: "2026-07-15", status: "Ready", doctor: "Dr. Vance", file: "lipid_glucose.pdf" }
             ],
             insuranceAlerts: [
-                { id: "ia_1", patientId: "p1", title: "Deductible 90% Met", description: "You are $120 away from 100% copay coverage.", expiry: "2026-12-31" }
+                { id: "ia_1", patientId: "p1", title: "Deductible 90% Met", description: "You are ₹10,000 away from 100% copay coverage.", expiry: "2026-12-31" }
             ],
             healthTips: [
                 "Stay hydrated! Drinking 2-3 liters of water daily keeps joints lubricated and supports cardiovascular health.",

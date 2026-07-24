@@ -1203,10 +1203,10 @@ class HealthcareApp {
                             <h5 style="margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">BCBS Premium Shield</h5>
                             <p style="margin: 2px 0 0 0; font-size: 0.65rem; color: var(--text-muted);">Blue Cross Blue Shield Partner</p>
                         </div>
-                        <span style="font-size: 0.85rem; font-weight: 700; color: hsl(var(--accent-hsl));">$120<span style="font-size: 0.6rem; font-weight: 500; color: var(--text-muted);">/mo</span></span>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: hsl(var(--accent-hsl));">₹9,999<span style="font-size: 0.6rem; font-weight: 500; color: var(--text-muted);">/mo</span></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px;">
-                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> $15 Copay/visit</span>
+                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> ₹1,000 Copay/visit</span>
                         <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> 90% Diagnostics</span>
                     </div>
                     <button class="btn btn-primary" onclick="app.applyForInsurance('BCBS Premium Shield')" style="margin: 0; padding: 6px; font-size: 0.75rem; background: rgba(20, 184, 166, 0.1); color: hsl(var(--accent-hsl)); border: none; font-weight: 600; cursor: pointer; width: 100%;">
@@ -1221,10 +1221,10 @@ class HealthcareApp {
                             <h5 style="margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">UHC Family Core</h5>
                             <p style="margin: 2px 0 0 0; font-size: 0.65rem; color: var(--text-muted);">UnitedHealthcare Partner</p>
                         </div>
-                        <span style="font-size: 0.85rem; font-weight: 700; color: hsl(var(--accent-hsl));">$190<span style="font-size: 0.6rem; font-weight: 500; color: var(--text-muted);">/mo</span></span>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: hsl(var(--accent-hsl));">₹15,000<span style="font-size: 0.6rem; font-weight: 500; color: var(--text-muted);">/mo</span></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px;">
-                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> $25 Copay/visit</span>
+                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> ₹1,500 Copay/visit</span>
                         <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> 100% Pediatric</span>
                     </div>
                     <button class="btn btn-primary" onclick="app.applyForInsurance('UHC Family Core')" style="margin: 0; padding: 6px; font-size: 0.75rem; background: rgba(20, 184, 166, 0.1); color: hsl(var(--accent-hsl)); border: none; font-weight: 600; cursor: pointer; width: 100%;">
@@ -1239,10 +1239,10 @@ class HealthcareApp {
                             <h5 style="margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">Aetna Prime Health</h5>
                             <p style="margin: 2px 0 0 0; font-size: 0.65rem; color: var(--text-muted);">Aetna Insurance Partner</p>
                         </div>
-                        <span style="font-size: 0.85rem; font-weight: 700; color: hsl(var(--accent-hsl));">$85<span style="font-size: 0.6rem; font-weight: 500; color: var(--text-muted);">/mo</span></span>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: hsl(var(--accent-hsl));">₹6,999<span style="font-size: 0.6rem; font-weight: 500; color: var(--text-muted);">/mo</span></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px;">
-                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> $35 Copay/visit</span>
+                        <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> ₹2,500 Copay/visit</span>
                         <span><i class="fa-solid fa-circle-check" style="color:hsl(var(--accent-hsl));"></i> 100% Telehealth</span>
                     </div>
                     <button class="btn btn-primary" onclick="app.applyForInsurance('Aetna Prime Health')" style="margin: 0; padding: 6px; font-size: 0.75rem; background: rgba(20, 184, 166, 0.1); color: hsl(var(--accent-hsl)); border: none; font-weight: 600; cursor: pointer; width: 100%;">
@@ -1649,7 +1649,7 @@ class HealthcareApp {
                                 </div>
                             </div>
                             <div class="entity-fee">
-                                <div>$${d.consultingFee}</div>
+                                <div>₹${d.consultingFee}</div>
                                 <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: normal;">Consult Fee</span>
                             </div>
                         </div>

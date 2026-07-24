@@ -133,7 +133,7 @@ class BookingFlow {
 
         // Update fee displays
         const fee = doc.consultingFee || 0;
-        document.getElementById('bookingFeeAmt').innerText = `$${fee.toFixed(2)}`;
+        document.getElementById('bookingFeeAmt').innerText = `₹${fee.toFixed(2)}`;
         this.updatePaymentDetails();
     }
 
@@ -160,11 +160,11 @@ class BookingFlow {
 
         const total = fee - discount;
 
-        document.getElementById('bookingInsDiscount').innerText = `-$${discount.toFixed(2)}`;
-        document.getElementById('bookingTotalPayable').innerText = `$${total.toFixed(2)}`;
+        document.getElementById('bookingInsDiscount').innerText = `-₹${discount.toFixed(2)}`;
+        document.getElementById('bookingTotalPayable').innerText = `₹${total.toFixed(2)}`;
         
         // Sync with payment modal label
-        document.getElementById('payModalAmt').innerText = `$${total.toFixed(2)}`;
+        document.getElementById('payModalAmt').innerText = `₹${total.toFixed(2)}`;
     }
 
     setupDropZone() {
