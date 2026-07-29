@@ -74,6 +74,8 @@ class HealthcareApp {
                 this.renderProfileScreen();
             } else if (screenId === 'register-screen') {
                 this.resetRegisterWizard();
+            } else if (screenId === 'history-screen') {
+                this.renderHistoryScreen();
             }
         }
     }
@@ -568,18 +570,22 @@ class HealthcareApp {
             }
         }
 
-        // BMI Card info
-        document.getElementById('healthScoreBMI').innerText = user.bmi;
-        document.getElementById('healthScoreDonor').innerText = user.settings.organDonor ? "Yes" : "No";
-
-        // Gauge Score
-        document.getElementById('healthScoreValue').innerText = user.healthScore;
-        const stroke = document.getElementById('healthGaugeStroke');
-        if (stroke) {
-            // circumference of circle r=28 is 2 * pi * 28 = 176
-            const offset = 176 - (176 * user.healthScore) / 100;
-            stroke.style.strokeDashoffset = offset;
-        }
+        // Vitals Card info
+        const healthIdVal = user.health_id || 'MED-123456';
+        document.getElementById('vitalsCardHealthId').innerText = healthIdVal;
+        document.getElementById('vitalsCardHeightWeight').innerText = `${user.height || 170} cm / ${user.weight || 70} kg`;
+        document.getElementById('vitalsCardBlood').innerText = user.bloodGroup || 'O+';
+        
+        let bmiCategory = 'Normal';
+        if (user.bmi < 18.5) bmiCategory = 'Underweight';
+        else if (user.bmi >= 25 && user.bmi < 30) bmiCategory = 'Overweight';
+        else if (user.bmi >= 30) bmiCategory = 'Obese';
+        document.getElementById('vitalsCardBMI').innerText = `${user.bmi || 24.2} (${bmiCategory})`;
+        
+        const chronicStr = user.medicalHistory?.chronicDiseases?.join(', ') || 'None';
+        const allergyStr = user.medicalHistory?.allergies?.join(', ') || 'None';
+        document.getElementById('vitalsCardAllergies').innerText = allergyStr;
+        document.getElementById('vitalsCardChronic').innerText = chronicStr;
 
         // Render dynamic alert & appointment widgets
         this.renderDynamicWidgets(user.id);
@@ -1527,33 +1533,290 @@ class HealthcareApp {
     }
 
     openPayments() {
-        this.openModal('paymentsLogModal');
-        const container = document.getElementById('paymentsLogModalContent');
-        container.innerHTML = '';
+        this.navigateTo('history-screen');
+    }
 
-        const appointments = db.getAppointments(db.data.currentUser).filter(app => app.paymentStatus === 'Paid');
-        if (appointments.length === 0) {
-            container.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">No payment logs or invoice receipts available.</p>`;
+    toggleHistoryTab(tab) {
+        this.historyTab = tab;
+        const btnBookings = document.getElementById('btnHistBookings');
+        const btnTransactions = document.getElementById('btnHistTransactions');
+        const bookingsTab = document.getElementById('historyBookingsTab');
+        const transactionsTab = document.getElementById('historyTransactionsTab');
+        
+        if (!btnBookings || !btnTransactions || !bookingsTab || !transactionsTab) return;
+
+        if (tab === 'bookings') {
+            btnBookings.style.background = 'var(--bg-card)';
+            btnBookings.style.color = 'var(--text-primary)';
+            btnTransactions.style.background = 'transparent';
+            btnTransactions.style.color = 'var(--text-secondary)';
+            bookingsTab.style.display = 'block';
+            transactionsTab.style.display = 'none';
+        } else {
+            btnTransactions.style.background = 'var(--bg-card)';
+            btnTransactions.style.color = 'var(--text-primary)';
+            btnBookings.style.background = 'transparent';
+            btnBookings.style.color = 'var(--text-secondary)';
+            transactionsTab.style.display = 'block';
+            bookingsTab.style.display = 'none';
+        }
+    }
+
+    renderHistoryScreen() {
+        this.toggleHistoryTab(this.historyTab || 'bookings');
+        
+        const bookingsContainer = document.getElementById('historyBookingsList');
+        const transactionsContainer = document.getElementById('historyTransactionsList');
+        
+        if (!bookingsContainer || !transactionsContainer) return;
+
+        bookingsContainer.innerHTML = '';
+        transactionsContainer.innerHTML = '';
+        
+        const appointments = db.getAppointments(db.data.currentUser);
+        
+        // Sort appointments by date & time descending (most recent first)
+        const sortedAppts = [...appointments].sort((a, b) => {
+            return new Date(b.date + ' ' + b.time.split(' - ')[0]) - new Date(a.date + ' ' + a.time.split(' - ')[0]);
+        });
+
+        if (sortedAppts.length === 0) {
+            const noData = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin: 30px 0;">No bookings or transactions history found.</p>`;
+            bookingsContainer.innerHTML = noData;
+            transactionsContainer.innerHTML = noData;
             return;
         }
 
-        appointments.forEach(a => {
-            const doc = db.getDoctor(a.doctorId);
-            container.innerHTML += `
-                <div class="card" style="margin-bottom: 10px;">
+        // Render Bookings List
+        sortedAppts.forEach(appt => {
+            const doc = db.getDoctor(appt.doctorId) || { name: 'Unknown Doctor', specialty: 'General' };
+            const statusColor = appt.status === 'Completed' ? 'hsl(var(--success-hsl))' : 
+                                appt.status === 'Upcoming' ? 'hsl(var(--primary-hsl))' : 'var(--text-muted)';
+            
+            bookingsContainer.innerHTML += `
+                <div class="card" onclick="app.showBookingHistoryDetail('${appt.id}')" style="cursor: pointer; border-left: 4px solid ${statusColor}; transition: transform 0.2s; margin-bottom: 5px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h4 style="font-size: 0.85rem;">Consultation Fee - ${doc.name}</h4>
-                            <p style="font-size: 0.7rem; color: var(--text-muted);">${a.date} | Trans ID: TXN-${a.id}</p>
+                        <div style="text-align: left;">
+                            <strong style="font-size: 0.85rem; display: block; color: var(--text-primary);">${doc.name}</strong>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">${doc.specialty}</span>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+                                <i class="fa-regular fa-calendar"></i> ${appt.date} | <i class="fa-regular fa-clock"></i> ${appt.time}
+                            </div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-weight: 700; font-size: 0.85rem; color: hsl(var(--success-hsl));">$${a.paymentAmount}</div>
-                            <span class="section-link" onclick="alert('Downloading clinical invoice...')">Invoice</span>
+                            <span style="font-size: 0.7rem; font-weight: 700; color: ${statusColor}; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px;">
+                                ${appt.status}
+                            </span>
+                            <span style="display: block; font-size: 0.65rem; color: var(--text-muted); margin-top: 6px;">Token: ${appt.visitToken}</span>
                         </div>
                     </div>
                 </div>
             `;
         });
+
+        // Render Transactions List
+        const paidAppts = sortedAppts.filter(a => a.paymentStatus === 'Paid' || a.paymentAmount > 0);
+        if (paidAppts.length === 0) {
+            transactionsContainer.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin: 30px 0;">No transaction logs available.</p>`;
+        } else {
+            paidAppts.forEach(appt => {
+                const doc = db.getDoctor(appt.doctorId) || { name: 'Unknown Doctor' };
+                transactionsContainer.innerHTML += `
+                    <div class="card" onclick="app.showTransactionHistoryDetail('${appt.id}')" style="cursor: pointer; border-left: 4px solid hsl(var(--success-hsl)); transition: transform 0.2s; margin-bottom: 5px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="text-align: left;">
+                                <strong style="font-size: 0.85rem; display: block;">Consultation Fee - ${doc.name}</strong>
+                                <span style="font-size: 0.7rem; color: var(--text-muted);">Trans ID: TXN-${appt.id}</span>
+                                <div style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px;">${appt.date}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; font-size: 0.9rem; color: hsl(var(--success-hsl));">₹${appt.paymentAmount.toFixed(2)}</div>
+                                <span style="font-size: 0.65rem; background: rgba(16, 185, 129, 0.1); color: hsl(var(--success-hsl)); padding: 2px 6px; border-radius: 4px; font-weight:600;">SUCCESS</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    showBookingHistoryDetail(apptId) {
+        const appt = db.data.appointments.find(a => a.id === apptId);
+        if (!appt) return;
+
+        const doc = db.getDoctor(appt.doctorId) || { name: 'Unknown Doctor', specialty: 'General', consultingFee: 0 };
+        const patient = db.getPatient(appt.patientId) || db.data.patients[appt.patientId] || { name: 'Unknown Patient' };
+        
+        document.getElementById('historyDetailModalTitle').innerText = "Booking Details";
+        
+        const reportsHtml = appt.reports && appt.reports.length > 0 ? 
+            appt.reports.map(r => `<div class="medicine-pill-tag" style="margin: 2px 0; display: inline-flex; border-radius: 8px; margin-right: 4px; padding: 4px 8px; border: 1px solid var(--border-color); font-size: 0.7rem;"><i class="fa-solid fa-file-pdf" style="color:#ef4444; margin-right: 4px;"></i> ${r.split('/').pop().split('-').pop()}</div>`).join('') : 'None';
+
+        const isVerified = appt.checkInStatus === 'Verified' || appt.checkInStatus === 'Checked In';
+        const verifyBadge = isVerified ? 
+            `<span style="background: rgba(16, 185, 129, 0.1); color: hsl(var(--success-hsl)); padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight:700;"><i class="fa-solid fa-circle-check"></i> Checked In</span>` :
+            `<span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight:700;"><i class="fa-solid fa-circle-xmark"></i> Not Checked In</span>`;
+
+        let healthIdStr = patient.health_id || 'N/A';
+        
+        // Show what health ID details were shared
+        const patientData = appt.healthIdDetails || patient;
+        const chronicStr = patientData.medicalHistory?.chronicDiseases?.join(', ') || 'None';
+        const allergyStr = patientData.medicalHistory?.allergies?.join(', ') || 'None';
+        const medsStr = patientData.medicalHistory?.currentMedicines?.map(m => m.name).join(', ') || 'None';
+
+        const content = document.getElementById('historyDetailModalContent');
+        if (!content) return;
+        content.innerHTML = `
+            <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 12px;">
+                <div style="text-align: left;">
+                    <h4 style="font-size: 1.1rem; margin-bottom: 2px;">${doc.name}</h4>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">${doc.specialty}</span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 1.2rem; font-weight: 800; color: hsl(var(--primary-hsl));">${appt.visitToken}</div>
+                    <span style="font-size: 0.65rem; color: var(--text-muted);">Queue Token</span>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 12px; border-left: 4px solid hsl(var(--primary-hsl)); padding: 12px;">
+                <div class="detail-row" style="margin-bottom: 6px; display: flex; justify-content: space-between;">
+                    <span class="detail-label" style="font-size:0.75rem; color: var(--text-secondary);">Status:</span>
+                    <span class="detail-value" style="font-size:0.75rem; font-weight:700; color: ${appt.status === 'Completed' ? 'hsl(var(--success-hsl))' : 'hsl(var(--primary-hsl))'}">${appt.status}</span>
+                </div>
+                <div class="detail-row" style="margin-bottom: 6px; display: flex; justify-content: space-between;">
+                    <span class="detail-label" style="font-size:0.75rem; color: var(--text-secondary);">Check-In:</span>
+                    <span class="detail-value" style="font-size:0.75rem;">${verifyBadge}</span>
+                </div>
+                <div class="detail-row" style="margin-bottom: 6px; display: flex; justify-content: space-between;">
+                    <span class="detail-label" style="font-size:0.75rem; color: var(--text-secondary);">Date:</span>
+                    <span class="detail-value" style="font-size:0.75rem; font-weight:600;">${appt.date}</span>
+                </div>
+                <div class="detail-row" style="margin-bottom: 6px; display: flex; justify-content: space-between;">
+                    <span class="detail-label" style="font-size:0.75rem; color: var(--text-secondary);">Time:</span>
+                    <span class="detail-value" style="font-size:0.75rem; font-weight:600;">${appt.time}</span>
+                </div>
+                <div class="detail-row" style="margin-bottom: 6px; display: flex; justify-content: space-between;">
+                    <span class="detail-label" style="font-size:0.75rem; color: var(--text-secondary);">Patient:</span>
+                    <span class="detail-value" style="font-size:0.75rem; font-weight:600;">${patient.name}</span>
+                </div>
+                <div class="detail-row" style="margin-bottom: 6px; display: flex; justify-content: space-between;">
+                    <span class="detail-label" style="font-size:0.75rem; color: var(--text-secondary);">Insurance:</span>
+                    <span class="detail-value" style="font-size:0.75rem;">${appt.insurance}</span>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 12px; border-left: 4px solid hsl(var(--accent-hsl)); padding: 12px;">
+                <h5 style="font-size: 0.8rem; color: hsl(var(--accent-hsl)); margin-bottom: 6px;"><i class="fa-solid fa-stethoscope"></i> Symptoms & Reason</h5>
+                <p style="font-size: 0.75rem; color: var(--text-primary); line-height: 1.4; margin: 0;">${appt.symptoms || 'None recorded'}</p>
+            </div>
+
+            <div class="card" style="margin-bottom: 12px; border-left: 4px solid hsl(var(--success-hsl)); padding: 12px;">
+                <h5 style="font-size: 0.8rem; color: hsl(var(--success-hsl)); margin-bottom: 6px;"><i class="fa-solid fa-id-card"></i> Health ID Record Shared</h5>
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 6px;">Shared Health ID: <strong>${healthIdStr}</strong></div>
+                <div style="font-size: 0.75rem; line-height: 1.4; color: var(--text-secondary);">
+                    <strong>Vitals:</strong> ${patientData.height || 'N/A'} cm | ${patientData.weight || 'N/A'} kg | BMI: ${patientData.bmi || 'N/A'}<br>
+                    <strong>Chronic issues:</strong> ${chronicStr}<br>
+                    <strong>Allergies:</strong> ${allergyStr}<br>
+                    <strong>Active Medications:</strong> ${medsStr}
+                </div>
+            </div>
+
+            <div class="card" style="padding: 12px; text-align: left; margin-bottom: 15px;">
+                <h5 style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;"><i class="fa-solid fa-paperclip"></i> Attached Records</h5>
+                <div style="display:flex; flex-wrap:wrap; gap:4px; font-size:0.75rem;">
+                    ${reportsHtml}
+                </div>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="app.closeModal('historyDetailModal')" style="width: 100%; margin: 0;">Close Details</button>
+        `;
+        app.openModal('historyDetailModal');
+    }
+
+    showTransactionHistoryDetail(apptId) {
+        const appt = db.data.appointments.find(a => a.id === apptId);
+        if (!appt) return;
+
+        const doc = db.getDoctor(appt.doctorId) || { name: 'Unknown Doctor', specialty: 'General', consultingFee: 1500 };
+        const patient = db.getPatient(appt.patientId) || db.data.patients[appt.patientId] || { name: 'Unknown Patient' };
+
+        document.getElementById('historyDetailModalTitle').innerText = "Transaction Invoice";
+
+        const baseFee = doc.consultingFee || 1500;
+        let insDiscount = 0;
+        if (appt.insurance === 'Blue Cross') insDiscount = baseFee * 0.9;
+        else if (appt.insurance === 'Aetna') insDiscount = baseFee * 0.8;
+        else if (appt.insurance === 'Cigna') insDiscount = baseFee * 0.7;
+        else if (appt.insurance === 'UnitedHealth') insDiscount = baseFee * 0.75;
+        
+        const paidAmount = appt.paymentAmount;
+
+        const content = document.getElementById('historyDetailModalContent');
+        if (!content) return;
+        content.innerHTML = `
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 1px dashed var(--border-color); padding-bottom: 15px;">
+                <i class="fa-solid fa-circle-check" style="font-size: 3rem; color: hsl(var(--success-hsl)); margin-bottom: 10px;"></i>
+                <h4 style="font-size: 1.2rem; margin: 0;">Payment Successful</h4>
+                <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-primary); margin: 5px 0;">₹${paidAmount.toFixed(2)}</div>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">Transaction ID: TXN-${appt.id}</span>
+            </div>
+
+            <div style="margin-bottom: 15px; text-align: left;">
+                <h5 style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Invoice Details</h5>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 4px 0;">
+                    <span style="color: var(--text-secondary);">Patient:</span>
+                    <strong style="color: var(--text-primary);">${patient.name}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 4px 0;">
+                    <span style="color: var(--text-secondary);">Provider:</span>
+                    <strong style="color: var(--text-primary);">${doc.name} (${doc.specialty})</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 4px 0;">
+                    <span style="color: var(--text-secondary);">Date:</span>
+                    <span style="color: var(--text-primary); font-weight: 500;">${appt.date}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 4px 0;">
+                    <span style="color: var(--text-secondary);">Insurance:</span>
+                    <span style="color: var(--text-primary);">${appt.insurance}</span>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0;">
+
+            <div style="margin-bottom: 15px; text-align: left;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 3px 0;">
+                    <span style="color: var(--text-secondary);">Consulting Fee:</span>
+                    <span style="color: var(--text-primary);">₹${baseFee.toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 3px 0;">
+                    <span style="color: var(--text-secondary);">Insurance Coverage:</span>
+                    <span style="color: hsl(var(--success-hsl));">-₹${insDiscount.toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 3px 0;">
+                    <span style="color: var(--text-secondary);">HIPAA Security Fee:</span>
+                    <span style="color: var(--text-primary);">₹0.00</span>
+                </div>
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: 700; padding: 4px 0;">
+                    <span style="color: var(--text-primary);">Amount Paid:</span>
+                    <span style="color: hsl(var(--success-hsl));">₹${paidAmount.toFixed(2)}</span>
+                </div>
+            </div>
+
+            <div class="card" style="background: rgba(16, 185, 129, 0.03); border: 1px solid rgba(16, 185, 129, 0.1); padding: 10px; margin-top: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="font-size: 0.65rem; color: var(--text-secondary); text-align: center; line-height: 1.3;">
+                    <i class="fa-solid fa-shield-halved" style="color: hsl(var(--success-hsl));"></i>
+                    This receipt serves as clinical proof of payment for insurance copay settlement. Fully encrypted under HIPAA transaction security rules.
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="alert('Downloading PDF Receipt...')" style="flex: 1; font-size: 0.75rem; margin:0; padding: 8px;"><i class="fa-solid fa-download"></i> Receipt PDF</button>
+                <button class="btn btn-primary" onclick="app.closeModal('historyDetailModal')" style="flex: 1; font-size: 0.75rem; margin:0; padding: 8px;">Done</button>
+            </div>
+        `;
+        app.openModal('historyDetailModal');
     }
 
     openAIChat() {

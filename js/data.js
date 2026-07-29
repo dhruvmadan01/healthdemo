@@ -1003,7 +1003,8 @@ class HealthcareDB {
                         visitToken: a.visit_token,
                         status: a.status,
                         checkInStatus: a.check_in_status,
-                        queue: a.queue || {}
+                        queue: a.queue || {},
+                        healthIdDetails: a.queue?.healthIdDetails || null
                     };
                     if (localIdx !== -1) {
                         this.data.appointments[localIdx] = mappedAppt;

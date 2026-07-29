@@ -20,7 +20,7 @@ class EmergencyFlow {
         const lblEl = document.getElementById('sosCountdownLabel');
         numEl.innerText = this.secondsRemaining;
         numEl.style.color = "hsl(var(--danger-hsl))";
-        lblEl.innerText = "Initializing emergency call... Tap to trigger immediately.";
+        lblEl.innerText = "Initializing emergency call to 102... Tap to trigger immediately.";
 
         // Mock coordinate updates
         this.updateCoordinates();
@@ -72,8 +72,16 @@ class EmergencyFlow {
                 Rescue coordinates transmitted. EMS unit is en route.<br>
                 Simulated SMS alert broadcasted to Emergency Contact:<br>
                 <b>${contact.name} (${contact.relation}) - ${contact.phone}</b>
+                <div style="margin-top: 12px;">
+                    <a href="tel:102" class="btn btn-danger" style="margin: 0; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; font-weight:700; color: white;">
+                        <i class="fa-solid fa-phone"></i> Call 102 Now
+                    </a>
+                </div>
             </div>
         `;
+        
+        // Trigger local phone call dialer prompt
+        window.location.href = "tel:102";
         
         // Play mock alert beep via AudioContext (Web Audio API)
         this.playSirenBeep();

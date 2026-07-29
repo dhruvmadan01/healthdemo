@@ -4,7 +4,7 @@
 class BookingFlow {
     constructor() {
         this.currentStep = 1;
-        this.totalSteps = 4;
+        this.totalSteps = 5;
         this.selectedDoctorId = null;
         this.uploadedFiles = [];
         this.activeCheckingApptId = null;
@@ -362,6 +362,101 @@ class BookingFlow {
         if (this.currentStep === 3) {
             this.renderExistingRecordsList();
         }
+
+        if (this.currentStep === 5) {
+            this.populateCheckoutDetails();
+        }
+    }
+
+    populateCheckoutDetails() {
+        const docId = document.getElementById('bookingDoctor').value;
+        const date = document.getElementById('bookingDate').value;
+        const time = document.getElementById('bookingTime').value;
+        const patientId = document.getElementById('bookingPatient').value;
+        
+        const bookTypeInput = document.querySelector('input[name="bookType"]:checked');
+        const consultType = bookTypeInput ? bookTypeInput.value : 'In-Person';
+        const symptoms = document.getElementById('bookingSymptoms').value || 'None';
+        
+        const doc = db.getDoctor(docId) || { name: 'Unknown Doctor', consultingFee: 0 };
+        const patient = db.getPatient(patientId) || db.data.patients[patientId] || {
+            name: 'Unknown Patient',
+            health_id: 'MED-' + Math.floor(100000 + Math.random() * 900000),
+            dob: '',
+            gender: 'Unspecified',
+            bloodGroup: 'O+',
+            height: 170,
+            weight: 70,
+            bmi: 24.2,
+            emergencyContact: { name: 'N/A', relation: 'N/A', phone: 'N/A' },
+            medicalHistory: { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
+            lifestyle: { smoking: 'Never', alcohol: 'Never', exercise: 'None', sleep: '8 hours' }
+        };
+
+        if (!patient.health_id) {
+            patient.health_id = 'MED-' + Math.floor(100000 + Math.random() * 900000);
+        }
+
+        const docNameEl = document.getElementById('checkoutDoctorName');
+        if (docNameEl) docNameEl.innerText = doc.name;
+        
+        const dateTimeEl = document.getElementById('checkoutDateTime');
+        if (dateTimeEl) dateTimeEl.innerText = `${date} at ${time}`;
+        
+        const patientNameEl = document.getElementById('checkoutPatientName');
+        if (patientNameEl) patientNameEl.innerText = patient.name;
+        
+        const consultTypeEl = document.getElementById('checkoutConsultType');
+        if (consultTypeEl) consultTypeEl.innerText = consultType;
+        
+        const symptomsEl = document.getElementById('checkoutSymptoms');
+        if (symptomsEl) symptomsEl.innerText = symptoms;
+        
+        const filesEl = document.getElementById('checkoutAttachedFiles');
+        if (filesEl) {
+            filesEl.innerText = this.uploadedFiles.length > 0 ? this.uploadedFiles.map(f => f.split('/').pop().split('-').pop()).join(', ') : 'None';
+        }
+        
+        const totalEl = document.getElementById('checkoutTotalPayable');
+        if (totalEl) {
+            totalEl.innerText = document.getElementById('bookingTotalPayable').innerText;
+        }
+
+        const healthIdEl = document.getElementById('checkoutHealthId');
+        if (healthIdEl) healthIdEl.innerText = patient.health_id;
+        
+        const age = patient.dob ? new Date().getFullYear() - new Date(patient.dob).getFullYear() : 'N/A';
+        const bioEl = document.getElementById('checkoutPatientBio');
+        if (bioEl) bioEl.innerText = `${patient.dob || 'N/A'} (${patient.gender}, ${age} yrs)`;
+        
+        const vitalsEl = document.getElementById('checkoutPatientVitals');
+        if (vitalsEl) vitalsEl.innerText = `${patient.height || 'N/A'} cm / ${patient.weight || 'N/A'} kg`;
+        
+        const medicalEl = document.getElementById('checkoutPatientMedical');
+        if (medicalEl) medicalEl.innerText = `${patient.bloodGroup || 'N/A'} / BMI: ${patient.bmi || 'N/A'}`;
+        
+        const emergencyEl = document.getElementById('checkoutPatientEmergency');
+        if (emergencyEl) {
+            const em = patient.emergencyContact || {};
+            emergencyEl.innerText = em.name ? `${em.name} (${em.relation || 'Contact'}): ${em.phone || ''}` : 'None';
+        }
+
+        const chronicStr = patient.medicalHistory?.chronicDiseases?.join(', ') || 'None';
+        const allergyStr = patient.medicalHistory?.allergies?.join(', ') || 'None';
+        const allergiesEl = document.getElementById('checkoutPatientAllergies');
+        if (allergiesEl) allergiesEl.innerText = `Chronic: ${chronicStr} | Allergies: ${allergyStr}`;
+        
+        const medsEl = document.getElementById('checkoutPatientMeds');
+        if (medsEl) {
+            const medNames = patient.medicalHistory?.currentMedicines?.map(m => m.name).join(', ') || 'None';
+            medsEl.innerText = medNames;
+        }
+        
+        const lifestyleEl = document.getElementById('checkoutPatientLifestyle');
+        if (lifestyleEl) {
+            const ls = patient.lifestyle || {};
+            lifestyleEl.innerText = `Smoking: ${ls.smoking || 'N/A'}, Alcohol: ${ls.alcohol || 'N/A'}, Exercise: ${ls.exercise || 'N/A'}, Sleep: ${ls.sleep || 'N/A'}`;
+        }
     }
 
     nextStep() {
@@ -429,6 +524,30 @@ class BookingFlow {
             const tokenNum = Math.floor(100 + Math.random() * 900);
             const apptId = `a_${Date.now()}`;
             
+            const patientObj = db.getPatient(patientId) || db.data.patients[patientId] || {};
+            if (!patientObj.health_id) {
+                patientObj.health_id = 'MED-' + Math.floor(100000 + Math.random() * 900000);
+            }
+            
+            const healthIdDetails = {
+                id: patientObj.id || patientId,
+                health_id: patientObj.health_id,
+                name: patientObj.name || "Unknown Patient",
+                dob: patientObj.dob || "",
+                gender: patientObj.gender || "Unspecified",
+                bloodGroup: patientObj.bloodGroup || "O+",
+                height: parseFloat(patientObj.height || 170),
+                weight: parseFloat(patientObj.weight || 70),
+                bmi: parseFloat(patientObj.bmi || 24.2),
+                email: patientObj.email || "",
+                phone: patientObj.phone || "",
+                emergencyContact: patientObj.emergencyContact || { name: "", relation: "", phone: "" },
+                settings: patientObj.settings || { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
+                medicalHistory: patientObj.medicalHistory || { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
+                lifestyle: patientObj.lifestyle || { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
+                healthScore: patientObj.healthScore || 80
+            };
+            
             const newApp = {
                 id: apptId,
                 patientId: patientId,
@@ -440,17 +559,19 @@ class BookingFlow {
                 reports: this.uploadedFiles,
                 insurance: insurance,
                 paymentStatus: "Paid",
-                paymentAmount: parseFloat(document.getElementById('bookingTotalPayable').innerText.replace('$', '')),
+                paymentAmount: parseFloat(document.getElementById('bookingTotalPayable').innerText.replace(/[₹$]/g, '')),
                 qrCode: `${window.location.origin}/doctor.html?appt=${apptId}`,
                 visitToken: `T-${tokenNum}`,
                 status: "Upcoming",
                 checkInStatus: "Not Checked In",
+                healthIdDetails: healthIdDetails,
                 queue: {
                     position: 5,
                     estWaitTime: 50,
                     delay: 5,
                     room: "Room 102",
-                    currentSpeaker: "T-801"
+                    currentSpeaker: "T-801",
+                    healthIdDetails: healthIdDetails
                 }
             };
 

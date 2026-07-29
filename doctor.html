@@ -446,13 +446,87 @@
             constructor() {
                 this.storageKey = 'healthcare_patient_db';
                 const stored = localStorage.getItem(this.storageKey);
-                this.data = stored ? JSON.parse(stored) : { appointments: [], patients: {}, doctors: {} };
+                this.data = stored ? JSON.parse(stored) : { appointments: [], patients: {}, doctors: {}, prescriptions: [] };
+                if (!this.data.prescriptions) this.data.prescriptions = [];
             }
             save() {
                 localStorage.setItem(this.storageKey, JSON.stringify(this.data));
             }
             getDoctor(id) {
                 return this.data.doctors[id];
+            }
+            addPrescription(prescription) {
+                if (!this.data.prescriptions) this.data.prescriptions = [];
+                this.data.prescriptions.push(prescription);
+                
+                // Update local patient's active medicines
+                const patient = this.data.patients[prescription.patientId];
+                if (patient) {
+                    if (!patient.medicalHistory) {
+                        patient.medicalHistory = { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] };
+                    }
+                    if (!patient.medicalHistory.currentMedicines) {
+                        patient.medicalHistory.currentMedicines = [];
+                    }
+                    prescription.medicines.forEach(med => {
+                        const exists = patient.medicalHistory.currentMedicines.find(m => m.name.toLowerCase() === med.name.toLowerCase());
+                        if (!exists) {
+                            patient.medicalHistory.currentMedicines.push(med);
+                        }
+                    });
+                }
+                
+                this.save();
+                
+                // Sync to Supabase
+                this.uploadPrescription(prescription);
+                if (patient) this.saveProfileToSupabase(patient);
+            }
+
+            async uploadPrescription(p) {
+                try {
+                    const { error } = await supabaseClient
+                        .from('prescriptions')
+                        .insert({
+                            id: p.id,
+                            appointment_id: p.appointmentId,
+                            patient_id: p.patientId,
+                            doctor_id: p.doctorId,
+                            doctor_name: p.doctor,
+                            date: p.date,
+                            notes: p.notes,
+                            medicines: p.medicines,
+                            file_url: p.file || null
+                        });
+                    if (error) console.error("Error uploading prescription to Supabase:", error);
+                } catch (err) {
+                    console.error("Failed to upload prescription to Supabase:", err);
+                }
+            }
+
+            async saveProfileToSupabase(patient) {
+                try {
+                    const { error } = await supabaseClient
+                        .from('profiles')
+                        .update({
+                            name: patient.name,
+                            dob: patient.dob,
+                            gender: patient.gender,
+                            blood_group: patient.bloodGroup,
+                            height: patient.height,
+                            weight: patient.weight,
+                            bmi: patient.bmi,
+                            emergency_contact: patient.emergencyContact,
+                            medical_history: patient.medicalHistory,
+                            lifestyle: patient.lifestyle,
+                            settings: patient.settings,
+                            health_score: patient.healthScore
+                        })
+                        .eq('id', patient.id);
+                    if (error) console.error("Error saving profile to Supabase:", error);
+                } catch (err) {
+                    console.error("Failed to save profile to Supabase:", err);
+                }
             }
         }
         const db = new HealthcareDB();
@@ -911,41 +985,51 @@
 
         // Query patient profile from Supabase and render
         async function loadPatientDetails(patientId, appt) {
+            // Reset active prescription builder medicines list for this session
+            window.prescribedMedicines = [];
+
             const container = document.getElementById('patientFileContainer');
             container.innerHTML = `<p style="font-size: 0.9rem; color: var(--text-muted); text-align: center; padding: 40px;">Fetching patient file...</p>`;
 
             let patient = null;
 
-            try {
-                // Query Supabase profiles table
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', patientId)
-                    .maybeSingle();
+            // Prioritize Health ID details transferred with the appointment
+            if (appt && (appt.healthIdDetails || (appt.queue && appt.queue.healthIdDetails))) {
+                patient = appt.healthIdDetails || appt.queue.healthIdDetails;
+            }
 
-                if (!error && data) {
-                    patient = {
-                        id: data.id,
-                        health_id: data.health_id,
-                        name: data.name,
-                        dob: data.dob || "",
-                        gender: data.gender || "Unspecified",
-                        bloodGroup: data.blood_group || "O+",
-                        height: parseFloat(data.height || 170),
-                        weight: parseFloat(data.weight || 70),
-                        bmi: parseFloat(data.bmi || 24.2),
-                        email: data.email || "",
-                        phone: data.phone || "",
-                        emergencyContact: data.emergency_contact || { name: "", relation: "", phone: "" },
-                        settings: data.settings || { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
-                        medicalHistory: data.medical_history || { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
-                        lifestyle: data.lifestyle || { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
-                        healthScore: data.health_score || 80
-                    };
+            if (!patient) {
+                try {
+                    // Query Supabase profiles table
+                    const { data, error } = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', patientId)
+                        .maybeSingle();
+
+                    if (!error && data) {
+                        patient = {
+                            id: data.id,
+                            health_id: data.health_id,
+                            name: data.name,
+                            dob: data.dob || "",
+                            gender: data.gender || "Unspecified",
+                            bloodGroup: data.blood_group || "O+",
+                            height: parseFloat(data.height || 170),
+                            weight: parseFloat(data.weight || 70),
+                            bmi: parseFloat(data.bmi || 24.2),
+                            email: data.email || "",
+                            phone: data.phone || "",
+                            emergencyContact: data.emergency_contact || { name: "", relation: "", phone: "" },
+                            settings: data.settings || { language: "English", organDonor: false, darkMode: false, biometricsEnabled: false },
+                            medicalHistory: data.medical_history || { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
+                            lifestyle: data.lifestyle || { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" },
+                            healthScore: data.health_score || 80
+                        };
+                    }
+                } catch (err) {
+                    console.error("Supabase profile fetch failed, fallback to local:", err);
                 }
-            } catch (err) {
-                console.error("Supabase profile fetch failed, fallback to local:", err);
             }
 
             // Fallback to local storage patient record if Supabase search was empty/failed
@@ -995,12 +1079,17 @@
                 filesHtml = `<p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">No files attached to this session.</p>`;
             }
 
+            const showTransferredBadge = appt && (appt.healthIdDetails || (appt.queue && appt.queue.healthIdDetails));
+            const badgeHtml = showTransferredBadge ? 
+                `<span style="font-size: 0.65rem; background-color: rgba(16, 185, 129, 0.1); color: hsl(var(--success-hsl)); padding: 2px 8px; border-radius: 6px; font-weight:700; margin-left: 5px;"><i class="fa-solid fa-shield-halved"></i> Transferred from Health ID</span>` : '';
+
             container.innerHTML = `
                 <!-- Patient Overview Header -->
                 <div style="display: flex; gap: 20px; align-items: center; text-align: left; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                     <div class="user-avatar" style="width: 70px; height: 70px; font-size: 1.8rem; margin:0;">${patient.name.split(' ').map(n=>n[0]).join('')}</div>
                     <div style="flex: 1;">
                         <span style="font-size: 0.65rem; background-color: rgba(20, 184, 166, 0.1); color: hsl(var(--accent-hsl)); padding: 2px 8px; border-radius: 6px; font-weight:700;">Health ID: ${patient.health_id}</span>
+                        ${badgeHtml}
                         <h2 style="margin: 4px 0; font-family: var(--font-heading); font-size: 1.5rem; color: var(--text-primary);">${patient.name}</h2>
                         <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-envelope"></i> ${patient.email || 'No email'} | <i class="fa-solid fa-phone"></i> ${patient.phone || 'No phone'}</span>
                     </div>
@@ -1083,6 +1172,65 @@
                             <i class="fa-solid fa-camera"></i> Verify Patient Check-In (Scan QR)
                         </button>
                     `}
+                </div>
+
+                <!-- Write Prescription Form Section -->
+                <div style="border-top: 1px solid var(--border-color); margin-top: 20px; padding-top: 20px; text-align: left;">
+                    <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: hsl(var(--primary-hsl)); margin-bottom: 12px;">
+                        <i class="fa-solid fa-file-medical" style="color: hsl(var(--accent-hsl));"></i> Issue New Prescription
+                    </h3>
+                    
+                    <!-- Medicine Inputs -->
+                    <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 15px;">
+                        <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);"><i class="fa-solid fa-pills"></i> Add Medication</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                            <div>
+                                <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Medicine Name</label>
+                                <input type="text" id="prescMedName" placeholder="e.g. Paracetamol" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Dosage</label>
+                                <input type="text" id="prescMedDose" placeholder="e.g. 1-0-1 or 500mg" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%;">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                            <div>
+                                <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Duration</label>
+                                <input type="text" id="prescMedDuration" placeholder="e.g. 5 days" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Food Instructions</label>
+                                <select id="prescMedFood" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%; height: auto; display: block; background-color: var(--bg-secondary);">
+                                    <option value="After Food">After Food</option>
+                                    <option value="Before Food">Before Food</option>
+                                    <option value="With Food">With Food</option>
+                                    <option value="Anytime">Anytime</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addMedicineToTempList()" style="width: 100%; margin: 5px 0 0 0; padding: 6px; font-size: 0.75rem; border-radius: 8px; cursor: pointer;">
+                            <i class="fa-solid fa-plus"></i> Add to List
+                        </button>
+                    </div>
+
+                    <!-- Added Medicines List -->
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="font-size: 0.8rem; margin-bottom: 6px; color: var(--text-secondary);">Medicines to Prescribe:</h4>
+                        <div id="tempPrescMedicinesList" style="background: var(--bg-secondary); border: 1px dashed var(--border-color); padding: 10px; border-radius: 8px; min-height: 45px;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">No medicines added to this prescription yet.</span>
+                        </div>
+                    </div>
+
+                    <!-- Clinical Notes -->
+                    <div class="input-group" style="margin-bottom: 15px;">
+                        <label class="input-label" style="font-size: 0.75rem;">Clinical Notes & Advice</label>
+                        <textarea id="prescNotes" placeholder="Enter general checkup notes, diet guidelines or physical rest advice..." class="input-field" style="width: 100%; min-height: 60px; font-size: 0.75rem; padding: 8px; resize: vertical; margin: 0;"></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="button" class="btn btn-primary" onclick="submitClinicalPrescription('${appt.id}', '${patient.id}')" style="width: 100%; margin: 0; font-weight: 700; cursor: pointer;">
+                        <i class="fa-solid fa-paper-plane"></i> Issue & Send Prescription
+                    </button>
                 </div>
             `;
         }
@@ -1252,6 +1400,107 @@
             // Reload queue
             loadDoctorQueue();
         }
+
+        // Prescription Builder helper functions
+        window.prescribedMedicines = [];
+
+        window.addMedicineToTempList = function() {
+            const nameEl = document.getElementById('prescMedName');
+            const doseEl = document.getElementById('prescMedDose');
+            const durEl = document.getElementById('prescMedDuration');
+            const foodEl = document.getElementById('prescMedFood');
+            
+            if (!nameEl || !doseEl || !durEl || !foodEl) return;
+
+            const name = nameEl.value.trim();
+            const dose = doseEl.value.trim();
+            const duration = durEl.value.trim();
+            const food = foodEl.value;
+
+            if (!name) {
+                alert("Please enter a medicine name.");
+                return;
+            }
+
+            const med = { name, dose: dose || "As directed", duration: duration || "As directed", foodInstructions: food, warnings: "None" };
+            window.prescribedMedicines.push(med);
+
+            // Clear inputs
+            nameEl.value = '';
+            doseEl.value = '';
+            durEl.value = '';
+
+            renderTempMedicinesList();
+        };
+
+        window.renderTempMedicinesList = function() {
+            const container = document.getElementById('tempPrescMedicinesList');
+            if (!container) return;
+
+            if (window.prescribedMedicines.length === 0) {
+                container.innerHTML = `<span style="font-size: 0.75rem; color: var(--text-muted);">No medicines added to this prescription yet.</span>`;
+                return;
+            }
+
+            container.innerHTML = window.prescribedMedicines.map((m, idx) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-tertiary); padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; text-align: left;">
+                        <strong>${m.name}</strong> - ${m.dose} (${m.duration}, ${m.foodInstructions})
+                    </div>
+                    <button type="button" onclick="removeTempMedicine(${idx})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `).join('');
+        };
+
+        window.removeTempMedicine = function(idx) {
+            window.prescribedMedicines.splice(idx, 1);
+            renderTempMedicinesList();
+        };
+
+        window.submitClinicalPrescription = async function(apptId, patientId) {
+            if (window.prescribedMedicines.length === 0) {
+                alert("Please add at least one medication to prescribe.");
+                return;
+            }
+
+            const notes = document.getElementById('prescNotes').value.trim();
+            const dateStr = new Date().toISOString().split('T')[0];
+
+            // Get active doctor profile
+            const activeDoctorId = document.getElementById('doctorSelect').value;
+            const doctorObj = db.getDoctor(activeDoctorId) || { name: "Dr. Elizabeth Vance" };
+
+            const prescId = 'pr_' + Date.now();
+            const newPresc = {
+                id: prescId,
+                appointmentId: apptId,
+                patientId: patientId,
+                doctorId: activeDoctorId,
+                doctor: doctorObj.name,
+                date: dateStr,
+                notes: notes || "No specific advice notes recorded.",
+                medicines: [...window.prescribedMedicines],
+                file: `Prescription-${prescId}.pdf`
+            };
+
+            // Call db.addPrescription
+            db.addPrescription(newPresc);
+
+            // Alert success
+            alert("Prescription submitted successfully! It has been synced to Supabase and will reflect immediately on the patient's portal.");
+
+            // Clear temporary array
+            window.prescribedMedicines = [];
+
+            // Reload patient details to show updated prescriptions lists
+            // Find active appointment object
+            const currentAppt = db.data.appointments.find(a => a.id === apptId);
+            if (currentAppt) {
+                await loadPatientDetails(patientId, currentAppt);
+            }
+        };
 
         // Toggle light/dark themes
         function toggleTheme() {
