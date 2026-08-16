@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="One Minute Clinical - Receptionist Management System">
+    <title>One Minute Clinical - Reception Portal</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            padding: 20px;
+            margin: 0;
+            display: block;
+            overflow-y: auto;
+            min-height: 100vh;
+        }
+        .reception-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 25px;
+            background: linear-gradient(135deg, #0f4c81, #131c2e);
+            color: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-area i {
+            font-size: 1.8rem;
+            color: hsl(var(--accent-hsl));
+        }
+        .logo-area span {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+        .card-header h3 {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .input-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-field {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: hsl(var(--accent-hsl));
+            background: var(--bg-secondary);
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background: hsl(var(--accent-hsl));
+            color: white;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+        .doctor-pill {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+        }
+        .doctor-pill .info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .doctor-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .doctor-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .doctor-spec {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+        .queue-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: hsl(var(--accent-hsl));
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+        .appointment-row {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+            font-size: 0.85rem;
+        }
+        .appointment-row.header {
+            font-weight: 700;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: none;
+        }
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+            width: fit-content;
+        }
+        .status-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: hsl(var(--warning-hsl));
+        }
+        .status-verified {
+            background: rgba(16, 185, 129, 0.15);
+            color: hsl(var(--success-hsl));
+        }
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 450px;
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--hover-shadow);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .search-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        .search-item:hover {
+            background: var(--bg-tertiary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Authentication Overlay -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-card">
+            <img src="logo.jpg" alt="Logo" style="width: 70px; height: 70px; border-radius: 16px; margin-bottom: 15px;">
+            <h2 style="font-family: var(--font-heading); margin-bottom: 5px;">One Minute Reception</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 25px;">Clinic Front-Desk Check-In & Walk-In Registration</p>
+            
+            <!-- Login Form -->
+            <form id="receptionLoginForm" onsubmit="handleAuthSubmit(event, 'login')">
+                <div class="input-group">
+                    <label class="input-label" for="loginEmail">Email Address</label>
+                    <input class="input-field" type="email" id="loginEmail" placeholder="reception@hospital.com" required value="demo.reception@oneminute.com">
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="loginPassword">Password</label>
+                    <input class="input-field" type="password" id="loginPassword" placeholder="Enter secure password" required value="Password123">
+                </div>
+                <button class="btn btn-primary" type="submit" style="width:100%; margin-top:10px;">Sign In</button>
+                <p style="font-size:0.8rem; margin-top:15px; color:var(--text-secondary);">
+                    Need receptionist access? <span style="color:hsl(var(--accent-hsl)); cursor:pointer; font-weight:600;" onclick="toggleAuthMode('register')">Register here</span>
+                </p>
+            </form>
+
+            <!-- Register Form (Hidden initially) -->
+            <form id="receptionRegisterForm" onsubmit="handleAuthSubmit(event, 'register')" style="display:none;">
+                <div class="input-group">
+                    <label class="input-label" for="regName">Full Name</label>
+                    <input class="input-field" type="text" id="regName" placeholder="Desk Attendant Name" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="regEmail">Email Address</label>
+                    <input class="input-field" type="email" id="regEmail" placeholder="yourname@hospital.com" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="regPassword">Password</label>
+                    <input class="input-field" type="password" id="regPassword" placeholder="Min 6 characters" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="regHospital">Select Hospital / Clinic</label>
+                    <select class="input-field" id="regHospital" onchange="handleHospitalChange()" style="height:auto;">
+                        <option value="h1">St. Elizabeth Medical Center</option>
+                        <option value="h2">Metro Pediatric & General Hospital</option>
+                        <option value="h3">Apex Cardiology & Rehabilitation Clinic</option>
+                        <option value="custom">-- Register New Clinic/Hospital --</option>
+                    </select>
+                </div>
+
+                <!-- Custom Clinic inputs (Hidden unless select is custom) -->
+                <div id="customClinicFields" style="display:none; border-top:1px dashed var(--border-color); padding-top:15px; margin-top:10px;">
+                    <div class="input-group">
+                        <label class="input-label" for="customClinicName">New Clinic Name</label>
+                        <input class="input-field" type="text" id="customClinicName" placeholder="e.g. City Urgent Care Center">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="customClinicAddress">New Clinic Address</label>
+                        <input class="input-field" type="text" id="customClinicAddress" placeholder="e.g. 456 Parkway Ave, Heights">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" type="submit" style="width:100%; margin-top:10px;">Create Desk Account</button>
+                <p style="font-size:0.8rem; margin-top:15px; color:var(--text-secondary);">
+                    Already registered? <span style="color:hsl(var(--accent-hsl)); cursor:pointer; font-weight:600;" onclick="toggleAuthMode('login')">Sign In here</span>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Workspace Dashboard (Visible after login) -->
+    <div class="reception-container">
+        <!-- Header -->
+        <header class="header-bar">
+            <div class="logo-area">
+                <i class="fa-solid fa-hospital-user"></i>
+                <div>
+                    <span>One Minute Clinical</span>
+                    <p style="font-size:0.7rem; color:hsl(var(--accent-hsl)); font-weight:600; margin:0;" id="activeClinicLabel">St. Elizabeth Medical Center</p>
+                </div>
+            </div>
+            <div style="display: flex; gap:10px; align-items:center;">
+                <span id="receptionistNameLabel" style="font-size: 0.85rem; font-weight:500; opacity:0.9;">Attendant: -</span>
+                <button class="btn btn-secondary" onclick="toggleTheme()" style="padding:6px 12px; font-size:0.75rem;">
+                    <i class="fa-solid fa-moon"></i> Theme
+                </button>
+                <button class="btn btn-secondary" onclick="handleLogout()" style="padding:6px 12px; font-size:0.75rem; background: rgba(239, 68, 68, 0.1); color: hsl(var(--danger-hsl)); border-color: rgba(239, 68, 68, 0.2);">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Left Side: Roster & Scanners -->
+            <div style="display: flex; flex-direction:column; gap:20px;">
+                
+                <!-- Token Search Check-in -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-ticket"></i> Check In Token / QR</h3>
+                    </div>
+                    <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:15px;">
+                        Scan physical paper QR or type the patient's appointment token below to verify their identity and check them into the clinic queue.
+                    </p>
+                    <div class="input-group" style="display: flex; gap: 8px; margin-bottom: 0;">
+                        <input class="input-field" type="text" id="tokenSearchInput" placeholder="e.g. T-804 or Appointment ID" style="flex:1;">
+                        <button class="btn btn-primary" onclick="verifyTokenSubmit()" style="padding: 10px 15px;"><i class="fa-solid fa-circle-check"></i> Check In</button>
+                    </div>
+                </div>
+
+                <!-- Doctor Queue Monitor -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-user-doctor"></i> Physicians On Duty</h3>
+                    </div>
+                    <div id="doctorQueueList">
+                        <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); padding:10px;">Loading doctors...</p>
+                    </div>
+                </div>
+
+                <!-- Book Walk-in Appointment Wizard -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-user-plus"></i> Walk-In Registration</h3>
+                    </div>
+                    
+                    <!-- Search Patient Step -->
+                    <div id="walkinStepSearch">
+                        <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:12px;">Step 1: Lookup patient health profile</p>
+                        <div class="input-group" style="display:flex; gap:8px;">
+                            <input class="input-field" type="text" id="patientQuery" placeholder="Search by name, phone or MED-ID...">
+                            <button class="btn btn-secondary" onclick="searchPatientDirectory()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        </div>
+                        <div id="patientSearchResults" style="max-height:180px; overflow-y:auto; margin-bottom:15px; border-radius:8px; border: 1px solid var(--border-color); display:none;">
+                        </div>
+                        <button class="btn btn-secondary" onclick="showQuickRegisterForm()" style="width:100%; font-size:0.8rem;">
+                            <i class="fa-solid fa-plus"></i> Patient Not Found - Create Guest Profile
+                        </button>
+                    </div>
+
+                    <!-- Guest Profile Creation -->
+                    <div id="walkinStepRegister" style="display:none;">
+                        <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:12px;">Step 1b: Guest Patient Profile Details</p>
+                        <div class="input-group">
+                            <label class="input-label">Patient Full Name</label>
+                            <input class="input-field" type="text" id="guestName" placeholder="e.g. John Doe">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Contact Phone</label>
+                            <input class="input-field" type="text" id="guestPhone" placeholder="e.g. +1-555-0190">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Date of Birth</label>
+                            <input class="input-field" type="date" id="guestDob">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Gender</label>
+                            <select class="input-field" id="guestGender">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:10px;">
+                            <button class="btn btn-secondary" onclick="cancelGuestRegister()" style="flex:1;">Cancel</button>
+                            <button class="btn btn-primary" onclick="submitGuestRegister()" style="flex:1;">Save & Continue</button>
+                        </div>
+                    </div>
+
+                    <!-- Booking Wizard Final Details -->
+                    <div id="walkinStepBook" style="display:none;">
+                        <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:10px;">Step 2: Assign Doctor & Schedule</p>
+                        <div class="card-inner" style="background:var(--bg-tertiary); padding:10px; border-radius:8px; margin-bottom:15px; font-size:0.8rem;">
+                            <strong>Selected Patient:</strong> <span id="walkinPatientName">Guest Patient</span>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Select Practitioner</label>
+                            <select class="input-field" id="walkinDoctor">
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Symptoms & Reason</label>
+                            <input class="input-field" type="text" id="walkinSymptoms" placeholder="e.g. Chest pain, cold, routine checkup">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Appt Time Slot</label>
+                            <input class="input-field" type="time" id="walkinTime" value="10:00">
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-secondary" onclick="backToPatientSelection()" style="flex:1;">Back</button>
+                            <button class="btn btn-primary" onclick="submitWalkInBooking()" style="flex:1;">Confirm Queue Slot</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Today's Clinic Roster -->
+            <div class="card" style="display: flex; flex-direction:column;">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-list-check"></i> Today's Appointment Roster</h3>
+                    <button class="btn btn-secondary" onclick="loadClinicRoster()" style="padding:6px 12px; font-size:0.75rem;"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <div class="appointment-row header">
+                        <span>Patient</span>
+                        <span>Practitioner</span>
+                        <span>Time</span>
+                        <span>Visit Token</span>
+                        <span>Action</span>
+                    </div>
+                    <div id="clinicRosterList" style="min-height:350px;">
+                        <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); padding:60px;">Roster loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Supabase Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        let receptionistProfile = null;
+        let selectedWalkInPatient = null;
+        let doctorsMap = {};
+
+        // Switch Forms in Auth Overlay
+        function toggleAuthMode(mode) {
+            document.getElementById('receptionLoginForm').style.display = mode === 'login' ? 'block' : 'none';
+            document.getElementById('receptionRegisterForm').style.display = mode === 'register' ? 'block' : 'none';
+        }
+
+        // Show custom clinic fields
+        function handleHospitalChange() {
+            const select = document.getElementById('regHospital');
+            const customArea = document.getElementById('customClinicFields');
+            customArea.style.display = select.value === 'custom' ? 'block' : 'none';
+        }
+
+        // Auth Submit handler (registers or logs in receptionist)
+        async function handleAuthSubmit(event, action) {
+            event.preventDefault();
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Processing...";
+
+            try {
+                if (action === 'register') {
+                    const name = document.getElementById('regName').value.trim();
+                    const email = document.getElementById('regEmail').value.trim();
+                    const password = document.getElementById('regPassword').value;
+                    let hospitalId = document.getElementById('regHospital').value;
+
+                    // Handle custom hospital
+                    if (hospitalId === 'custom') {
+                        const customName = document.getElementById('customClinicName').value.trim();
+                        const customAddr = document.getElementById('customClinicAddress').value.trim();
+                        if (!customName || !customAddr) {
+                            alert("Please enter a clinic name and address.");
+                            submitBtn.disabled = false;
+                            submitBtn.innerText = "Create Desk Account";
+                            return;
+                        }
+                        hospitalId = 'h_' + Date.now();
+                        const newHosp = {
+                            id: hospitalId,
+                            name: customName,
+                            address: customAddr,
+                            image: 'https://images.unsplash.com/photo-1586773860418-d3b3de97e663?auto=format&fit=crop&q=80&w=400',
+                            departments: ['General Medicine'],
+                            emergency_icu_status: 'Available',
+                            amenities: ['Parking', 'Pharmacy'],
+                            rating: 4.8,
+                            reviews_count: 10
+                        };
+                        
+                        await supabaseClient.from('hospitals').insert(newHosp);
+                        db.data.hospitals[hospitalId] = newHosp;
+                        db.save();
+                    }
+
+                    // Register auth
+                    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: { data: { full_name: name } }
+                    });
+
+                    if (authError) throw authError;
+
+                    // Insert receptionist mapping profile
+                    const newReceptionist = {
+                        id: authData.user.id,
+                        name: name,
+                        email: email,
+                        hospital_id: hospitalId,
+                        status: 'approved'
+                    };
+
+                    const { error: dbErr } = await supabaseClient.from('receptionists').insert(newReceptionist);
+                    if (dbErr) {
+                        console.warn("Table receptionists did not exist, using profiles role fallback:", dbErr.message);
+                        // Save under profile settings fallback for scale
+                        await supabaseClient.from('profiles').update({
+                            settings: { language: 'English', role: 'receptionist', hospital_id: hospitalId }
+                        }).eq('id', authData.user.id);
+                    }
+
+                    // Save local storage mock
+                    if (!db.data.receptionists) db.data.receptionists = {};
+                    db.data.receptionists[authData.user.id] = newReceptionist;
+                    db.save();
+
+                    alert("Receptionist Account Created successfully!");
+                    initializeSession(authData.user);
+                } else {
+                    const email = document.getElementById('loginEmail').value.trim();
+                    const password = document.getElementById('loginPassword').value;
+
+                    const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+                    if (authError) throw authError;
+                    initializeSession(authData.user);
+                }
+            } catch (err) {
+                alert("Operation failed: " + err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = action === 'login' ? 'Sign In' : 'Create Desk Account';
+            }
+        }
+
+        // Initialize receptionist dashboard session
+        async function initializeSession(authUser) {
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('receptionistNameLabel').innerText = `Attendant: ${authUser.user_metadata?.full_name || authUser.email.split('@')[0]}`;
+
+            // Fetch receptionist profile details
+            let hospitalId = 'h1'; // fallback default
+            
+            // Try fetching from public.receptionists table
+            try {
+                const { data: recData, error } = await supabaseClient
+                    .from('receptionists')
+                    .select('*')
+                    .eq('id', authUser.id)
+                    .maybeSingle();
+
+                if (!error && recData) {
+                    receptionistProfile = recData;
+                    hospitalId = recData.hospital_id;
+                } else {
+                    // Try profiles settings fallback
+                    const { data: profData } = await supabaseClient
+                        .from('profiles')
+                        .select('settings')
+                        .eq('id', authUser.id)
+                        .maybeSingle();
+                    if (profData && profData.settings?.hospital_id) {
+                        hospitalId = profData.settings.hospital_id;
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not query receptionist table:", e);
+            }
+
+            receptionistProfile = {
+                id: authUser.id,
+                name: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
+                hospital_id: hospitalId
+            };
+
+            // Set clinic label
+            const hosp = db.getHospital(hospitalId) || { name: 'St. Elizabeth Medical Center' };
+            document.getElementById('activeClinicLabel').innerText = hosp.name;
+
+            // Load static databases and initial dashboard arrays
+            await db.loadHospitalsAndDoctorsFromSupabase();
+            loadClinicDoctors();
+            loadClinicRoster();
+        }
+
+        // Load Doctors at receptionist's clinic
+        function loadClinicDoctors() {
+            const container = document.getElementById('doctorQueueList');
+            const select = document.getElementById('walkinDoctor');
+            
+            const docs = Object.values(db.data.doctors).filter(d => d.hospitalId === receptionistProfile.hospital_id);
+            container.innerHTML = '';
+            select.innerHTML = '';
+
+            if (docs.length === 0) {
+                container.innerHTML = `<p style="font-size:0.75rem; text-align:center; color:var(--text-muted); padding:10px;">No physicians registered at this clinic.</p>`;
+                return;
+            }
+
+            docs.forEach(d => {
+                doctorsMap[d.id] = d.name;
+                
+                // Count queue size for today
+                const appts = db.data.appointments || [];
+                const queueCount = appts.filter(a => 
+                    a.doctorId === d.id && 
+                    a.date === new Date().toISOString().split('T')[0] && 
+                    (a.checkInStatus === 'Checked In' || a.checkInStatus === 'Verified') &&
+                    a.status !== 'Completed' && a.status !== 'Cancelled'
+                ).length;
+
+                container.innerHTML += `
+                    <div class="doctor-pill">
+                        <div class="info">
+                            <img src="${d.image || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300'}" class="doctor-avatar">
+                            <div>
+                                <span class="doctor-name">${d.name}</span>
+                                <div class="doctor-spec">${d.specialty}</div>
+                            </div>
+                        </div>
+                        <span class="queue-badge">${queueCount} Waiting</span>
+                    </div>
+                `;
+
+                select.innerHTML += `<option value="${d.id}">${d.name} (${d.specialty})</option>`;
+            });
+        }
+
+        // Load Today's Clinic Appointments Roster
+        async function loadClinicRoster() {
+            const container = document.getElementById('clinicRosterList');
+            container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:var(--text-muted); padding:60px;">Fetching rosters from cloud...</p>`;
+            
+            const today = new Date().toISOString().split('T')[0];
+
+            try {
+                // Fetch all appointments for receptionist's hospital today
+                const { data: appts, error } = await supabaseClient
+                    .from('appointments')
+                    .select('*')
+                    .eq('hospital_id', receptionistProfile.hospital_id)
+                    .eq('date', today);
+
+                if (error) throw error;
+
+                // Sync appointments into local storage db
+                if (appts) {
+                    appts.forEach(a => {
+                        const localIdx = db.data.appointments.findIndex(la => la.id === a.id);
+                        const mapped = {
+                            id: a.id,
+                            patientId: a.patient_id,
+                            doctorId: a.doctor_id,
+                            hospitalId: a.hospital_id,
+                            date: a.date,
+                            time: a.time,
+                            symptoms: a.symptoms,
+                            reports: a.reports || [],
+                            insurance: a.insurance,
+                            paymentStatus: a.payment_status,
+                            paymentAmount: parseFloat(a.payment_amount || 0),
+                            qrCode: a.qr_code,
+                            visitToken: a.visit_token,
+                            status: a.status,
+                            checkInStatus: a.check_in_status,
+                            queue: a.queue || {},
+                            healthIdDetails: a.queue?.healthIdDetails || null
+                        };
+                        if (localIdx !== -1) {
+                            db.data.appointments[localIdx] = mapped;
+                        } else {
+                            db.data.appointments.push(mapped);
+                        }
+                    });
+                    db.save();
+                }
+            } catch (err) {
+                console.warn("Using offline local appointments fallback:", err);
+            }
+
+            const todayAppts = db.data.appointments.filter(a => 
+                a.hospitalId === receptionistProfile.hospital_id && 
+                a.date === today &&
+                a.status !== 'Completed' &&
+                a.status !== 'Cancelled'
+            );
+
+            // Fetch any missing patient profile details
+            const missingPatientIds = todayAppts.filter(a => !db.data.patients[a.patientId]).map(a => a.patientId);
+            if (missingPatientIds.length > 0) {
+                try {
+                    const { data: profs } = await supabaseClient.from('profiles').select('*').in('id', missingPatientIds);
+                    if (profs) {
+                        profs.forEach(p => {
+                            db.data.patients[p.id] = {
+                                id: p.id,
+                                health_id: p.health_id,
+                                name: p.name,
+                                email: p.email,
+                                phone: p.phone,
+                                dob: p.dob,
+                                gender: p.gender,
+                                bloodGroup: p.blood_group
+                            };
+                        });
+                        db.save();
+                    }
+                } catch (e) {
+                    console.warn("Could not retrieve patient records:", e);
+                }
+            }
+
+            container.innerHTML = '';
+
+            if (todayAppts.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:60px; color:var(--text-muted);">
+                        <i class="fa-solid fa-calendar-day" style="font-size:3rem; opacity:0.1; margin-bottom:10px;"></i>
+                        <p style="font-size:0.8rem;">No appointments scheduled for today.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort appointments by time
+            todayAppts.sort((x, y) => x.time.localeCompare(y.time));
+
+            todayAppts.forEach(a => {
+                const doctorName = doctorsMap[a.doctorId] || "Practitioner";
+                // Get patient name (favor walk-in custom details first if available)
+                const customDetails = a.healthIdDetails || a.queue?.healthIdDetails;
+                const patientName = customDetails?.name || db.data.patients[a.patientId]?.name || "Unknown Patient";
+                
+                const isVerified = a.checkInStatus === 'Verified';
+                const badgeClass = isVerified ? 'status-verified' : 'status-pending';
+                const badgeLabel = isVerified ? 'Checked In' : 'Pending Check-In';
+                
+                const actionButton = isVerified ? 
+                    `<button class="btn btn-secondary" disabled style="padding: 4px 10px; font-size:0.7rem; opacity:0.5;"><i class="fa-solid fa-check"></i> Arrived</button>` :
+                    `<button class="btn btn-primary" onclick="verifyToken('${a.id}')" style="padding: 4px 10px; font-size:0.7rem;"><i class="fa-solid fa-circle-check"></i> Check In</button>`;
+
+                container.innerHTML += `
+                    <div class="appointment-row">
+                        <strong style="color:var(--text-primary); font-size:0.85rem;">${patientName}</strong>
+                        <span style="color:var(--text-secondary);">${doctorName}</span>
+                        <span style="font-weight:500;">${a.time}</span>
+                        <span><code style="background:var(--bg-tertiary); padding:2px 6px; border-radius:4px; font-weight:700;">${a.visitToken}</code></span>
+                        <div>${actionButton}</div>
+                    </div>
+                `;
+            });
+
+            // Re-render doctor list queue counts
+            loadClinicDoctors();
+        }
+
+        // Verify patient checkin token
+        async function verifyToken(apptId) {
+            try {
+                // Update in local cache
+                const apptIdx = db.data.appointments.findIndex(la => la.id === apptId);
+                if (apptIdx !== -1) {
+                    db.data.appointments[apptIdx].checkInStatus = 'Verified';
+                    db.save();
+                }
+
+                // Sync update to Supabase
+                const { error } = await supabaseClient
+                    .from('appointments')
+                    .update({ check_in_status: 'Verified' })
+                    .eq('id', apptId);
+
+                if (error) throw error;
+                
+                alert("Patient checked in and marked as verified in queue!");
+                loadClinicRoster();
+            } catch (err) {
+                alert("Failed to verify check-in: " + err.message);
+            }
+        }
+
+        // Verify Checkin by token string search
+        async function verifyTokenSubmit() {
+            const val = document.getElementById('tokenSearchInput').value.trim().toUpperCase();
+            if (!val) {
+                alert("Please enter a valid visit token (e.g. T-804) or Appointment ID.");
+                return;
+            }
+
+            // Find matching appointment in today's list
+            const today = new Date().toISOString().split('T')[0];
+            const match = db.data.appointments.find(a => 
+                a.hospitalId === receptionistProfile.hospital_id && 
+                a.date === today &&
+                (a.visitToken.toUpperCase() === val || a.id.toUpperCase() === val)
+            );
+
+            if (match) {
+                await verifyToken(match.id);
+                document.getElementById('tokenSearchInput').value = '';
+            } else {
+                // Check if appointment exists on cloud directly
+                try {
+                    const { data: cloudAppt } = await supabaseClient
+                        .from('appointments')
+                        .select('*')
+                        .eq('visit_token', val)
+                        .eq('date', today)
+                        .maybeSingle();
+                    if (cloudAppt) {
+                        await verifyToken(cloudAppt.id);
+                        document.getElementById('tokenSearchInput').value = '';
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Direct token query error:", e);
+                }
+                alert("No scheduled appointment found for today matching token: " + val);
+            }
+        }
+
+        // Search Patient directory for Walk-in Booking
+        async function searchPatientDirectory() {
+            const query = document.getElementById('patientQuery').value.trim();
+            const resultsBox = document.getElementById('patientSearchResults');
+            resultsBox.innerHTML = '';
+            resultsBox.style.display = 'block';
+
+            if (!query) {
+                resultsBox.style.display = 'none';
+                return;
+            }
+
+            try {
+                let { data: profiles, error } = await supabaseClient.from('profiles').select('*');
+                if (error) throw error;
+
+                if (profiles) {
+                    // Filter locally to catch all search dimensions easily
+                    const q = query.toLowerCase();
+                    const filtered = profiles.filter(p => 
+                        (p.name && p.name.toLowerCase().includes(q)) ||
+                        (p.phone && p.phone.includes(q)) ||
+                        (p.health_id && p.health_id.toLowerCase().includes(q)) ||
+                        (p.email && p.email.toLowerCase().includes(q))
+                    );
+
+                    if (filtered.length === 0) {
+                        resultsBox.innerHTML = `<p style="padding:10px; font-size:0.75rem; text-align:center; color:var(--text-muted);">No matching patients found. Click guest profile button to proceed.</p>`;
+                        return;
+                    }
+
+                    filtered.forEach(p => {
+                        const item = document.createElement('div');
+                        item.className = 'search-item';
+                        item.innerHTML = `
+                            <div>
+                                <strong style="font-size:0.85rem;">${p.name}</strong>
+                                <div style="font-size:0.7rem; color:var(--text-secondary);">${p.health_id} | ${p.phone || 'No Phone'}</div>
+                            </div>
+                            <span style="font-size:0.75rem; color:hsl(var(--accent-hsl)); font-weight:600;"><i class="fa-solid fa-circle-plus"></i> Select</span>
+                        `;
+                        item.onclick = () => selectPatientForWalkIn(p);
+                        resultsBox.appendChild(item);
+                    });
+                }
+            } catch (err) {
+                console.error("Directory search failed:", err);
+                resultsBox.innerHTML = `<p style="padding:10px; font-size:0.75rem; text-align:center; color:var(--text-danger);">Offline: Failed to reach patient directory.</p>`;
+            }
+        }
+
+        // Select Patient for Booking
+        function selectPatientForWalkIn(patient) {
+            selectedWalkInPatient = patient;
+            document.getElementById('patientQuery').value = '';
+            document.getElementById('patientSearchResults').style.display = 'none';
+
+            // Update wizard display
+            document.getElementById('walkinPatientName').innerText = `${patient.name} (${patient.health_id})`;
+            document.getElementById('walkinStepSearch').style.display = 'none';
+            document.getElementById('walkinStepBook').style.display = 'block';
+        }
+
+        // Show Guest Register form
+        function showQuickRegisterForm() {
+            document.getElementById('walkinStepSearch').style.display = 'none';
+            document.getElementById('walkinStepRegister').style.display = 'block';
+        }
+
+        // Cancel Guest register
+        function cancelGuestRegister() {
+            document.getElementById('walkinStepRegister').style.display = 'none';
+            document.getElementById('walkinStepSearch').style.display = 'block';
+        }
+
+        // Submit Quick guest registration
+        function submitGuestRegister() {
+            const name = document.getElementById('guestName').value.trim();
+            const phone = document.getElementById('guestPhone').value.trim();
+            const dob = document.getElementById('guestDob').value;
+            const gender = document.getElementById('guestGender').value;
+
+            if (!name || !phone) {
+                alert("Please fill in the guest patient's name and phone number.");
+                return;
+            }
+
+            // Create temporary guest patient object (satisfies booking details)
+            selectedWalkInPatient = {
+                id: receptionistProfile.id, // satisfying foreign key constraints, details stored in healthIdDetails
+                name: name,
+                phone: phone,
+                dob: dob,
+                gender: gender,
+                health_id: 'GUEST-' + Math.floor(100000 + Math.random() * 900000)
+            };
+
+            document.getElementById('walkinPatientName').innerText = `${name} (${selectedWalkInPatient.health_id} - Guest)`;
+            document.getElementById('walkinStepRegister').style.display = 'none';
+            document.getElementById('walkinStepBook').style.display = 'block';
+            
+            // Reset guest form inputs
+            document.getElementById('guestName').value = '';
+            document.getElementById('guestPhone').value = '';
+            document.getElementById('guestDob').value = '';
+        }
+
+        // Go back to search step
+        function backToPatientSelection() {
+            document.getElementById('walkinStepBook').style.display = 'none';
+            document.getElementById('walkinStepSearch').style.display = 'block';
+            selectedWalkInPatient = null;
+        }
+
+        // Submit Walk-in Booking
+        async function submitWalkInBooking() {
+            const docId = document.getElementById('walkinDoctor').value;
+            const symptoms = document.getElementById('walkinSymptoms').value.trim() || 'Walk-in Consultation';
+            const time = document.getElementById('walkinTime').value;
+            const today = new Date().toISOString().split('T')[0];
+            const apptId = 'a_' + Date.now();
+            const tokenVal = 'T-' + Math.floor(100 + Math.random() * 900);
+
+            const doc = db.getDoctor(docId);
+            if (!doc) {
+                alert("Selected doctor details missing.");
+                return;
+            }
+
+            const healthIdDetails = {
+                id: selectedWalkInPatient.id,
+                health_id: selectedWalkInPatient.health_id,
+                name: selectedWalkInPatient.name,
+                dob: selectedWalkInPatient.dob || "",
+                gender: selectedWalkInPatient.gender || "Unspecified",
+                phone: selectedWalkInPatient.phone || "",
+                bloodGroup: selectedWalkInPatient.bloodGroup || "O+",
+                height: 170,
+                weight: 70,
+                bmi: 24.2,
+                medicalHistory: { allergies: [], chronicDiseases: [], surgeries: [], currentMedicines: [] },
+                lifestyle: { smoking: "Never", alcohol: "Never", exercise: "None", sleep: "8 hours" }
+            };
+
+            const newApp = {
+                id: apptId,
+                patientId: selectedWalkInPatient.id,
+                doctorId: docId,
+                hospitalId: receptionistProfile.hospital_id,
+                date: today,
+                time: time,
+                symptoms: symptoms,
+                reports: [],
+                insurance: "None",
+                paymentStatus: "Paid",
+                paymentAmount: parseFloat(doc.consultingFee || 100),
+                qrCode: `${window.location.origin}/doctor.html?appt=${apptId}`,
+                visitToken: tokenVal,
+                status: "Upcoming",
+                checkInStatus: "Verified", // Walk-ins are checked-in at reception desk immediately
+                healthIdDetails: healthIdDetails,
+                queue: {
+                    position: 1,
+                    estWaitTime: 15,
+                    delay: 0,
+                    room: "Suite 302",
+                    currentSpeaker: tokenVal,
+                    healthIdDetails: healthIdDetails
+                }
+            };
+
+            try {
+                // Upload appointment to Supabase
+                const { error } = await supabaseClient
+                    .from('appointments')
+                    .insert({
+                        id: apptId,
+                        patient_id: selectedWalkInPatient.id,
+                        doctor_id: docId,
+                        hospital_id: receptionistProfile.hospital_id,
+                        date: today,
+                        time: time,
+                        symptoms: symptoms,
+                        reports: [],
+                        insurance: "None",
+                        payment_status: "Paid",
+                        payment_amount: parseFloat(doc.consultingFee || 100),
+                        qr_code: newApp.qrCode,
+                        visit_token: tokenVal,
+                        status: "Upcoming",
+                        check_in_status: "Verified",
+                        queue: newApp.queue
+                    });
+
+                if (error) throw error;
+
+                // Save locally
+                db.data.appointments.push(newApp);
+                db.save();
+
+                alert(`Walk-In Appointment booked successfully!\nToken: ${tokenVal}\nPosition: Added to Doctor queue.`);
+                
+                // Reset Wizard
+                document.getElementById('walkinSymptoms').value = '';
+                document.getElementById('walkinStepBook').style.display = 'none';
+                document.getElementById('walkinStepSearch').style.display = 'block';
+                selectedWalkInPatient = null;
+                
+                // Refresh list
+                await loadClinicRoster();
+            } catch (err) {
+                alert("Failed to book walk-in: " + err.message);
+            }
+        }
+
+        // Toggle Theme
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme_dark_reception', isDark ? 'true' : 'false');
+        }
+
+        // Handle Logout
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            receptionistProfile = null;
+            document.getElementById('authOverlay').style.display = 'flex';
+        }
+
+        // On Load
+        window.onload = async function() {
+            // Apply theme
+            const isDark = localStorage.getItem('theme_dark_reception') === 'true';
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+            }
+
+            // Bind mock session if already active
+            const session = supabaseClient.currentSession || window.supabaseSession;
+            if (session && session.user) {
+                initializeSession(session.user);
+            }
+        };
+    </script>
+</body>
+</html>

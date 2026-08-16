@@ -289,3 +289,26 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
     after insert on auth.users
     for each row execute procedure public.handle_new_user();
+
+-- 8. Add Receptionists Table and Policies
+create table if not exists public.receptionists (
+    id uuid primary key references auth.users(id) on delete cascade,
+    name text not null,
+    email text,
+    phone text,
+    hospital_id text references public.hospitals(id) on delete cascade,
+    status text not null default 'approved' check (status in ('pending', 'approved', 'rejected')),
+    created_at timestamptz default timezone('utc'::text, now()) not null
+);
+
+alter table public.receptionists enable row level security;
+
+drop policy if exists "Receptionists are viewable by everyone" on public.receptionists;
+create policy "Receptionists are viewable by everyone" on public.receptionists for select using (true);
+
+drop policy if exists "Anyone can register as a receptionist" on public.receptionists;
+create policy "Anyone can register as a receptionist" on public.receptionists for insert with check (true);
+
+drop policy if exists "Receptionists can update their own profile" on public.receptionists;
+create policy "Receptionists can update their own profile" on public.receptionists for update using (auth.uid() = id);
+

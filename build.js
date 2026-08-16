@@ -30,6 +30,12 @@ if (fs.existsSync('doctor.html')) {
 if (fs.existsSync('admin.html')) {
     fs.copyFileSync('admin.html', 'www/admin.html');
 }
+if (fs.existsSync('reception.html')) {
+    fs.copyFileSync('reception.html', 'www/reception.html');
+}
+if (fs.existsSync('preview.html')) {
+    fs.copyFileSync('preview.html', 'www/preview.html');
+}
 if (fs.existsSync('logo.jpg')) {
     fs.copyFileSync('logo.jpg', 'www/logo.jpg');
 }

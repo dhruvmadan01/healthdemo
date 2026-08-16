@@ -297,7 +297,61 @@ class HealthcareApp {
         }
     }
 
+    async simulateOAuth(provider) {
+        try {
+            const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                provider: provider.toLowerCase(),
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+            if (error) throw error;
+        } catch (err) {
+            console.error(err);
+            alert(`${provider} login failed: ${err.message}`);
+        }
+    }
+
     async handleSupabaseUserLoggedIn(user) {
+        // Role check redirection for scale interlinking
+        try {
+            const { data: docData } = await supabaseClient
+                .from('doctors')
+                .select('id')
+                .eq('id', user.id)
+                .maybeSingle();
+            if (docData) {
+                window.location.href = 'doctor.html';
+                return;
+            }
+        } catch (e) {
+            console.warn("Doctor check bypassed/offline:", e);
+        }
+
+        try {
+            const { data: recData } = await supabaseClient
+                .from('receptionists')
+                .select('id')
+                .eq('id', user.id)
+                .maybeSingle();
+            if (recData) {
+                window.location.href = 'reception.html';
+                return;
+            }
+
+            const { data: profData } = await supabaseClient
+                .from('profiles')
+                .select('settings')
+                .eq('id', user.id)
+                .maybeSingle();
+            if (profData && profData.settings?.role === 'receptionist') {
+                window.location.href = 'reception.html';
+                return;
+            }
+        } catch (e) {
+            console.warn("Receptionist check bypassed/offline:", e);
+        }
+
         // Sync user clinical data from Supabase
         await db.syncUserData(user.id);
         let patient = db.data.patients[user.id];
@@ -467,7 +521,7 @@ class HealthcareApp {
         }
     }
 
-    triggerBiometricLogin() {
+    async triggerBiometricLogin() {
         // Find last active profile or fallback to Alex Mercer (p1)
         let userId = db.data.currentUser || "p1";
         let targetPatient = db.getPatient(userId);
@@ -479,6 +533,28 @@ class HealthcareApp {
                 image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150"
             };
             userId = "p1";
+        }
+        
+        // Native Capacitor Biometric support
+        const NativeBiometric = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric;
+        if (NativeBiometric) {
+            try {
+                const available = await NativeBiometric.isAvailable();
+                if (available.isAvailable) {
+                    const result = await NativeBiometric.verifyIdentity({
+                        reason: "Access your clinical portal securely",
+                        title: "Biometric Login",
+                        subtitle: "Confirm your identity",
+                        description: "Touch the sensor or look at the camera"
+                    });
+                    if (result) {
+                        this.loginUser(userId);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn("Native biometric authentication failed/unavailable, using simulator:", e);
+            }
         }
         
         this.navigateTo('biometrics-screen');

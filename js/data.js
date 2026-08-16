@@ -1125,6 +1125,66 @@ class HealthcareDB {
             console.error("Failed to load hospitals/doctors from database:", e);
         }
     }
+
+    async fetchDoctorAppointmentsForDate(doctorId, date) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('appointments')
+                .select('*')
+                .eq('doctor_id', doctorId)
+                .eq('date', date);
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.error("Failed to fetch doctor appointments for date:", e);
+            return this.data.appointments.filter(a => a.doctorId === doctorId && a.date === date);
+        }
+    }
+
+    async getLiveQueueDetails(appt) {
+        if (!appt) return null;
+        const appts = await this.fetchDoctorAppointmentsForDate(appt.doctorId, appt.date);
+        
+        // Active patients in queue: check_in_status is Checked In or Verified, and status is Upcoming or In-Progress
+        const activeQueue = appts.filter(a => 
+            (a.check_in_status === 'Checked In' || a.check_in_status === 'Verified' || a.check_in_status === 'Arrived') &&
+            a.status !== 'Completed' && a.status !== 'Cancelled'
+        );
+        
+        // Sort by scheduled appointment time slot, then by registration order
+        activeQueue.sort((x, y) => {
+            const timeDiff = x.time.localeCompare(y.time);
+            if (timeDiff !== 0) return timeDiff;
+            return (x.created_at || '').localeCompare(y.created_at || '');
+        });
+
+        // Find if there is an active session currently inside the room
+        const inProgress = appts.find(a => a.status === 'In-Progress');
+        
+        // Find position of the current appointment in the active waiting queue
+        const myIndex = activeQueue.findIndex(a => a.id === appt.id);
+        if (myIndex === -1) {
+            return {
+                position: '-',
+                estWaitTime: '-',
+                delay: 0,
+                room: "Suite 302",
+                currentSpeaker: inProgress ? (inProgress.visit_token || inProgress.visitToken) : (activeQueue[0] ? (activeQueue[0].visit_token || activeQueue[0].visitToken) : 'None')
+            };
+        }
+
+        const position = myIndex + 1;
+        const estWaitTime = position * 15; // 15 mins estimated per patient
+        const delay = inProgress ? 10 : 0; // add 10 mins if doctor is currently in consultation
+
+        return {
+            position: position,
+            estWaitTime: estWaitTime,
+            delay: delay,
+            room: "Suite 302",
+            currentSpeaker: inProgress ? (inProgress.visit_token || inProgress.visitToken) : (activeQueue[0] ? (activeQueue[0].visit_token || activeQueue[0].visitToken) : 'None')
+        };
+    }
 }
 
 const db = new HealthcareDB();

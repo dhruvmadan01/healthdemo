@@ -734,18 +734,26 @@ class BookingFlow {
         }
     }
 
-    syncQueueScreen(appt) {
+    async syncQueueScreen(appt) {
         const doc = db.getDoctor(appt.doctorId);
         const hospital = db.getHospital(appt.hospitalId);
 
-        document.getElementById('queuePosVal').innerText = appt.queue.position;
+        // Retrieve live queue position dynamically
+        const liveQueue = await db.getLiveQueueDetails(appt);
+        const qPos = liveQueue ? liveQueue.position : appt.queue.position;
+        const qRoom = liveQueue ? liveQueue.room : appt.queue.room;
+        const qWait = liveQueue ? liveQueue.estWaitTime : appt.queue.estWaitTime;
+        const qDelay = liveQueue ? liveQueue.delay : appt.queue.delay;
+        const qSpeaker = liveQueue ? liveQueue.currentSpeaker : appt.queue.currentSpeaker;
+
+        document.getElementById('queuePosVal').innerText = qPos;
         document.getElementById('queueDoctorName').innerText = doc.name;
         document.getElementById('queueHospitalName').innerText = hospital.name;
         document.getElementById('queueTokenVal').innerText = appt.visitToken;
-        document.getElementById('queueRoomVal').innerText = appt.queue.room;
-        document.getElementById('queueWaitVal').innerText = `${appt.queue.estWaitTime} mins`;
-        document.getElementById('queueDelayVal').innerText = `+${appt.queue.delay} mins delay`;
-        document.getElementById('queueCurrentSpeakerVal').innerText = appt.queue.currentSpeaker;
+        document.getElementById('queueRoomVal').innerText = qRoom;
+        document.getElementById('queueWaitVal').innerText = qWait === '-' ? '-' : `${qWait} mins`;
+        document.getElementById('queueDelayVal').innerText = qDelay === 0 ? 'No delay' : `+${qDelay} mins delay`;
+        document.getElementById('queueCurrentSpeakerVal').innerText = qSpeaker;
     }
 }
 

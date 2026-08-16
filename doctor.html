@@ -191,9 +191,89 @@
                 width: 100%;
             }
         }
+
+        /* Doctor Authentication Overlay CSS */
+        .doctor-auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .doctor-auth-card {
+            width: 100%;
+            max-width: 460px;
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--hover-shadow);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Doctor Authentication Overlay -->
+    <div id="doctorAuthOverlay" class="doctor-auth-overlay" style="display: none;">
+        <div class="doctor-auth-card">
+            <img src="logo.jpg" alt="Logo" style="width: 70px; height: 70px; border-radius: 16px; margin-bottom: 15px; margin-left: auto; margin-right: auto; display: block;">
+            <h2 style="font-family: var(--font-heading); margin-bottom: 5px;">Physician Workspace</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 25px;" id="doctorAuthSubtext">A secure, HIPAA-compliant clinic dashboard.</p>
+            
+            <!-- Login Form Panel -->
+            <div id="doctorLoginPanel">
+                <form id="doctorLoginForm" onsubmit="handleDoctorLogin(event)">
+                    <div class="input-group">
+                        <label class="input-label" for="loginEmail">Email Address</label>
+                        <input class="input-field" type="email" id="loginEmail" placeholder="doctor@clinic.com" required value="elizabeth.vance@oneminute.com">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="loginPassword">Password</label>
+                        <input class="input-field" type="password" id="loginPassword" placeholder="Enter secure password" required value="Password123">
+                    </div>
+                    <button class="btn btn-primary" type="submit" style="width:100%; margin-top:10px; cursor:pointer;">Sign In</button>
+                    <p style="font-size:0.8rem; margin-top:15px; color:var(--text-secondary);">
+                        New practitioner? <span style="color:hsl(var(--accent-hsl)); cursor:pointer; font-weight:600;" onclick="openModal('doctorRegisterModal')">Apply for clinical registration</span>
+                    </p>
+                </form>
+            </div>
+
+            <!-- Verification Pending Panel -->
+            <div id="doctorPendingPanel" style="display: none;">
+                <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid hsl(var(--warning-hsl)); color: hsl(var(--warning-hsl)); padding: 20px; border-radius: 16px; font-size: 0.85rem; text-align: center;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.5rem; margin-bottom: 10px; display: block;"></i>
+                    <strong style="font-size:1.1rem; display:block; margin-bottom:6px;">Verification Review In Progress</strong>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">
+                        Your physician credentials have been recorded. Account approval by the hospital administrator is required before you can access the patient scheduler.
+                    </p>
+                </div>
+                <button class="btn btn-secondary" onclick="handleSignOut()" style="width:100%; margin-top:20px; cursor:pointer;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Switch Account / Sign Out
+                </button>
+            </div>
+
+            <!-- Rejected Panel -->
+            <div id="doctorRejectedPanel" style="display: none;">
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid hsl(var(--danger-hsl)); color: hsl(var(--danger-hsl)); padding: 20px; border-radius: 16px; font-size: 0.85rem; text-align: center;">
+                    <i class="fa-solid fa-circle-xmark" style="font-size: 2.5rem; margin-bottom: 10px; display: block;"></i>
+                    <strong style="font-size:1.1rem; display:block; margin-bottom:6px;">Application Declined</strong>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">
+                        Your request for clinical registration has been declined by the system administrator. Please contact IT support if this is an error.
+                    </p>
+                </div>
+                <button class="btn btn-secondary" onclick="handleSignOut()" style="width:100%; margin-top:20px; cursor:pointer;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div class="doctor-dashboard-container" style="max-width: 1250px; margin: 0 auto;">
         
@@ -212,6 +292,9 @@
                 </button>
                 <button class="btn btn-secondary" onclick="toggleTheme()" style="margin:0; padding: 6px 12px; width:auto; font-size:0.8rem; background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer;">
                     <i class="fa-solid fa-moon"></i>
+                </button>
+                <button class="btn" onclick="handleSignOut()" style="margin:0; padding: 6px 12px; width:auto; font-size:0.8rem; background:rgba(239, 68, 68, 0.15); border:none; color:hsl(var(--danger-hsl)); font-weight:600; cursor:pointer;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sign Out
                 </button>
             </div>
         </header>
@@ -336,6 +419,11 @@
                     <input type="text" id="regName" class="input-field" placeholder="e.g. Dr. Jane Foster" required>
                 </div>
 
+                <div class="input-group">
+                    <label class="input-label" for="regPassword">Account Password</label>
+                    <input type="password" id="regPassword" class="input-field" placeholder="Choose secure password (Min 6 chars)" required>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="input-group">
                         <label class="input-label" for="regEmail">Email Address</label>
@@ -436,11 +524,10 @@
 
     <!-- Supabase CDN Script -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
     <script>
         // Supabase Initialization
-        const supabaseUrl = "https://utpiqcvwwypxqmeeqere.supabase.co";
-        const supabaseKey = "sb_publishable_UHh-NROwE8idyhPSR_CKKg_6tmUMCd8";
-        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = window.supabaseClient;
 
         // Local Storage Caching class mimicking main DB
         class HealthcareDB {
@@ -752,6 +839,7 @@
             queueContainer.innerHTML = '';
             appts.forEach(a => {
                 const patient = db.data.patients[a.patientId] || { name: 'Loading Profile...', health_id: 'N/A' };
+                const patientName = (a.queue && a.queue.healthIdDetails && a.queue.healthIdDetails.name) || patient.name;
                 const isVerified = a.checkInStatus === 'Verified';
                 const badgeClass = isVerified ? 'status-verified' : 'status-pending';
                 const badgeLabel = isVerified ? 'Verified ✅' : 'Pending Check-In';
@@ -760,7 +848,7 @@
                 queueContainer.innerHTML += `
                     <div class="queue-item ${activeClass}" onclick="selectFromQueue('${a.id}')">
                         <div>
-                            <strong style="font-size: 0.85rem; display: block; color: var(--text-primary);">${patient.name}</strong>
+                            <strong style="font-size: 0.85rem; display: block; color: var(--text-primary);">${patientName}</strong>
                             <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-clock"></i> ${a.time} | Token: ${a.visitToken}</span>
                         </div>
                         <span class="status-badge ${badgeClass}">${badgeLabel}</span>
@@ -1260,6 +1348,7 @@
             
             const name = document.getElementById('regName').value.trim();
             const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
             const phone = document.getElementById('regPhone').value.trim();
             const specialty = document.getElementById('regSpecialty').value;
             const qualification = document.getElementById('regQualification').value.trim();
@@ -1291,7 +1380,6 @@
                     reviews_count: 1
                 };
                 
-                // Upload clinic to Supabase hospitals table
                 try {
                     const { error: hError } = await supabaseClient
                         .from('hospitals')
@@ -1307,7 +1395,6 @@
                     return;
                 }
                 
-                // Save clinic locally
                 db.data.hospitals[newHospitalId] = newHospital;
                 db.save();
                 
@@ -1325,10 +1412,30 @@
             const imageInput = document.getElementById('regImage').value.trim();
             const image = imageInput || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300';
             
-            const id = 'd_' + Date.now();
+            // 1. Sign up user in Supabase Auth
+            let userId = '';
+            try {
+                const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: name,
+                            phone: phone
+                        }
+                    }
+                });
+
+                if (signUpError) throw signUpError;
+                userId = authData.user.id;
+            } catch (err) {
+                alert("Auth account registration failed: " + err.message);
+                return;
+            }
             
+            // 2. Insert physician record into doctors table
             const newDoctor = {
-                id,
+                id: userId,
                 name,
                 specialty,
                 qualification,
@@ -1347,7 +1454,6 @@
                 status: 'pending'
             };
             
-            // Upload to Supabase doctors table
             try {
                 const { error } = await supabaseClient
                     .from('doctors')
@@ -1360,11 +1466,10 @@
                 }
             } catch (err) {
                 console.error("Failed to connect to Supabase database:", err);
-                alert("Failed to reach cloud database. Registration saved locally.");
             }
             
             // Save locally
-            db.data.doctors[id] = {
+            db.data.doctors[userId] = {
                 id: newDoctor.id,
                 name: newDoctor.name,
                 qualification: newDoctor.qualification,
@@ -1385,21 +1490,11 @@
             };
             db.save();
             
-            // Refresh doctor dropdown options and select newly registered doctor
-            const select = document.getElementById('doctorSelect');
-            const opt = document.createElement('option');
-            opt.value = id;
-            opt.innerText = `${name} (${specialty})`;
-            select.appendChild(opt);
-            select.value = id;
-            
             closeModal('doctorRegisterModal');
             document.getElementById('doctorRegisterForm').reset();
             
-            alert(`Physician registration submitted! Welcome, ${name}. Your application is pending administrator verification.`);
-            
-            // Reload queue
-            loadDoctorQueue();
+            alert(`Physician registration submitted! Welcome, ${name}. Your clinical application is awaiting review by the administrator.`);
+            showDoctorOverlayPanel('pending');
         }
 
         // Prescription Builder helper functions
@@ -1518,11 +1613,142 @@
             }
         }
 
+        async function handleSignOut() {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'index.html';
+        }
+
+        function showDoctorOverlayPanel(panelType) {
+            document.getElementById('doctorAuthOverlay').style.display = 'flex';
+            document.getElementById('doctorLoginPanel').style.display = panelType === 'login' ? 'block' : 'none';
+            document.getElementById('doctorPendingPanel').style.display = panelType === 'pending' ? 'block' : 'none';
+            document.getElementById('doctorRejectedPanel').style.display = panelType === 'rejected' ? 'block' : 'none';
+        }
+
+        function handleDoctorVerificationState(doc) {
+            if (doc.status === 'approved') {
+                document.getElementById('doctorAuthOverlay').style.display = 'none';
+                initDoctors().then(() => {
+                    const select = document.getElementById('doctorSelect');
+                    if (select && Array.from(select.options).some(o => o.value === doc.id)) {
+                        select.value = doc.id;
+                        loadDoctorQueue();
+                    }
+                });
+            } else if (doc.status === 'rejected') {
+                showDoctorOverlayPanel('rejected');
+            } else {
+                showDoctorOverlayPanel('pending');
+            }
+        }
+
+        async function verifyDoctorSession(user) {
+            if (!user) {
+                showDoctorOverlayPanel('login');
+                return;
+            }
+
+            try {
+                // Fetch doctor details from public.doctors table
+                const { data: doc, error } = await supabaseClient
+                    .from('doctors')
+                    .select('*')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (!doc) {
+                    const localDoc = db.data.doctors[user.id];
+                    if (localDoc) {
+                        handleDoctorVerificationState(localDoc);
+                        return;
+                    }
+
+                    alert("This account is not registered as a physician. Please apply for clinical registration or sign in with another account.");
+                    await handleSignOut();
+                    return;
+                }
+
+                // Sync to local cache
+                db.data.doctors[doc.id] = {
+                    id: doc.id,
+                    name: doc.name,
+                    qualification: doc.qualification,
+                    specialty: doc.specialty,
+                    experience: parseInt(doc.experience || 0),
+                    hospitalId: doc.hospital_id,
+                    reviews: doc.reviews || { rating: 5.0, count: 1 },
+                    consultingFee: parseFloat(doc.consulting_fee || 0),
+                    consultationTypes: doc.consultation_types || [],
+                    languages: doc.languages || [],
+                    acceptedInsurance: doc.accepted_insurance || [],
+                    availability: doc.availability || [],
+                    awards: doc.awards || [],
+                    image: doc.image,
+                    email: doc.email || "",
+                    phone: doc.phone || "",
+                    status: doc.status || "pending"
+                };
+                db.save();
+
+                handleDoctorVerificationState(doc);
+            } catch (err) {
+                console.error("Session verification failed:", err);
+                const localDoc = db.data.doctors[user.id];
+                if (localDoc) {
+                    handleDoctorVerificationState(localDoc);
+                } else {
+                    showDoctorOverlayPanel('login');
+                }
+            }
+        }
+
+        async function handleDoctorLogin(event) {
+            event.preventDefault();
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Signing in...";
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+                await verifyDoctorSession(data.user);
+            } catch (err) {
+                alert("Login failed: " + err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Sign In";
+            }
+        }
+
         // On Page Load
         window.onload = async function() {
             loadTheme();
             handleMobileLayoutResize();
-            await initDoctors();
+
+            // Session check
+            const session = supabaseClient.currentSession || window.supabaseSession;
+            if (!session || !session.user) {
+                if (!window.isPreviewMode) {
+                    showDoctorOverlayPanel('login');
+                    return;
+                } else {
+                    await initDoctors();
+                }
+            } else {
+                if (!window.isPreviewMode) {
+                    await verifyDoctorSession(session.user);
+                } else {
+                    await initDoctors();
+                }
+            }
 
             // Check if there is an URL query parameter for appointment ID (?appt=a_xxxx)
             const params = new URLSearchParams(window.location.search);

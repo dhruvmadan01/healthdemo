@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="One Minute Clinical - Preview Portal">
+    <title>One Minute Clinical - Preview Portal</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #0b1329;
+            color: #f8fafc;
+            font-family: var(--font-body);
+            padding: 40px 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+        .preview-wrapper {
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .preview-header {
+            margin-bottom: 10px;
+        }
+        .preview-header h1 {
+            font-family: var(--font-heading);
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #14b8a6, #0f4c81);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .preview-header p {
+            color: #94a3b8;
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        @media (max-width: 850px) {
+            .portal-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .portal-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 400px;
+        }
+        .portal-card:hover {
+            transform: translateY(-8px);
+            border-color: #14b8a6;
+            box-shadow: 0 20px 40px rgba(20, 184, 166, 0.1);
+        }
+        .portal-icon {
+            font-size: 3rem;
+            color: #14b8a6;
+            margin-bottom: 20px;
+        }
+        .portal-title {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+        .portal-desc {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            line-height: 1.4;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+        .action-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+        }
+        .btn-bypass {
+            background: linear-gradient(135deg, #14b8a6, #0f4c81);
+            color: white;
+            box-shadow: 0 4px 15px rgba(20, 184, 166, 0.2);
+        }
+        .btn-bypass:hover {
+            opacity: 0.95;
+            box-shadow: 0 6px 20px rgba(20, 184, 166, 0.3);
+        }
+        .btn-normal {
+            background: #0f172a;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+        }
+        .btn-normal:hover {
+            background: #1e293b;
+            color: #ffffff;
+        }
+        .credentials-box {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            text-align: left;
+            border: 1px dashed #334155;
+            margin-top: 15px;
+        }
+        .credentials-box strong {
+            color: #14b8a6;
+        }
+        .status-pill {
+            background: rgba(20, 184, 166, 0.1);
+            border: 1px solid rgba(20, 184, 166, 0.2);
+            color: #14b8a6;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 auto;
+            width: fit-content;
+        }
+        .config-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .link-btn {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-decoration: underline;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .link-btn:hover {
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="preview-wrapper">
+        
+        <!-- Header -->
+        <header class="preview-header">
+            <h1>Clinical Trial Preview Roster</h1>
+            <p>
+                Experience the patient check-in loop: book walk-ins at front reception, check wait status in real-time, and call patients from the physician queue.
+            </p>
+        </header>
+
+        <!-- Mode Status Pill -->
+        <div class="status-pill" id="systemStatusPill">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Preview Mode is <strong>Active</strong> (Auth bypass enabled)</span>
+        </div>
+
+        <!-- Portal Cards Grid -->
+        <div class="portal-grid">
+            
+            <!-- Patient App Card -->
+            <div class="portal-card">
+                <div>
+                    <div class="portal-icon"><i class="fa-solid fa-hospital-user"></i></div>
+                    <h2 class="portal-title">1. Patient View</h2>
+                    <p class="portal-desc">
+                        Search doctors, book clinical visits, verify appointments, consent to check-in, and view your dynamic queue position.
+                    </p>
+                </div>
+                <div>
+                    <div class="action-list">
+                        <a href="index.html?preview=true" class="btn btn-bypass">
+                            <i class="fa-solid fa-bolt"></i> Bypass Sign-In (Alex)
+                        </a>
+                        <a href="index.html?preview=false" class="btn btn-normal">
+                            <i class="fa-solid fa-key"></i> Launch with Cloud DB
+                        </a>
+                    </div>
+                    <div class="credentials-box">
+                        <strong>Demo Account</strong><br>
+                        Email: <code>alex.mercer@email.com</code><br>
+                        Pass: <code>Password123</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Receptionist App Card -->
+            <div class="portal-card">
+                <div>
+                    <div class="portal-icon"><i class="fa-solid fa-desktop"></i></div>
+                    <h2 class="portal-title">2. Reception Desk</h2>
+                    <p class="portal-desc">
+                        Register front-desk accounts, check in patients by scanning tokens, manage walk-in queues, and search local patient files.
+                    </p>
+                </div>
+                <div>
+                    <div class="action-list">
+                        <a href="reception.html?preview=true" class="btn btn-bypass">
+                            <i class="fa-solid fa-bolt"></i> Bypass Sign-In
+                        </a>
+                        <a href="reception.html?preview=false" class="btn btn-normal">
+                            <i class="fa-solid fa-key"></i> Launch with Cloud DB
+                        </a>
+                    </div>
+                    <div class="credentials-box">
+                        <strong>Demo Account</strong><br>
+                        Email: <code>demo.reception@oneminute.com</code><br>
+                        Pass: <code>Password123</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctor App Card -->
+            <div class="portal-card">
+                <div>
+                    <div class="portal-icon"><i class="fa-solid fa-user-doctor"></i></div>
+                    <h2 class="portal-title">3. Doctor Panel</h2>
+                    <p class="portal-desc">
+                        Toggle physician queue status, consult patients, review files/records, and prescribe medications/advice directly.
+                    </p>
+                </div>
+                <div>
+                    <div class="action-list">
+                        <a href="doctor.html?preview=true" class="btn btn-bypass">
+                            <i class="fa-solid fa-bolt"></i> Quick Open
+                        </a>
+                        <a href="doctor.html?preview=false" class="btn btn-normal">
+                            <i class="fa-solid fa-key"></i> Launch with Cloud DB
+                        </a>
+                    </div>
+                    <div class="credentials-box">
+                        <strong>Demo Account</strong><br>
+                        Email: <code>elizabeth.vance@oneminute.com</code><br>
+                        Pass: <code>Password123</code>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Actions -->
+        <footer class="config-actions">
+            <button class="link-btn" onclick="clearPreviewState()">Reset Local Simulation Data</button>
+            <span style="color:#334155;">|</span>
+            <button class="link-btn" onclick="disablePreviewMode()">Switch to Standard Production Mode</button>
+        </footer>
+
+    </div>
+
+    <script>
+        function clearPreviewState() {
+            localStorage.removeItem('healthcare_patient_db');
+            localStorage.removeItem('mock_supabase_session');
+            alert("Local storage databases reset to fresh seed parameters.");
+            location.reload();
+        }
+
+        function disablePreviewMode() {
+            localStorage.setItem('preview_mode', 'false');
+            document.getElementById('systemStatusPill').style.background = 'rgba(239, 68, 68, 0.1)';
+            document.getElementById('systemStatusPill').style.borderColor = 'rgba(239, 68, 68, 0.2)';
+            document.getElementById('systemStatusPill').style.color = '#ef4444';
+            document.getElementById('systemStatusPill').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>Preview Mode is <strong>Inactive</strong> (Using Cloud Database)</span>`;
+            alert("Switched to production mode. Pages will load using your live Supabase credentials unless you click the bypass buttons.");
+        }
+        
+        window.onload = function() {
+            const preview = localStorage.getItem('preview_mode') !== 'false';
+            if (!preview) {
+                document.getElementById('systemStatusPill').style.background = 'rgba(239, 68, 68, 0.1)';
+                document.getElementById('systemStatusPill').style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                document.getElementById('systemStatusPill').style.color = '#ef4444';
+                document.getElementById('systemStatusPill').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>Preview Mode is <strong>Inactive</strong> (Using Cloud Database)</span>`;
+            }
+        };
+    </script>
+
+</body>
+</html>
