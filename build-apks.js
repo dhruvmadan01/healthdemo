@@ -35,7 +35,7 @@ try {
     
     // Copy compiled APK to workspace root
     const compiledApkPath = 'android/app/build/outputs/apk/debug/app-debug.apk';
-    const patientDest = 'oneminute.apk';
+    const patientDest = 'oneminute-patient.apk';
     if (fs.existsSync(compiledApkPath)) {
         fs.copyFileSync(compiledApkPath, patientDest);
         console.log(`Success: Patient App APK copied to ${path.resolve(patientDest)}`);
@@ -57,7 +57,7 @@ try {
     runCommand('.\\gradlew.bat assembleDebug', 'android');
     
     // Copy compiled APK to workspace root
-    const doctorDest = 'medigi.apk';
+    const doctorDest = 'oneminute-doctor.apk';
     if (fs.existsSync(compiledApkPath)) {
         fs.copyFileSync(compiledApkPath, doctorDest);
         console.log(`Success: Doctor App APK copied to ${path.resolve(doctorDest)}`);
