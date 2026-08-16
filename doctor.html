@@ -216,6 +216,113 @@
             border: 1px solid var(--border-color);
             text-align: center;
         }
+
+        /* Doctor Workspace Tabbed Navigation CSS */
+        .doctor-workspace-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 20px;
+            margin-top: 20px;
+            min-height: calc(100vh - 120px);
+        }
+        .nav-sidebar {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: fit-content;
+            text-align: left;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+        }
+        .nav-tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+            text-align: left;
+        }
+        .nav-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+        }
+        .nav-tab-btn.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+        .workspace-panels {
+            flex: 1;
+            min-width: 0;
+        }
+        .workspace-panel {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Patient profile sub-tabs */
+        .sub-tabs-bar {
+            display: flex;
+            background: var(--bg-tertiary);
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            gap: 4px;
+        }
+        .sub-tab-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 6px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        .sub-tab-btn.active {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            box-shadow: var(--card-shadow);
+        }
+        .sub-tab-content {
+            display: none;
+            text-align: left;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+            .doctor-workspace-layout {
+                grid-template-columns: 1fr !important;
+                min-height: auto;
+            }
+            .nav-sidebar {
+                flex-direction: row !important;
+                overflow-x: auto;
+                white-space: nowrap;
+                padding: 10px !important;
+                border-radius: 12px;
+            }
+            .nav-tab-btn {
+                width: auto !important;
+                padding: 8px 16px !important;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -310,67 +417,184 @@
         </div>
 
         <!-- Main Workspace -->
-        <div class="doctor-dashboard">
-
-            <!-- Left Panel: Verification & Queue -->
-            <div class="sidebar-panel">
-                
-                <!-- QR Verification Scanner Panel -->
-                <div class="card" style="text-align: left;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 12px; font-family: var(--font-heading);"><i class="fa-solid fa-qrcode"></i> Patient QR Verification</h3>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 15px;">
-                        Paste the patient's check-in QR Code URL below or select from queue to view clinical info.
-                    </p>
-                    
-                    <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                        <input type="text" id="qrInput" class="input-field" placeholder="Paste QR Code URL or Appt ID..." style="margin: 0; padding: 10px; font-size: 0.8rem; flex: 1;">
-                        <button class="btn btn-primary" onclick="verifyQRManual()" style="margin: 0; padding: 10px 15px; width: auto;"><i class="fa-solid fa-circle-check"></i> Verify</button>
-                    </div>
-
-                    <div class="scanner-box" id="simulateScannerBox" onclick="triggerManualCamera()" style="cursor: pointer;">
-                        <i class="fa-solid fa-camera" style="font-size: 2rem; color: hsl(var(--accent-hsl)); margin-bottom: 8px;"></i>
-                        <h4 style="font-size: 0.85rem; font-weight: 600;">Simulated Scanning Chamber</h4>
-                        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Click to launch camera simulator scanner.</p>
-                    </div>
-                </div>
-
-                <!-- Daily Clinic Queue -->
-                <div class="card" style="text-align: left;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 12px; font-family: var(--font-heading);"><i class="fa-solid fa-clipboard-list"></i> Scheduled Appointments</h3>
-                    <div class="queue-list" id="queueList">
-                        <!-- Queue items -->
-                    </div>
-                </div>
-
+        <div class="doctor-workspace-layout" id="doctorWorkspaceContent">
+            
+            <!-- Left Navigation Sidebar -->
+            <div class="card nav-sidebar">
+                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 5px; padding-left: 10px;">Clinical Modules</div>
+                <button class="nav-tab-btn active" id="btn-tab-dashboard" onclick="switchWorkspaceTab('dashboard')"><i class="fa-solid fa-gauge"></i> Home Dashboard</button>
+                <button class="nav-tab-btn" id="btn-tab-schedule" onclick="switchWorkspaceTab('schedule')"><i class="fa-solid fa-calendar-day"></i> Today's Schedule</button>
+                <button class="nav-tab-btn" id="btn-tab-queue" onclick="switchWorkspaceTab('queue')"><i class="fa-solid fa-list-ol"></i> Live Patient Queue</button>
+                <button class="nav-tab-btn" id="btn-tab-consult" onclick="switchWorkspaceTab('consult')"><i class="fa-solid fa-user-injured"></i> Active Consultation</button>
+                <button class="nav-tab-btn" id="btn-tab-availability" onclick="switchWorkspaceTab('availability')"><i class="fa-solid fa-clock"></i> Practice Availability</button>
             </div>
-
-            <!-- Right Panel: Patient Information File -->
-            <div class="main-panel">
+            
+            <!-- Right Panels Container -->
+            <div class="workspace-panels">
                 
-                <!-- Verification Success Notification Banner -->
-                <div id="verificationSuccessBanner" style="display: none;">
-                    <div class="verification-success-alert">
-                        <i class="fa-solid fa-circle-check" style="font-size: 1.4rem;"></i>
+                <!-- Panel 1: Home Dashboard -->
+                <div id="panel-dashboard" class="workspace-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="font-family: var(--font-heading); font-size: 1.8rem;" id="welcomeDoctorText">Welcome, Doctor</h2>
+                        <span id="dashDateText" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;"></span>
+                    </div>
+                    
+                    <!-- Metrics grid -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                        <div class="card" style="padding: 20px; text-align: left; border-left: 4px solid var(--primary); margin:0;">
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; font-weight: 600;">Today's Appointments</span>
+                            <strong style="font-size: 2.2rem; display: block; line-height: 1.2; margin-top: 5px; font-family: var(--font-heading);" id="dashApptsVal">0</strong>
+                        </div>
+                        <div class="card" style="padding: 20px; text-align: left; border-left: 4px solid var(--accent); margin:0;">
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; font-weight: 600;">Waiting List</span>
+                            <strong style="font-size: 2.2rem; display: block; line-height: 1.2; margin-top: 5px; font-family: var(--font-heading);" id="dashWaitingVal">0</strong>
+                        </div>
+                        <div class="card" style="padding: 20px; text-align: left; border-left: 4px solid hsl(var(--success-hsl)); margin:0;">
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; font-weight: 600;">Completed Visits</span>
+                            <strong style="font-size: 2.2rem; display: block; line-height: 1.2; margin-top: 5px; font-family: var(--font-heading);" id="dashCompletedVal">0</strong>
+                        </div>
+                        <div class="card" style="padding: 20px; text-align: left; border-left: 4px solid hsl(var(--warning-hsl)); margin:0;">
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; font-weight: 600;">Upcoming / Pending</span>
+                            <strong style="font-size: 2.2rem; display: block; line-height: 1.2; margin-top: 5px; font-family: var(--font-heading);" id="dashUpcomingVal">0</strong>
+                        </div>
+                    </div>
+                    
+                    <!-- Next Patient Container -->
+                    <div id="dashNextPatientCard">
+                        <!-- Next Patient callout card populated dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Panel 2: Today's Schedule -->
+                <div id="panel-schedule" class="workspace-panel" style="display:none; text-align: left;">
+                    <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 15px;"><i class="fa-solid fa-calendar-day"></i> Today's Schedule</h2>
+                    <div class="card" style="padding: 0; overflow-x: auto; margin:0;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                            <thead>
+                                <tr style="background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                                    <th style="padding: 12px 10px;">Time</th>
+                                    <th style="padding: 12px 10px;">Patient Name</th>
+                                    <th style="padding: 12px 10px;">Visit Type</th>
+                                    <th style="padding: 12px 10px;">Status</th>
+                                    <th style="padding: 12px 10px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Panel 3: Live Patient Queue -->
+                <div id="panel-queue" class="workspace-panel" style="display:none; text-align: left;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div>
-                            <strong style="display: block; font-size: 0.85rem;">Patient Verification Successful</strong>
-                            <span style="font-size: 0.75rem;" id="verificationBannerMsg">Patient identity and clinical consents checked via One Minute token.</span>
+                            <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 15px;"><i class="fa-solid fa-list-ol"></i> Live Roster Queue</h2>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 20px;">Sequence of arrived/verified patient tokens checked in by front reception.</p>
+                            
+                            <div class="card" style="padding: 20px; margin:0;">
+                                <h4 style="font-size: 0.85rem; text-transform: uppercase; font-weight: 700; color: var(--primary); margin-bottom: 10px;">Now Consulting</h4>
+                                <div id="nowConsultingArea">
+                                    <!-- Consulting patient card -->
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 15px;"><i class="fa-solid fa-hourglass-half"></i> Waiting Patients</h2>
+                            <div class="card" style="padding: 15px; margin:0;">
+                                <div id="queueWaitingList" class="queue-list">
+                                    <!-- Waiting patient list -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Panel 4: Active Consultation -->
+                <div id="panel-consult" class="workspace-panel" style="display:none; text-align: left;">
+                    <!-- Verification Banner -->
+                    <div id="verificationSuccessBanner" style="display: none; margin-bottom: 15px;">
+                        <div class="verification-success-alert">
+                            <i class="fa-solid fa-circle-check" style="font-size: 1.4rem;"></i>
+                            <div>
+                                <strong style="display: block; font-size: 0.85rem;">Patient Verification Successful</strong>
+                                <span style="font-size: 0.75rem;" id="verificationBannerMsg">Patient identity and clinical consents checked via One Minute token.</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- QR Verification Input -->
+                    <div class="card" style="padding: 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <strong style="font-size: 0.9rem; display: block;"><i class="fa-solid fa-qrcode"></i> Scan check-in token</strong>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Enter token to pull profile and launch consultation file.</span>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="activeQrInput" class="input-field" placeholder="Enter Token..." style="margin: 0; padding: 6px 12px; font-size: 0.8rem; width: 180px;">
+                            <button class="btn btn-primary" onclick="verifyQRManualActive()" style="margin: 0; padding: 6px 15px; width: auto;">Verify</button>
+                        </div>
+                    </div>
+
+                    <!-- Selected Patient Workspace -->
+                    <div id="patientFileContainer">
+                        <!-- Populated dynamically when patient is selected -->
+                        <div class="card" style="text-align: center; padding: 60px; color: var(--text-secondary); margin:0;">
+                            <i class="fa-solid fa-folder-open" style="font-size: 4rem; color: var(--text-muted); opacity: 0.3; margin-bottom: 15px; display: block;"></i>
+                            <h3>No Patient Session Active</h3>
+                            <p style="font-size: 0.85rem; max-width: 400px; margin: 5px auto 0 auto;">Select a patient from the Schedule, Waiting Queue, or verify a dynamic Check-In token to launch the consultation screen.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Panel 5: Practice Availability -->
+                <div id="panel-availability" class="workspace-panel" style="display:none; text-align: left;">
+                    <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 15px;"><i class="fa-solid fa-clock"></i> Weekly Practice Hours</h2>
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px;">
+                        <div class="card" style="padding: 20px; margin:0;">
+                            <h3 style="font-size: 1.1rem; margin-bottom: 15px; font-family: var(--font-heading);">Weekly Schedule Settings</h3>
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                    <strong>Practice Duty Status</strong>
+                                    <select id="availStatus" class="input-field" style="margin:0; width: 140px; padding: 6px; background-color: var(--bg-secondary); color: var(--text-primary);" onchange="updateDutyStatus()">
+                                        <option value="available">Active Duty</option>
+                                        <option value="leave">On Leave</option>
+                                    </select>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                    <strong>Weekly Consultation Days</strong>
+                                    <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent);">Monday - Saturday</span>
+                                </div>
+                                <div>
+                                    <strong style="display:block; margin-bottom: 10px;">Consultation Session Shifts</strong>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 8px; border:1px solid var(--border-color);">
+                                            <span style="font-size: 0.7rem; color: var(--text-secondary); display: block;">Morning Shift</span>
+                                            <strong>10:00 AM - 02:00 PM</strong>
+                                        </div>
+                                        <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 8px; border:1px solid var(--border-color);">
+                                            <span style="font-size: 0.7rem; color: var(--text-secondary); display: block;">Evening Shift</span>
+                                            <strong>05:00 PM - 08:00 PM</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card" style="padding: 20px; margin:0;">
+                            <h3 style="font-size: 1.1rem; margin-bottom: 15px; font-family: var(--font-heading);">Block Leave Calendar</h3>
+                            <div class="input-group" style="margin-bottom: 15px;">
+                                <label class="input-label" for="leaveDatePicker">Select Date to Block Slots</label>
+                                <input type="date" id="leaveDatePicker" class="input-field" style="width:100%;">
+                            </div>
+                            <button class="btn btn-primary" onclick="blockDate()" style="width: 100%;"><i class="fa-solid fa-ban"></i> Block Selected Date</button>
+                            <div id="blockedDatesList" style="margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary);">
+                                <!-- Blocked dates -->
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Active Patient Medical File -->
-                <div class="record-card" id="patientFileContainer">
-                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                        <i class="fa-solid fa-folder-open" style="font-size: 4rem; opacity: 0.3; margin-bottom: 15px;"></i>
-                        <h3>No Patient Loaded</h3>
-                        <p style="font-size: 0.85rem; max-width: 400px; margin: 5px auto 0 auto;">
-                            Select a patient from the queue or input their check-in QR code to view clinical history, active prescriptions, and uploaded files.
-                        </p>
-                    </div>
-                </div>
-
             </div>
-
         </div>
 
     </div>
@@ -731,7 +955,7 @@
         // Render queue for selected doctor
         async function loadDoctorQueue() {
             const docId = document.getElementById('doctorSelect').value;
-            const queueContainer = document.getElementById('queueList');
+            if (!docId) return;
 
             // Try fetching latest appointments from Supabase for this doctor
             try {
@@ -775,24 +999,22 @@
 
             const activeDoc = db.data.doctors[docId];
             if (activeDoc && activeDoc.status && activeDoc.status !== 'approved') {
-                queueContainer.innerHTML = `
-                    <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid hsl(var(--warning-hsl)); color: hsl(var(--warning-hsl)); padding: 15px; border-radius: 12px; font-size: 0.8rem; text-align: center; margin-top: 10px;">
-                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.4rem; margin-bottom: 6px; display: block;"></i>
-                        <strong>Verification Pending</strong>
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.3;">
-                            Your clinical registration is awaiting review. Admin approval is required before patients can book or view your queue.
-                        </p>
-                    </div>
-                `;
+                const mainArea = document.getElementById('doctorWorkspaceContent');
+                if (mainArea) {
+                    mainArea.innerHTML = `
+                        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid hsl(var(--warning-hsl)); color: hsl(var(--warning-hsl)); padding: 40px 20px; border-radius: 20px; text-align: center; max-width: 600px; margin: 40px auto;">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size: 3.5rem; margin-bottom: 15px; display: block;"></i>
+                            <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 10px;">Verification Pending</h2>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+                                Your physician registration is currently awaiting administrative approval. You will gain access to patient lists, schedules, and active consultation screens once approved.
+                            </p>
+                        </div>
+                    `;
+                }
                 return;
             }
 
             const appts = db.data.appointments.filter(a => a.doctorId === docId);
-
-            if (appts.length === 0) {
-                queueContainer.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 20px;">No appointments today.</p>`;
-                return;
-            }
 
             // Sync missing profiles from Supabase
             const missingPatientIds = [];
@@ -836,25 +1058,137 @@
                 }
             }
 
-            queueContainer.innerHTML = '';
-            appts.forEach(a => {
-                const patient = db.data.patients[a.patientId] || { name: 'Loading Profile...', health_id: 'N/A' };
-                const patientName = (a.queue && a.queue.healthIdDetails && a.queue.healthIdDetails.name) || patient.name;
-                const isVerified = a.checkInStatus === 'Verified';
-                const badgeClass = isVerified ? 'status-verified' : 'status-pending';
-                const badgeLabel = isVerified ? 'Verified ✅' : 'Pending Check-In';
-                const activeClass = a.id === activeAppointmentId ? 'active' : '';
+            // Calculations for metrics
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayAppts = appts.filter(a => a.date === todayStr);
 
-                queueContainer.innerHTML += `
-                    <div class="queue-item ${activeClass}" onclick="selectFromQueue('${a.id}')">
-                        <div>
-                            <strong style="font-size: 0.85rem; display: block; color: var(--text-primary);">${patientName}</strong>
-                            <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-clock"></i> ${a.time} | Token: ${a.visitToken}</span>
+            const totalCount = todayAppts.length;
+            const waitingCount = todayAppts.filter(a => (a.checkInStatus === 'Checked In' || a.checkInStatus === 'Verified' || a.checkInStatus === 'Arrived') && a.status !== 'Completed' && a.status !== 'Cancelled').length;
+            const completedCount = todayAppts.filter(a => a.status === 'Completed').length;
+            const upcomingCount = totalCount - completedCount - waitingCount;
+
+            // Update Metrics Cards
+            const apptsValEl = document.getElementById('dashApptsVal');
+            if (apptsValEl) apptsValEl.innerText = totalCount;
+            const waitingValEl = document.getElementById('dashWaitingVal');
+            if (waitingValEl) waitingValEl.innerText = waitingCount;
+            const completedValEl = document.getElementById('dashCompletedVal');
+            if (completedValEl) completedValEl.innerText = completedCount;
+            const upcomingValEl = document.getElementById('dashUpcomingVal');
+            if (upcomingValEl) upcomingValEl.innerText = upcomingCount;
+
+            // Find Next Patient
+            const sortedWaiting = todayAppts.filter(a => a.status !== 'Completed' && a.status !== 'Cancelled');
+            sortedWaiting.sort((x, y) => x.time.localeCompare(y.time));
+            const nextAppt = sortedWaiting[0];
+
+            const nextPatientCard = document.getElementById('dashNextPatientCard');
+            if (nextPatientCard) {
+                if (nextAppt) {
+                    const nextPatient = db.data.patients[nextAppt.patientId] || { name: 'Unknown Patient' };
+                    const patientName = (nextAppt.queue && nextAppt.queue.healthIdDetails && nextAppt.queue.healthIdDetails.name) || nextPatient.name;
+                    nextPatientCard.innerHTML = `
+                        <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); padding: 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--primary); letter-spacing: 0.05em; display: block; margin-bottom: 5px;">Next Up</span>
+                                <strong style="font-size: 1.2rem; display: block; font-family: var(--font-heading);">${patientName}</strong>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);"><i class="fa-solid fa-clock"></i> ${nextAppt.time} | Token: ${nextAppt.visitToken}</span>
+                            </div>
+                            <button class="btn btn-primary" onclick="startConsultation('${nextAppt.id}')">View Patient & Start Consult</button>
                         </div>
-                        <span class="status-badge ${badgeClass}">${badgeLabel}</span>
-                    </div>
-                `;
-            });
+                    `;
+                } else {
+                    nextPatientCard.innerHTML = `
+                        <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+                            <i class="fa-solid fa-circle-check" style="font-size: 1.5rem; color: var(--accent); margin-bottom: 5px; display: block;"></i>
+                            No remaining patients in queue for today.
+                        </div>
+                    `;
+                }
+            }
+
+            // Render Today's Schedule Table
+            const scheduleBody = document.getElementById('scheduleTableBody');
+            if (scheduleBody) {
+                scheduleBody.innerHTML = '';
+                if (todayAppts.length === 0) {
+                    scheduleBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No appointments scheduled for today.</td></tr>`;
+                } else {
+                    const sortedDay = [...todayAppts].sort((x, y) => x.time.localeCompare(y.time));
+                    sortedDay.forEach(a => {
+                        const p = db.data.patients[a.patientId] || { name: 'Unknown' };
+                        const patientName = (a.queue && a.queue.healthIdDetails && a.queue.healthIdDetails.name) || p.name;
+                        const isNew = a.symptoms ? 'New Patient' : 'Follow-up';
+                        let statusBadgeClass = 'status-pending';
+                        if (a.status === 'Completed') statusBadgeClass = 'status-verified';
+                        else if (a.checkInStatus === 'Verified' || a.checkInStatus === 'Checked In') statusBadgeClass = 'status-in-progress';
+                        
+                        scheduleBody.innerHTML += `
+                            <tr style="border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="startConsultation('${a.id}')">
+                                <td style="padding: 12px 10px; font-weight: 600;">${a.time}</td>
+                                <td style="padding: 12px 10px;">
+                                    <strong style="display: block;">${patientName}</strong>
+                                    <span style="font-size: 0.7rem; color: var(--text-secondary);">Token: ${a.visitToken}</span>
+                                </td>
+                                <td style="padding: 12px 10px; font-size: 0.8rem; color: var(--text-secondary);">${isNew}</td>
+                                <td style="padding: 12px 10px;"><span class="status-badge ${statusBadgeClass}">${a.status || 'Scheduled'} (${a.checkInStatus || 'Pending'})</span></td>
+                                <td style="padding: 12px 10px;"><button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; width: auto; margin:0;" onclick="event.stopPropagation(); startConsultation('${a.id}')">Select</button></td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
+
+            // Render Patient Queue (Live list for Calling Panel)
+            const queueWaitingContainer = document.getElementById('queueWaitingList');
+            if (queueWaitingContainer) {
+                queueWaitingContainer.innerHTML = '';
+                const waitingQueue = todayAppts.filter(a => (a.checkInStatus === 'Checked In' || a.checkInStatus === 'Verified' || a.checkInStatus === 'Arrived') && a.status !== 'Completed' && a.status !== 'Cancelled');
+                waitingQueue.sort((x, y) => x.time.localeCompare(y.time));
+
+                // Find consulting patient
+                const inProgressAppt = todayAppts.find(a => a.status === 'In-Progress');
+                const nowConsultingContainer = document.getElementById('nowConsultingArea');
+                if (nowConsultingContainer) {
+                    if (inProgressAppt) {
+                        const p = db.data.patients[inProgressAppt.patientId] || { name: 'Unknown' };
+                        const patientName = (inProgressAppt.queue && inProgressAppt.queue.healthIdDetails && inProgressAppt.queue.healthIdDetails.name) || p.name;
+                        nowConsultingContainer.innerHTML = `
+                            <div style="background: rgba(16, 185, 129, 0.06); border: 1px solid var(--accent); padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                                <div>
+                                    <strong style="font-size: 1.1rem; display: block; color: var(--text-primary);">${patientName}</strong>
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-clock"></i> Consult Started: ${inProgressAppt.time} | Token: ${inProgressAppt.visitToken}</span>
+                                </div>
+                                <button class="btn btn-primary" style="margin:0;" onclick="startConsultation('${inProgressAppt.id}')">Consult Workspace</button>
+                            </div>
+                        `;
+                    } else {
+                        nowConsultingContainer.innerHTML = `
+                            <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 12px; color: var(--text-secondary); font-size: 0.85rem; text-align: center; border: 1px solid var(--border-color);">
+                                No patient currently inside the consultation room.
+                            </div>
+                        `;
+                    }
+                }
+
+                if (waitingQueue.length === 0) {
+                    queueWaitingContainer.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 20px;">No patients checked in or waiting currently.</p>`;
+                } else {
+                    waitingQueue.forEach((a, idx) => {
+                        const p = db.data.patients[a.patientId] || { name: 'Unknown' };
+                        const patientName = (a.queue && a.queue.healthIdDetails && a.queue.healthIdDetails.name) || p.name;
+                        queueWaitingContainer.innerHTML += `
+                            <div class="queue-item" style="margin-bottom: 8px; border-left: 3px solid var(--primary); padding-left: 10px; display:flex; justify-content:space-between; align-items:center; background:var(--bg-tertiary); border-radius:8px; padding:10px;">
+                                <div>
+                                    <strong style="font-size: 0.9rem; display: block;">${idx + 1}. ${patientName}</strong>
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Token: ${a.visitToken} | Scheduled: ${a.time}</span>
+                                </div>
+                                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.75rem; width: auto; margin:0;" onclick="callPatient('${a.id}')"><i class="fa-solid fa-bullhorn"></i> Call Room</button>
+                            </div>
+                        `;
+                    });
+                }
+            }
         }
 
         // When doctor clicks on an appointment item to view (without auto-verification)
@@ -1070,11 +1404,187 @@
             banner.style.display = 'block';
 
             await loadPatientDetails(appt.patientId, appt);
-        }
+            }
 
-        // Query patient profile from Supabase and render
+        // Global workspace and consult state
+        window.prescribedMedicines = [];
+
+        // Tab switcher for Desktop Panels
+        let activeWorkspaceTab = 'dashboard';
+        window.switchWorkspaceTab = function(tabId) {
+            activeWorkspaceTab = tabId;
+            
+            // Toggle panels display
+            document.querySelectorAll('.workspace-panel').forEach(p => p.style.display = 'none');
+            const targetPanel = document.getElementById('panel-' + tabId);
+            if (targetPanel) targetPanel.style.display = 'block';
+            
+            // Toggle active state on nav buttons
+            document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
+            const targetBtn = document.getElementById('btn-tab-' + tabId);
+            if (targetBtn) targetBtn.classList.add('active');
+            
+            // If opening dashboard, sync dates
+            if (tabId === 'dashboard') {
+                const dateTextEl = document.getElementById('dashDateText');
+                if (dateTextEl) {
+                    dateTextEl.innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                }
+                const activeDoctorId = document.getElementById('doctorSelect').value;
+                const doc = db.getDoctor(activeDoctorId);
+                if (doc) {
+                    document.getElementById('welcomeDoctorText').innerText = `Good Morning, ${doc.name}`;
+                }
+            }
+        };
+
+        // Verification scanner helper inside consult panel
+        window.verifyQRManualActive = async function() {
+            const token = document.getElementById('activeQrInput').value.trim();
+            if (!token) {
+                alert("Please enter a valid visit token.");
+                return;
+            }
+            
+            const docId = document.getElementById('doctorSelect').value;
+            const appt = db.data.appointments.find(a => a.visitToken === token && a.doctorId === docId);
+            if (!appt) {
+                alert("Appointment with specified token not found for this doctor roster.");
+                return;
+            }
+            
+            appt.checkInStatus = 'Verified';
+            try {
+                await supabaseClient
+                    .from('appointments')
+                    .update({ check_in_status: 'Verified' })
+                    .eq('id', appt.id);
+            } catch (e) {}
+            db.save();
+            
+            await startConsultation(appt.id);
+            
+            document.getElementById('verificationSuccessBanner').style.display = 'block';
+            document.getElementById('verificationBannerMsg').innerText = `Patient identity token ${token} verified successfully!`;
+            document.getElementById('activeQrInput').value = '';
+        };
+
+        // Select and switch to active consultation
+        window.startConsultation = async function(apptId) {
+            activeAppointmentId = apptId;
+            const appt = db.data.appointments.find(a => a.id === apptId);
+            if (appt) {
+                switchWorkspaceTab('consult');
+                await loadPatientDetails(appt.patientId, appt);
+            }
+        };
+
+        // Call next waiting patient
+        window.callPatient = async function(apptId) {
+            const docId = document.getElementById('doctorSelect').value;
+            const appts = db.data.appointments.filter(a => a.doctorId === docId);
+
+            // 1. Reset any previously 'In-Progress' status to 'Upcoming'
+            for (let a of appts) {
+                if (a.status === 'In-Progress') {
+                    a.status = 'Upcoming';
+                    try {
+                        await supabaseClient
+                            .from('appointments')
+                            .update({ status: 'Upcoming' })
+                            .eq('id', a.id);
+                    } catch (e) {}
+                }
+            }
+
+            // 2. Set target appointment status to 'In-Progress'
+            const target = db.data.appointments.find(a => a.id === apptId);
+            if (target) {
+                target.status = 'In-Progress';
+                if (!target.queue) target.queue = {};
+                target.queue.position = 0;
+                target.queue.estWaitTime = 0;
+                target.queue.currentSpeaker = target.visitToken;
+
+                try {
+                    await supabaseClient
+                        .from('appointments')
+                        .update({ 
+                            status: 'In-Progress',
+                            queue: target.queue
+                        })
+                        .eq('id', target.id);
+                } catch (e) {
+                    console.error("Failed to sync call state to Supabase:", e);
+                }
+
+                db.save();
+                alert(`🛎️ BUZZER RUNG: Calling Patient Token ${target.visitToken} to Room!`);
+                await loadDoctorQueue();
+                startConsultation(apptId);
+            }
+        };
+
+        // Switch Sub-tabs inside Patient Profile Card
+        window.switchPatientSubTab = function(tabName) {
+            document.querySelectorAll('.sub-tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.sub-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('sub-tab-' + tabName).style.display = 'block';
+            event.target.classList.add('active');
+        };
+
+        // Prefill digital prescription medicine chips
+        window.prefillMedicine = function(name, dose, duration, food) {
+            document.getElementById('prescMedName').value = name;
+            document.getElementById('prescMedDose').value = dose;
+            document.getElementById('prescMedDuration').value = duration;
+            document.getElementById('prescMedFood').value = food;
+        };
+
+        // Simulate uploading a lab file
+        window.simulateFileUpload = function() {
+            const fileUrl = prompt("Enter simulated PDF URL or filename:", "lab_report_blood_work.pdf");
+            if (fileUrl) {
+                alert(`Successfully uploaded and shared document: ${fileUrl}`);
+            }
+        };
+
+        // Patient Communication alerts
+        window.sendClinicalComm = function(type, apptId) {
+            const appt = db.data.appointments.find(a => a.id === apptId);
+            if (!appt) return;
+            const p = db.data.patients[appt.patientId] || { name: 'Patient' };
+            
+            if (type === 'reminder') {
+                alert(`📲 Follow-up notification sent to ${p.name}: "Reminder: Your checkup follow-up session is scheduled for next week."`);
+            } else if (type === 'file') {
+                alert(`📲 Prescription link sent to ${p.name}: "Your digital Rx is ready: oneminute.com/rx/${appt.visitToken}"`);
+            }
+        };
+
+        // Practice Availability controls
+        window.updateDutyStatus = function() {
+            const status = document.getElementById('availStatus').value;
+            alert(`Clinic status updated successfully: Doctor is now "${status === 'available' ? 'Active Duty' : 'On Leave'}"`);
+        };
+
+        window.blockDate = function() {
+            const date = document.getElementById('leaveDatePicker').value;
+            if (!date) {
+                alert("Please select a valid date.");
+                return;
+            }
+            
+            const list = document.getElementById('blockedDatesList');
+            list.innerHTML += `<div style="background: rgba(239, 68, 68, 0.05); padding: 5px 10px; border-radius: 6px; margin-top: 5px; display:flex; justify-content:space-between; border: 1px solid rgba(239, 68, 68, 0.15);">
+                <span>Date: ${date} (Blocked)</span>
+                <i class="fa-solid fa-circle-xmark" style="color:#ef4444; cursor:pointer;" onclick="this.parentElement.remove()"></i>
+            </div>`;
+            alert(`Slots blocked successfully for ${date}. Receptionist and patients will be notified.`);
+        };
+
+        // Fetch patient details and populate consultation workspace
         async function loadPatientDetails(patientId, appt) {
-            // Reset active prescription builder medicines list for this session
             window.prescribedMedicines = [];
 
             const container = document.getElementById('patientFileContainer');
@@ -1082,14 +1592,12 @@
 
             let patient = null;
 
-            // Prioritize Health ID details transferred with the appointment
             if (appt && (appt.healthIdDetails || (appt.queue && appt.queue.healthIdDetails))) {
                 patient = appt.healthIdDetails || appt.queue.healthIdDetails;
             }
 
             if (!patient) {
                 try {
-                    // Query Supabase profiles table
                     const { data, error } = await supabaseClient
                         .from('profiles')
                         .select('*')
@@ -1121,7 +1629,6 @@
                 }
             }
 
-            // Fallback to local storage patient record if Supabase search was empty/failed
             if (!patient) {
                 patient = db.data.patients[patientId];
             }
@@ -1139,7 +1646,7 @@
             if (patient.medicalHistory.currentMedicines && patient.medicalHistory.currentMedicines.length > 0) {
                 patient.medicalHistory.currentMedicines.forEach(m => {
                     medsHtml += `
-                        <div style="border-left: 2px solid hsl(var(--accent-hsl)); padding-left: 10px; margin-bottom: 10px;">
+                        <div style="border-left: 2px solid var(--accent); padding-left: 10px; margin-bottom: 10px;">
                             <strong style="font-size: 0.8rem; color: var(--text-primary); display:block;">${m.name} (${m.dose})</strong>
                             <span style="font-size: 0.7rem; color: var(--text-secondary);">${m.foodInstructions} | ${m.duration}</span>
                         </div>
@@ -1149,11 +1656,10 @@
                 medsHtml = `<p style="font-size: 0.75rem; color: var(--text-muted);">No active prescribed medications.</p>`;
             }
 
-            // Build files/reports section for this appointment
-            let filesHtml = '';
+            // Build files list
+            let filesHtml = '<h4 style="font-size:0.85rem; margin-bottom:10px;">Patient Uploaded Files</h4>';
             if (appt.reports && appt.reports.length > 0) {
                 appt.reports.forEach(file => {
-                    // Extract printable filename
                     const fileName = file.split('/').pop().split('-').pop();
                     const onClickAttr = (file.startsWith('http') || file.startsWith('blob:') || file.startsWith('data:')) ? 
                         `onclick="window.open('${file}', '_blank')"` : `onclick="alert('Simulating secure clinical PDF download: ${fileName}')"`;
@@ -1165,164 +1671,321 @@
                     `;
                 });
             } else {
-                filesHtml = `<p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">No files attached to this session.</p>`;
+                filesHtml += `<p style="font-size: 0.75rem; color: var(--text-muted);">No reports or medical files attached to this session.</p>`;
+            }
+            filesHtml += `
+                <div style="border-top:1px dashed var(--border-color); margin-top:15px; padding-top:12px;">
+                    <button class="btn btn-secondary" style="width:100%; font-size:0.75rem; padding:8px;" onclick="simulateFileUpload()"><i class="fa-solid fa-file-arrow-up"></i> Upload New Report / Lab Result</button>
+                </div>
+            `;
+
+            // Build demographics info
+            const demographicsHtml = `
+                <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+                    <div class="user-avatar" style="width: 60px; height: 60px; font-size: 1.5rem; margin:0;">${patient.name.split(' ').map(n=>n[0]).join('')}</div>
+                    <div>
+                        <span style="font-size: 0.65rem; background-color: rgba(20, 184, 166, 0.1); color: hsl(var(--accent-hsl)); padding: 2px 8px; border-radius: 6px; font-weight:700;">Health ID: ${patient.health_id}</span>
+                        <h3 style="margin: 2px 0; font-family: var(--font-heading); font-size: 1.3rem;">${patient.name}</h3>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-phone"></i> ${patient.phone || 'No phone'}</span>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.8rem; margin-bottom: 15px;">
+                    <div><span style="color:var(--text-secondary);">Age:</span> <strong>${age} yrs</strong></div>
+                    <div><span style="color:var(--text-secondary);">Gender:</span> <strong>${patient.gender}</strong></div>
+                    <div><span style="color:var(--text-secondary);">Blood:</span> <strong style="color:#ef4444;"><i class="fa-solid fa-droplet"></i> ${patient.bloodGroup}</strong></div>
+                    <div><span style="color:var(--text-secondary);">BMI:</span> <strong style="color:hsl(var(--accent-hsl));">${patient.bmi}</strong></div>
+                </div>
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); padding: 12px; border-radius: 8px; color: #ef4444; font-size: 0.8rem; margin-bottom: 12px; font-weight: 600;">
+                    ⚠️ Allergies: ${allergyStr}
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; font-size: 0.8rem; border: 1px solid var(--border-color);">
+                    <strong>Chronic Conditions:</strong> ${chronicStr}
+                </div>
+            `;
+
+            // Build visit logs
+            const pastVisits = db.data.appointments.filter(a => a.patientId === patientId && a.status === 'Completed' && a.id !== appt.id);
+            let historyHtml = '<h4 style="font-size:0.85rem; margin-bottom:10px;">Previous Consultations</h4>';
+            if (pastVisits.length === 0) {
+                historyHtml += `<p style="font-size:0.75rem; color:var(--text-muted);">No previous visit logs recorded for this patient.</p>`;
+            } else {
+                pastVisits.forEach(pv => {
+                    historyHtml += `
+                        <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; color:var(--primary); margin-bottom:4px;">
+                                <span>Date: ${pv.date}</span>
+                                <span>Token: ${pv.visitToken}</span>
+                            </div>
+                            <p style="font-size:0.75rem; color:var(--text-primary);"><strong>Symptoms:</strong> ${pv.symptoms}</p>
+                        </div>
+                    `;
+                });
             }
 
-            const showTransferredBadge = appt && (appt.healthIdDetails || (appt.queue && appt.queue.healthIdDetails));
-            const badgeHtml = showTransferredBadge ? 
-                `<span style="font-size: 0.65rem; background-color: rgba(16, 185, 129, 0.1); color: hsl(var(--success-hsl)); padding: 2px 8px; border-radius: 6px; font-weight:700; margin-left: 5px;"><i class="fa-solid fa-shield-halved"></i> Transferred from Health ID</span>` : '';
+            // Prescriptions history
+            const patientPrescs = db.data.prescriptions.filter(pr => pr.patientId === patientId);
+            let prescsHtml = '<h4 style="font-size:0.85rem; margin-bottom:10px;">Prescription History</h4>';
+            if (patientPrescs.length === 0) {
+                prescsHtml += `<p style="font-size:0.75rem; color:var(--text-muted);">No historical prescriptions issued.</p>`;
+            } else {
+                patientPrescs.forEach(pr => {
+                    prescsHtml += `
+                        <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; color:var(--accent); margin-bottom:4px;">
+                                <span>${pr.doctor}</span>
+                                <span>${pr.date}</span>
+                            </div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:5px;">${pr.notes}</div>
+                            <div style="display:flex; flex-direction:column; gap:3px;">
+                                ${pr.medicines.map(m => `<span style="font-size:0.7rem; color:var(--text-primary); font-weight:600;"><i class="fa-solid fa-circle-check" style="color:var(--accent); font-size:0.6rem;"></i> ${m.name} - ${m.dose} (${m.duration})</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
 
+            // Generate full layout content
             container.innerHTML = `
-                <!-- Patient Overview Header -->
-                <div style="display: flex; gap: 20px; align-items: center; text-align: left; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
-                    <div class="user-avatar" style="width: 70px; height: 70px; font-size: 1.8rem; margin:0;">${patient.name.split(' ').map(n=>n[0]).join('')}</div>
-                    <div style="flex: 1;">
-                        <span style="font-size: 0.65rem; background-color: rgba(20, 184, 166, 0.1); color: hsl(var(--accent-hsl)); padding: 2px 8px; border-radius: 6px; font-weight:700;">Health ID: ${patient.health_id}</span>
-                        ${badgeHtml}
-                        <h2 style="margin: 4px 0; font-family: var(--font-heading); font-size: 1.5rem; color: var(--text-primary);">${patient.name}</h2>
-                        <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-envelope"></i> ${patient.email || 'No email'} | <i class="fa-solid fa-phone"></i> ${patient.phone || 'No phone'}</span>
-                    </div>
-                </div>
-
-                <!-- Vital Clinical Grid -->
-                <div class="medical-grid">
-                    <div>
-                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Height & Weight</span>
-                        <strong style="font-size: 0.9rem;">${patient.height} cm / ${patient.weight} kg</strong>
-                    </div>
-                    <div>
-                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">BMI Score</span>
-                        <strong style="font-size: 0.9rem; color: hsl(var(--accent-hsl));">${patient.bmi}</strong>
-                    </div>
-                    <div>
-                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Blood Group</span>
-                        <strong style="font-size: 0.9rem; color: #ef4444;"><i class="fa-solid fa-droplet"></i> ${patient.bloodGroup}</strong>
-                    </div>
-                </div>
-
-                <!-- Session Symptoms and Files -->
-                <div style="text-align: left; margin-bottom: 20px; padding: 12px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border-color);">
-                    <h4 style="font-size: 0.85rem; margin-bottom: 5px; color: hsl(var(--primary-hsl));"><i class="fa-solid fa-stethoscope"></i> Current Session Reason / Symptoms</h4>
-                    <p style="font-size: 0.8rem; color: var(--text-primary); line-height: 1.4; margin-bottom: 10px;">${appt.symptoms}</p>
+                <div class="patient-consult-workspace" style="display: grid; grid-template-columns: 320px 1fr; gap: 20px;">
                     
-                    <h4 style="font-size: 0.85rem; margin-bottom: 5px; color: hsl(var(--primary-hsl));"><i class="fa-solid fa-paperclip"></i> Patient Uploaded Records / Lab Files</h4>
-                    <div style="display:flex; flex-wrap:wrap; gap:5px;">
-                        ${filesHtml}
-                    </div>
-                </div>
+                    <!-- Left Column: Patient Profile Card & History Tabs -->
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div class="card" style="padding: 15px; margin:0;">
+                            <!-- Profile Inner Tabs Navigation -->
+                            <div class="sub-tabs-bar">
+                                <button class="sub-tab-btn active" onclick="switchPatientSubTab('demographics')">Profile</button>
+                                <button class="sub-tab-btn" onclick="switchPatientSubTab('history')">Visits</button>
+                                <button class="sub-tab-btn" onclick="switchPatientSubTab('prescs')">Rx Hist</button>
+                                <button class="sub-tab-btn" onclick="switchPatientSubTab('files')">Files</button>
+                            </div>
+                            
+                            <!-- Tab Content 1: Demographics -->
+                            <div id="sub-tab-demographics" class="sub-tab-content" style="display:block;">
+                                ${demographicsHtml}
+                            </div>
+                            
+                            <!-- Tab Content 2: History -->
+                            <div id="sub-tab-history" class="sub-tab-content">
+                                ${historyHtml}
+                            </div>
+                            
+                            <!-- Tab Content 3: Prescriptions -->
+                            <div id="sub-tab-prescs" class="sub-tab-content">
+                                ${prescsHtml}
+                            </div>
+                            
+                            <!-- Tab Content 4: Files -->
+                            <div id="sub-tab-files" class="sub-tab-content">
+                                ${filesHtml}
+                            </div>
+                        </div>
 
-                <!-- Clinical History and Bio Info -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left;">
-                    <div>
-                        <h4 style="font-size: 0.9rem; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">Medical Details</h4>
-                        <div class="detail-row">
-                            <span class="detail-label" style="font-size:0.75rem;">Chronic Issues:</span>
-                            <span class="detail-value" style="font-size:0.75rem;">${chronicStr}</span>
+                        <!-- Session Reason / Symptoms Box -->
+                        <div class="card" style="padding: 15px; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); margin:0;">
+                            <strong style="font-size:0.8rem; color:var(--primary); display:block; margin-bottom:5px;"><i class="fa-solid fa-hospital-user"></i> Patient Check-In Complaint</strong>
+                            <p style="font-size:0.75rem; color:var(--text-primary); line-height:1.4;">${appt.symptoms || 'General Checkup Consultation.'}</p>
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label" style="font-size:0.75rem;">Allergies:</span>
-                            <span class="detail-value" style="font-size:0.75rem;">${allergyStr}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label" style="font-size:0.75rem;">Organ Donor:</span>
-                            <span class="detail-value" style="font-size:0.75rem;">${patient.settings.organDonor ? 'Yes' : 'No'}</span>
-                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Vitals, Diagnosis, Advice & Rx Builder -->
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
                         
-                        <h4 style="font-size: 0.9rem; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">Lifestyle Audit</h4>
-                        <div class="detail-row">
-                            <span class="detail-label" style="font-size:0.75rem;">Smoking:</span>
-                            <span class="detail-value" style="font-size:0.75rem;">${patient.lifestyle.smoking}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label" style="font-size:0.75rem;">Alcohol:</span>
-                            <span class="detail-value" style="font-size:0.75rem;">${patient.lifestyle.alcohol}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label" style="font-size:0.75rem;">Exercise:</span>
-                            <span class="detail-value" style="font-size:0.75rem;">${patient.lifestyle.exercise}</span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 style="font-size: 0.9rem; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">Active Prescriptions</h4>
-                        ${medsHtml}
-                    </div>
-                </div>
-
-                <!-- Identity Verification Trigger -->
-                <div style="border-top: 1px solid var(--border-color); margin-top: 20px; padding-top: 15px;">
-                    ${appt.checkInStatus === 'Verified' ? `
-                        <div class="verification-success-alert" style="margin: 0; text-align: left;">
-                            <i class="fa-solid fa-circle-check" style="font-size: 1.2rem;"></i>
-                            <span style="font-size: 0.8rem; font-weight: 600;">Patient Verified ✅ Check-In Completed.</span>
-                        </div>
-                    ` : `
-                        <button type="button" class="btn btn-primary" onclick="openQRScanner('${appt.id}')" style="margin: 0; width: 100%; cursor:pointer;">
-                            <i class="fa-solid fa-camera"></i> Verify Patient Check-In (Scan QR)
-                        </button>
-                    `}
-                </div>
-
-                <!-- Write Prescription Form Section -->
-                <div style="border-top: 1px solid var(--border-color); margin-top: 20px; padding-top: 20px; text-align: left;">
-                    <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: hsl(var(--primary-hsl)); margin-bottom: 12px;">
-                        <i class="fa-solid fa-file-medical" style="color: hsl(var(--accent-hsl));"></i> Issue New Prescription
-                    </h3>
-                    
-                    <!-- Medicine Inputs -->
-                    <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 15px;">
-                        <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);"><i class="fa-solid fa-pills"></i> Add Medication</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                            <div>
-                                <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Medicine Name</label>
-                                <input type="text" id="prescMedName" placeholder="e.g. Paracetamol" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%;">
-                            </div>
-                            <div>
-                                <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Dosage</label>
-                                <input type="text" id="prescMedDose" placeholder="e.g. 1-0-1 or 500mg" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%;">
+                        <!-- Vitals Section -->
+                        <div class="card" style="padding: 20px; margin:0;">
+                            <h3 style="font-family: var(--font-heading); font-size: 1.1rem; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; color:var(--primary);"><i class="fa-solid fa-heart-pulse"></i> Patient Vitals</h3>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                                <div>
+                                    <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Blood Pressure</label>
+                                    <input type="text" id="consultBP" placeholder="e.g. 120/80" value="120/80" class="input-field" style="padding: 8px 10px; font-size: 0.8rem; margin: 0; width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Pulse (bpm)</label>
+                                    <input type="number" id="consultPulse" placeholder="e.g. 72" value="75" class="input-field" style="padding: 8px 10px; font-size: 0.8rem; margin: 0; width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Temp (°F)</label>
+                                    <input type="number" step="0.1" id="consultTemp" placeholder="e.g. 98.6" value="98.4" class="input-field" style="padding: 8px 10px; font-size: 0.8rem; margin: 0; width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Weight (kg)</label>
+                                    <input type="number" step="0.1" id="consultWeight" placeholder="e.g. 70" value="${patient.weight || 70}" class="input-field" style="padding: 8px 10px; font-size: 0.8rem; margin: 0; width: 100%;">
+                                </div>
                             </div>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                            <div>
-                                <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Duration</label>
-                                <input type="text" id="prescMedDuration" placeholder="e.g. 5 days" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%;">
+
+                        <!-- Diagnosis Inputs -->
+                        <div class="card" style="padding: 20px; margin:0;">
+                            <h3 style="font-family: var(--font-heading); font-size: 1.1rem; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; color:var(--primary);"><i class="fa-solid fa-stethoscope"></i> Consultation Records</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px;">
+                                <div class="input-group" style="margin:0;">
+                                    <label class="input-label" style="font-size:0.75rem;">Chief Complaint</label>
+                                    <input type="text" id="consultComplaint" placeholder="e.g. Acute chest pain, headache..." value="${appt.symptoms || ''}" class="input-field" style="width:100%; padding:8px;">
+                                </div>
+                                <div class="input-group" style="margin:0;">
+                                    <label class="input-label" style="font-size:0.75rem;">Diagnosis / Disease</label>
+                                    <input type="text" id="consultDiagnosis" placeholder="e.g. Hypertension, Viral Infection..." class="input-field" style="width:100%; padding:8px;">
+                                </div>
                             </div>
-                            <div>
-                                <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Food Instructions</label>
-                                <select id="prescMedFood" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%; height: auto; display: block; background-color: var(--bg-secondary);">
-                                    <option value="After Food">After Food</option>
-                                    <option value="Before Food">Before Food</option>
-                                    <option value="With Food">With Food</option>
-                                    <option value="Anytime">Anytime</option>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="input-group" style="margin:0;">
+                                    <label class="input-label" style="font-size:0.75rem;">Symptom Details & Clinical Notes</label>
+                                    <textarea id="consultSymptoms" placeholder="Describe symptoms history, active period..." class="input-field" style="width:100%; min-height:60px; font-size:0.75rem; padding:8px; resize:vertical;"></textarea>
+                                </div>
+                                <div class="input-group" style="margin:0;">
+                                    <label class="input-label" style="font-size:0.75rem;">Treatment Strategy & Advice</label>
+                                    <textarea id="consultTreatment" placeholder="Rest protocols, dietary adjustments..." class="input-field" style="width:100%; min-height:60px; font-size:0.75rem; padding:8px; resize:vertical;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Digital Prescription Workspace -->
+                        <div class="card" style="padding: 20px; margin:0;">
+                            <h3 style="font-family: var(--font-heading); font-size: 1.1rem; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; color:var(--primary);"><i class="fa-solid fa-file-medical"></i> Digital Prescription Builder</h3>
+                            
+                            <!-- Quick add templates -->
+                            <div style="margin-bottom: 15px;">
+                                <label style="font-size:0.7rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Saved / Frequently Prescribed Templates:</label>
+                                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                    <span class="medicine-pill-tag" style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius:20px; padding: 4px 10px; font-size:0.7rem; cursor:pointer;" onclick="prefillMedicine('Paracetamol 500mg', '1-1-1', '3 days', 'After Food')">Paracetamol 500mg</span>
+                                    <span class="medicine-pill-tag" style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius:20px; padding: 4px 10px; font-size:0.7rem; cursor:pointer;" onclick="prefillMedicine('Amoxicillin 500mg', '1-0-1', '5 days', 'After Food')">Amoxicillin 500mg</span>
+                                    <span class="medicine-pill-tag" style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius:20px; padding: 4px 10px; font-size:0.7rem; cursor:pointer;" onclick="prefillMedicine('Ibuprofen 400mg', '1-0-1', '3 days', 'After Food')">Ibuprofen 400mg</span>
+                                    <span class="medicine-pill-tag" style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius:20px; padding: 4px 10px; font-size:0.7rem; cursor:pointer;" onclick="prefillMedicine('Pantoprazole 40mg', '1-0-0', '7 days', 'Before Food')">Pantoprazole 40mg</span>
+                                    <span class="medicine-pill-tag" style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius:20px; padding: 4px 10px; font-size:0.7rem; cursor:pointer;" onclick="prefillMedicine('Cetirizine 10mg', '0-0-1', '5 days', 'Before Sleep')">Cetirizine 10mg</span>
+                                </div>
+                            </div>
+
+                            <!-- Input form -->
+                            <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px;">
+                                <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 8px; margin-bottom: 8px;">
+                                    <div>
+                                        <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Medicine Name</label>
+                                        <input type="text" id="prescMedName" placeholder="e.g. Paracetamol" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%;">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Dose Frequency</label>
+                                        <input type="text" id="prescMedDose" placeholder="e.g. 1-0-1" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%;">
+                                    </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 8px; margin-bottom: 8px;">
+                                    <div>
+                                        <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Duration</label>
+                                        <input type="text" id="prescMedDuration" placeholder="e.g. 3 days" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%;">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px;">Food Timing</label>
+                                        <select id="prescMedFood" class="input-field" style="padding: 6px 10px; font-size: 0.75rem; margin: 0; width: 100%; height: auto; display: block; background-color: var(--bg-secondary); color:var(--text-primary);">
+                                            <option value="After Food">After Food</option>
+                                            <option value="Before Food">Before Food</option>
+                                            <option value="With Food">With Food</option>
+                                            <option value="Before Sleep">Before Sleep</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-secondary" onclick="addMedicineToTempList()" style="width: 100%; margin: 5px 0 0 0; padding: 6px; font-size: 0.75rem; border-radius: 8px; cursor: pointer;">
+                                    <i class="fa-solid fa-plus"></i> Add Medicine Item
+                                </button>
+                            </div>
+
+                            <!-- List -->
+                            <div style="margin-bottom: 12px;">
+                                <label style="font-size: 0.75rem; color: var(--text-secondary); display:block; margin-bottom:5px;">Added Medication items:</label>
+                                <div id="tempPrescMedicinesList" style="background: var(--bg-secondary); border: 1px dashed var(--border-color); padding: 10px; border-radius: 8px; min-height: 45px;">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">No medicines added to this prescription yet.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Follow-up Setup and Communication -->
+                        <div class="card" style="padding: 20px; margin:0; display:flex; flex-direction:column; gap:15px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border-color); padding-bottom:10px;">
+                                <div>
+                                    <strong style="font-size:0.9rem; display:block;"><i class="fa-solid fa-calendar-plus"></i> Follow-up Session</strong>
+                                    <span style="font-size:0.75rem; color:var(--text-secondary);">Is follow-up consultation checkup required?</span>
+                                </div>
+                                <select id="consultFollowup" class="input-field" style="margin:0; width:150px; padding:6px; background-color: var(--bg-secondary); color:var(--text-primary);">
+                                    <option value="No Follow-Up">No Follow-Up</option>
+                                    <option value="After 3 days">After 3 days</option>
+                                    <option value="After 7 days">After 7 days</option>
+                                    <option value="After 14 days">After 14 days</option>
+                                    <option value="After 30 days">After 30 days</option>
                                 </select>
                             </div>
+
+                            <!-- Patient Communication Tools -->
+                            <div>
+                                <strong style="font-size:0.85rem; display:block; margin-bottom:8px;"><i class="fa-solid fa-paper-plane"></i> Patient Communication Quick-Actions</strong>
+                                <div style="display:flex; gap:8px;">
+                                    <button type="button" class="btn btn-secondary" style="flex:1; font-size:0.75rem; padding:8px;" onclick="sendClinicalComm('reminder', '${appt.id}')"><i class="fa-solid fa-clock"></i> Send Follow-up Reminder</button>
+                                    <button type="button" class="btn btn-secondary" style="flex:1; font-size:0.75rem; padding:8px;" onclick="sendClinicalComm('file', '${appt.id}')"><i class="fa-solid fa-share-nodes"></i> Share Prescription / Record</button>
+                                </div>
+                            </div>
                         </div>
-                        <button type="button" class="btn btn-secondary" onclick="addMedicineToTempList()" style="width: 100%; margin: 5px 0 0 0; padding: 6px; font-size: 0.75rem; border-radius: 8px; cursor: pointer;">
-                            <i class="fa-solid fa-plus"></i> Add to List
+
+                        <!-- Submit Consultation -->
+                        <button type="button" class="btn btn-primary" onclick="submitClinicalPrescription('${appt.id}', '${patient.id}')" style="width: 100%; margin: 0; font-weight: 700; padding:12px; font-size:0.95rem; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            <i class="fa-solid fa-file-medical"></i> Generate Prescription & Send to Patient
                         </button>
                     </div>
 
-                    <!-- Added Medicines List -->
-                    <div style="margin-bottom: 15px;">
-                        <h4 style="font-size: 0.8rem; margin-bottom: 6px; color: var(--text-secondary);">Medicines to Prescribe:</h4>
-                        <div id="tempPrescMedicinesList" style="background: var(--bg-secondary); border: 1px dashed var(--border-color); padding: 10px; border-radius: 8px; min-height: 45px;">
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">No medicines added to this prescription yet.</span>
-                        </div>
-                    </div>
-
-                    <!-- Clinical Notes -->
-                    <div class="input-group" style="margin-bottom: 15px;">
-                        <label class="input-label" style="font-size: 0.75rem;">Clinical Notes & Advice</label>
-                        <textarea id="prescNotes" placeholder="Enter general checkup notes, diet guidelines or physical rest advice..." class="input-field" style="width: 100%; min-height: 60px; font-size: 0.75rem; padding: 8px; resize: vertical; margin: 0;"></textarea>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="button" class="btn btn-primary" onclick="submitClinicalPrescription('${appt.id}', '${patient.id}')" style="width: 100%; margin: 0; font-weight: 700; cursor: pointer;">
-                        <i class="fa-solid fa-paper-plane"></i> Issue & Send Prescription
-                    </button>
                 </div>
             `;
         }
+
+        window.addMedicineToTempList = function() {
+            const nameEl = document.getElementById('prescMedName');
+            const doseEl = document.getElementById('prescMedDose');
+            const durEl = document.getElementById('prescMedDuration');
+            const foodEl = document.getElementById('prescMedFood');
+
+            const name = nameEl.value.trim();
+            const dose = doseEl.value.trim();
+            const duration = durEl.value.trim();
+            const food = foodEl.value;
+
+            if (!name || !dose || !duration) {
+                alert("Please fill in Medicine Name, Dosage and Duration.");
+                return;
+            }
+
+            window.prescribedMedicines.push({
+                name: name,
+                dose: dose,
+                duration: duration,
+                foodInstructions: food
+            });
+
+            nameEl.value = '';
+            doseEl.value = '';
+            durEl.value = '';
+
+            renderTempMedicinesList();
+        };
+
+        window.renderTempMedicinesList = function() {
+            const container = document.getElementById('tempPrescMedicinesList');
+            if (!container) return;
+
+            if (window.prescribedMedicines.length === 0) {
+                container.innerHTML = `<span style="font-size: 0.75rem; color: var(--text-muted);">No medicines added to this prescription yet.</span>`;
+                return;
+            }
+
+            container.innerHTML = window.prescribedMedicines.map((m, idx) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-tertiary); padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; text-align: left;">
+                        <strong>${m.name}</strong> - ${m.dose} (${m.duration}, ${m.foodInstructions})
+                    </div>
+                    <button type="button" onclick="removeTempMedicine(${idx})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `).join('');
+        };
+
+        window.removeTempMedicine = function(idx) {
+            window.prescribedMedicines.splice(idx, 1);
+            renderTempMedicinesList();
+        };
 
         // Show/hide custom clinic fields
         function handleHospitalSelectChange() {
@@ -1561,7 +2224,24 @@
                 return;
             }
 
-            const notes = document.getElementById('prescNotes').value.trim();
+            const bp = document.getElementById('consultBP').value.trim();
+            const pulse = document.getElementById('consultPulse').value.trim();
+            const temp = document.getElementById('consultTemp').value.trim();
+            const weight = document.getElementById('consultWeight').value.trim();
+            const complaint = document.getElementById('consultComplaint').value.trim();
+            const diagnosis = document.getElementById('consultDiagnosis').value.trim();
+            const symptoms = document.getElementById('consultSymptoms').value.trim();
+            const treatment = document.getElementById('consultTreatment').value.trim();
+            const followup = document.getElementById('consultFollowup').value;
+
+            // Format comprehensive clinical report notes text
+            const formattedNotes = `Chief Complaint: ${complaint || 'N/A'}\n` +
+                                   `Diagnosis: ${diagnosis || 'N/A'}\n` +
+                                   `Vitals - BP: ${bp}, Pulse: ${pulse} bpm, Temp: ${temp} F, Weight: ${weight} kg\n` +
+                                   `Notes: ${symptoms || 'None'}\n` +
+                                   `Advice: ${treatment || 'None'}\n` +
+                                   `Follow-up: ${followup}`;
+
             const dateStr = new Date().toISOString().split('T')[0];
 
             // Get active doctor profile
@@ -1576,26 +2256,57 @@
                 doctorId: activeDoctorId,
                 doctor: doctorObj.name,
                 date: dateStr,
-                notes: notes || "No specific advice notes recorded.",
+                notes: formattedNotes,
                 medicines: [...window.prescribedMedicines],
                 file: `Prescription-${prescId}.pdf`
             };
 
-            // Call db.addPrescription
+            // Call local db add
             db.addPrescription(newPresc);
 
-            // Alert success
-            alert("Prescription submitted successfully! It has been synced to Supabase and will reflect immediately on the patient's portal.");
+            // Sync prescription row to Supabase
+            try {
+                await supabaseClient
+                    .from('prescriptions')
+                    .insert({
+                        id: newPresc.id,
+                        appointment_id: newPresc.appointmentId,
+                        patient_id: newPresc.patientId,
+                        doctor_id: newPresc.doctorId,
+                        doctor: newPresc.doctor,
+                        date: newPresc.date,
+                        notes: newPresc.notes,
+                        medicines: newPresc.medicines,
+                        file: newPresc.file
+                    });
+            } catch (err) {
+                console.error("Supabase prescription upload error:", err);
+            }
+
+            // Update appointment status to Completed in local DB cache
+            db.updateAppointmentStatus(apptId, 'Completed', 'Completed');
+            
+            // Sync Completed status to Supabase
+            try {
+                await supabaseClient
+                    .from('appointments')
+                    .update({ 
+                        status: 'Completed',
+                        check_in_status: 'Completed'
+                    })
+                    .eq('id', apptId);
+            } catch (err) {
+                console.error("Failed to sync completed appointment status to Supabase:", err);
+            }
 
             // Clear temporary array
             window.prescribedMedicines = [];
 
-            // Reload patient details to show updated prescriptions lists
-            // Find active appointment object
-            const currentAppt = db.data.appointments.find(a => a.id === apptId);
-            if (currentAppt) {
-                await loadPatientDetails(patientId, currentAppt);
-            }
+            alert("Consultation finalized successfully! Prescription has been synced and sent to the patient's portal.");
+
+            // Reload doctor queue & switch back to Home Dashboard
+            await loadDoctorQueue();
+            switchWorkspaceTab('dashboard');
         };
 
         // Toggle light/dark themes
@@ -1632,7 +2343,9 @@
                     const select = document.getElementById('doctorSelect');
                     if (select && Array.from(select.options).some(o => o.value === doc.id)) {
                         select.value = doc.id;
-                        loadDoctorQueue();
+                        loadDoctorQueue().then(() => {
+                            switchWorkspaceTab('dashboard');
+                        });
                     }
                 });
             } else if (doc.status === 'rejected') {
