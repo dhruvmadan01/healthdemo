@@ -36,6 +36,12 @@ if (fs.existsSync('reception.html')) {
 if (fs.existsSync('preview.html')) {
     fs.copyFileSync('preview.html', 'www/preview.html');
 }
+if (fs.existsSync('landing.html')) {
+    fs.copyFileSync('landing.html', 'www/landing.html');
+}
+if (fs.existsSync('chirag.jpeg')) {
+    fs.copyFileSync('chirag.jpeg', 'www/chirag.jpeg');
+}
 if (fs.existsSync('logo.jpg')) {
     fs.copyFileSync('logo.jpg', 'www/logo.jpg');
 }
