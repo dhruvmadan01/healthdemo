@@ -806,6 +806,81 @@
             align-items: center;
         }
 
+        @media (max-width: 768px) {
+            .nav-links li:not(:last-child) {
+                display: none;
+            }
+            .nav-links {
+                gap: 0;
+            }
+            .hero {
+                padding-top: 60px;
+                padding-bottom: 60px;
+            }
+            .hero h1 {
+                font-size: 2.3rem;
+                letter-spacing: -0.02em;
+            }
+            .hero p {
+                font-size: 1rem;
+                margin-bottom: 30px;
+            }
+            .hero-ctas {
+                flex-direction: column;
+                gap: 12px;
+                align-items: center;
+                margin-bottom: 40px;
+            }
+            .hero-ctas .btn {
+                width: 100%;
+                max-width: 320px;
+            }
+            section {
+                padding: 55px 0;
+            }
+            .section-header {
+                margin-bottom: 35px;
+            }
+            .section-header h2 {
+                font-size: 1.75rem;
+            }
+            .section-header p {
+                font-size: 0.95rem;
+            }
+            .role-visual {
+                padding: 15px;
+            }
+            .role-visual div {
+                overflow-x: auto;
+                max-width: 100%;
+            }
+            .cta-box {
+                padding: 50px 20px;
+            }
+            .cta-box h2 {
+                font-size: 1.85rem;
+            }
+            .cta-box p {
+                font-size: 1rem;
+                margin-bottom: 24px;
+            }
+            .cta-box div {
+                flex-direction: column;
+                gap: 12px;
+                align-items: center;
+            }
+            .cta-box div .btn {
+                width: 100%;
+                max-width: 320px;
+            }
+            .footer-grid {
+                gap: 30px;
+            }
+            footer {
+                padding: 50px 0 30px 0;
+            }
+        }
+
         @media (max-width: 600px) {
             .footer-bottom {
                 flex-direction: column;
