@@ -11,7 +11,10 @@ class HealthcareApp {
             distance: [],
             price: [],
             availability: [],
-            language: []
+            language: [],
+            specialty: [],
+            experience: [],
+            rating: []
         };
         this.currentRegisterStep = 1;
         this.uploadedRegisterPhoto = '';
@@ -1984,6 +1987,21 @@ class HealthcareApp {
             if (this.selectedFilters.language.length > 0) {
                 doctors = doctors.filter(d => 
                     d.languages.some(lang => this.selectedFilters.language.includes(lang))
+                );
+            }
+            if (this.selectedFilters.specialty.length > 0) {
+                doctors = doctors.filter(d => 
+                    this.selectedFilters.specialty.includes(d.specialty)
+                );
+            }
+            if (this.selectedFilters.experience.length > 0) {
+                doctors = doctors.filter(d => 
+                    this.selectedFilters.experience.some(expVal => d.experience >= parseInt(expVal))
+                );
+            }
+            if (this.selectedFilters.rating.length > 0) {
+                doctors = doctors.filter(d => 
+                    this.selectedFilters.rating.some(ratVal => d.reviews.rating >= parseFloat(ratVal))
                 );
             }
 
