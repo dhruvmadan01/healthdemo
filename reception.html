@@ -21,7 +21,7 @@
             min-height: 100vh;
         }
         .reception-container {
-            max-width: 1200px;
+            max-width: 1250px;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
@@ -51,15 +51,46 @@
             font-size: 1.4rem;
             font-weight: 700;
         }
-        .dashboard-grid {
+        .workspace-layout {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: 240px 1fr;
             gap: 20px;
         }
         @media (max-width: 900px) {
-            .dashboard-grid {
+            .workspace-layout {
                 grid-template-columns: 1fr;
             }
+        }
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .menu-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .menu-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: hsl(var(--accent-hsl));
+            color: var(--text-primary);
+        }
+        .menu-btn.active {
+            background: linear-gradient(135deg, #0f4c81, #131c2e);
+            color: white;
+            border-color: transparent;
         }
         .card {
             background: var(--bg-secondary);
@@ -83,6 +114,53 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            margin: 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: var(--card-shadow);
+        }
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: 750;
+            line-height: 1.1;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 3px;
         }
         .input-group {
             margin-bottom: 15px;
@@ -142,6 +220,14 @@
         .btn-secondary:hover {
             background: var(--border-color);
         }
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
         .doctor-pill {
             display: flex;
             justify-content: space-between;
@@ -150,6 +236,7 @@
             border-radius: 12px;
             padding: 10px 15px;
             margin-bottom: 10px;
+            border: 1px solid var(--border-color);
         }
         .doctor-pill .info {
             display: flex;
@@ -178,20 +265,30 @@
             padding: 2px 8px;
             border-radius: 20px;
         }
-        .appointment-row {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
-            padding: 12px 10px;
-            border-bottom: 1px solid var(--border-color);
-            align-items: center;
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+        }
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
             font-size: 0.85rem;
         }
-        .appointment-row.header {
+        .custom-table th {
+            background: var(--bg-tertiary);
+            padding: 12px 15px;
             font-weight: 700;
             color: var(--text-secondary);
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            border: none;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .custom-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        .custom-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
         }
         .status-badge {
             padding: 3px 8px;
@@ -200,14 +297,27 @@
             font-weight: 600;
             text-align: center;
             width: fit-content;
+            display: inline-block;
         }
         .status-pending {
-            background: rgba(245, 158, 11, 0.15);
-            color: hsl(var(--warning-hsl));
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
         }
         .status-verified {
-            background: rgba(16, 185, 129, 0.15);
-            color: hsl(var(--success-hsl));
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+        .status-in-progress {
+            background: rgba(99, 102, 241, 0.12);
+            color: #6366f1;
+        }
+        .status-completed {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+        .status-cancelled {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
         }
         .auth-overlay {
             position: fixed;
@@ -241,6 +351,33 @@
         }
         .search-item:hover {
             background: var(--bg-tertiary);
+        }
+        .timeline-log {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            border-left: 2px solid var(--border-color);
+            padding-left: 15px;
+            position: relative;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: hsl(var(--accent-hsl));
+            border: 2px solid var(--bg-secondary);
+        }
+        .timeline-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
         }
     </style>
 </head>
@@ -335,132 +472,444 @@
             </div>
         </header>
 
-        <!-- Dashboard Grid -->
-        <div class="dashboard-grid">
+        <!-- Sidebar Navigation Split Grid -->
+        <div class="workspace-layout">
             
-            <!-- Left Side: Roster & Scanners -->
-            <div style="display: flex; flex-direction:column; gap:20px;">
+            <!-- Sidebar Nav Controls -->
+            <aside class="sidebar-menu">
+                <button class="menu-btn active" id="btn-tab-dashboard" onclick="switchWorkspaceTab('dashboard')">
+                    <i class="fa-solid fa-chart-pie"></i> Today's Dashboard
+                </button>
+                <button class="menu-btn" id="btn-tab-appointments" onclick="switchWorkspaceTab('appointments')">
+                    <i class="fa-solid fa-calendar-check"></i> Bookings & Roster
+                </button>
+                <button class="menu-btn" id="btn-tab-queue" onclick="switchWorkspaceTab('queue')">
+                    <i class="fa-solid fa-ticket"></i> Queue & Token Desk
+                </button>
+                <button class="menu-btn" id="btn-tab-patients" onclick="switchWorkspaceTab('patients')">
+                    <i class="fa-solid fa-users"></i> Patient Registry
+                </button>
+                <button class="menu-btn" id="btn-tab-billing" onclick="switchWorkspaceTab('billing')">
+                    <i class="fa-solid fa-receipt"></i> Billing & Payments
+                </button>
+                <button class="menu-btn" id="btn-tab-doctors" onclick="switchWorkspaceTab('doctors')">
+                    <i class="fa-solid fa-user-doctor"></i> Doctor Status
+                </button>
+                <button class="menu-btn" id="btn-tab-commission" onclick="switchWorkspaceTab('commission')">
+                    <i class="fa-solid fa-calculator"></i> Commission Track
+                </button>
+            </aside>
+
+            <!-- Main Workpanels Container -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
                 
-                <!-- Token Search Check-in -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fa-solid fa-ticket"></i> Check In Token / QR</h3>
+                <!-- Panel 1: Dashboard Overview -->
+                <div id="panel-dashboard" class="reception-panel" style="display: block;">
+                    <!-- Stats cards row -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                                <i class="fa-solid fa-calendar"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statTotalAppts">0</span>
+                                <span class="stat-label">Total Today</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                <i class="fa-solid fa-spinner"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statWaiting">0</span>
+                                <span class="stat-label">Waiting</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                                <i class="fa-solid fa-stethoscope"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statConsulting">0</span>
+                                <span class="stat-label">Consulting</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statCompleted">0</span>
+                                <span class="stat-label">Completed</span>
+                            </div>
+                        </div>
                     </div>
-                    <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:15px;">
-                        Scan physical paper QR or type the patient's appointment token below to verify their identity and check them into the clinic queue.
-                    </p>
-                    <div class="input-group" style="display: flex; gap: 8px; margin-bottom: 0;">
-                        <input class="input-field" type="text" id="tokenSearchInput" placeholder="e.g. T-804 or Appointment ID" style="flex:1;">
-                        <button class="btn btn-primary" onclick="verifyTokenSubmit()" style="padding: 10px 15px;"><i class="fa-solid fa-circle-check"></i> Check In</button>
+
+                    <div class="stats-grid" style="margin-top:-5px;">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                <i class="fa-solid fa-rectangle-xmark"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statCancelled">0</span>
+                                <span class="stat-label">Cancelled/No-show</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statCheckedIn">0</span>
+                                <span class="stat-label">Checked-In</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statUnpaid">0</span>
+                                <span class="stat-label">Unpaid Billings</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(20, 184, 166, 0.1); color: #14b8a6;">
+                                <i class="fa-solid fa-ticket"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statPlatform">0</span>
+                                <span class="stat-label">Online bookings</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:20px; margin-top:10px;">
+                        <!-- Quick verify token -->
+                        <div class="card" style="text-align: left;">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-ticket"></i> Check-in Token Scan</h3>
+                            </div>
+                            <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:12px;">Type patient booking token (e.g. T-804) to complete verification consent.</p>
+                            <div style="display:flex; gap:10px;">
+                                <input class="input-field" type="text" id="tokenSearchInput" placeholder="Enter Token (e.g. T-102)">
+                                <button class="btn btn-primary" onclick="verifyTokenSubmit()"><i class="fa-solid fa-circle-check"></i> Register Check-In</button>
+                            </div>
+                        </div>
+                        <!-- Confirmation and reminder logs -->
+                        <div class="card" style="text-align: left;">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-message"></i> Reminder Outbox Logs</h3>
+                            </div>
+                            <div class="timeline-log" id="notificationLogList" style="max-height: 150px; overflow-y: auto;">
+                                <div style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:20px;">No messages sent yet.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Doctor Queue Monitor -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fa-solid fa-user-doctor"></i> Physicians On Duty</h3>
-                    </div>
-                    <div id="doctorQueueList">
-                        <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); padding:10px;">Loading doctors...</p>
+                <!-- Panel 2: Appointments Management -->
+                <div id="panel-appointments" class="reception-panel" style="display: none;">
+                    <div class="card" style="text-align: left;">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-list-check"></i> Roster & Appointments Management</h3>
+                            <div style="display:flex; gap:8px;">
+                                <select class="input-field" id="filterDoctorSelect" onchange="loadClinicRoster()" style="width:180px; padding:6px; margin:0;">
+                                    <option value="all">All Physicians</option>
+                                </select>
+                                <button class="btn btn-secondary" onclick="loadClinicRoster()" style="padding:6px 12px; margin:0;"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                            </div>
+                        </div>
+
+                        <!-- Reschedule mini helper -->
+                        <div id="rescheduleQuickForm" style="display:none; background: var(--bg-tertiary); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                            <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);"><i class="fa-solid fa-clock"></i> Reschedule Appointment: <span id="reschedulePatientLabel">John Doe</span></h4>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                <div>
+                                    <label class="input-label" style="font-size:0.65rem;">New Time Slot</label>
+                                    <input type="time" class="input-field" id="rescheduleTimeInput">
+                                </div>
+                                <div style="display:flex; align-items:flex-end; gap:8px;">
+                                    <button class="btn btn-primary" style="flex:1;" onclick="submitQuickReschedule()">Save Time Slot</button>
+                                    <button class="btn btn-secondary" style="flex:1;" onclick="document.getElementById('rescheduleQuickForm').style.display='none'">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Patient</th>
+                                        <th>Practitioner</th>
+                                        <th>Time Slot</th>
+                                        <th>Token</th>
+                                        <th>Source</th>
+                                        <th>Status</th>
+                                        <th>Billing</th>
+                                        <th>Roster Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="appointmentsTableBody">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading schedule data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Book Walk-in Appointment Wizard -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fa-solid fa-user-plus"></i> Walk-In Registration</h3>
-                    </div>
-                    
-                    <!-- Search Patient Step -->
-                    <div id="walkinStepSearch">
-                        <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:12px;">Step 1: Lookup patient health profile</p>
-                        <div class="input-group" style="display:flex; gap:8px;">
-                            <input class="input-field" type="text" id="patientQuery" placeholder="Search by name, phone or MED-ID...">
-                            <button class="btn btn-secondary" onclick="searchPatientDirectory()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <!-- Panel 3: Queue & Token system -->
+                <div id="panel-queue" class="reception-panel" style="display: none;">
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap:20px;">
+                        
+                        <!-- Doctor Live Token Stats -->
+                        <div class="card" style="text-align: left;">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-ticket"></i> Live Token Status</h3>
+                            </div>
+                            <div id="doctorQueueStatsList" style="display:flex; flex-direction:column; gap:12px;">
+                                <p style="font-size:0.75rem; color:var(--text-muted); text-align:center;">Select doctor to monitor live queue status.</p>
+                            </div>
                         </div>
-                        <div id="patientSearchResults" style="max-height:180px; overflow-y:auto; margin-bottom:15px; border-radius:8px; border: 1px solid var(--border-color); display:none;">
-                        </div>
-                        <button class="btn btn-secondary" onclick="showQuickRegisterForm()" style="width:100%; font-size:0.8rem;">
-                            <i class="fa-solid fa-plus"></i> Patient Not Found - Create Guest Profile
-                        </button>
-                    </div>
 
-                    <!-- Guest Profile Creation -->
-                    <div id="walkinStepRegister" style="display:none;">
-                        <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:12px;">Step 1b: Guest Patient Profile Details</p>
-                        <div class="input-group">
-                            <label class="input-label">Patient Full Name</label>
-                            <input class="input-field" type="text" id="guestName" placeholder="e.g. John Doe">
+                        <!-- Waiting queue list -->
+                        <div class="card" style="text-align: left;">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-clock"></i> Active Waiting Queue List</h3>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Queue Position</th>
+                                            <th>Patient / Token</th>
+                                            <th>Attending Doctor</th>
+                                            <th>Checked-In Time</th>
+                                            <th>Wait Duration</th>
+                                            <th>Buzzer Handover</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="waitingQueueTableBody">
+                                        <tr>
+                                            <td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No patients currently waiting.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <label class="input-label">Contact Phone</label>
-                            <input class="input-field" type="text" id="guestPhone" placeholder="e.g. +1-555-0190">
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">Date of Birth</label>
-                            <input class="input-field" type="date" id="guestDob">
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">Gender</label>
-                            <select class="input-field" id="guestGender">
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div style="display:flex; gap:8px; margin-top:10px;">
-                            <button class="btn btn-secondary" onclick="cancelGuestRegister()" style="flex:1;">Cancel</button>
-                            <button class="btn btn-primary" onclick="submitGuestRegister()" style="flex:1;">Save & Continue</button>
-                        </div>
-                    </div>
 
-                    <!-- Booking Wizard Final Details -->
-                    <div id="walkinStepBook" style="display:none;">
-                        <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:10px;">Step 2: Assign Doctor & Schedule</p>
-                        <div class="card-inner" style="background:var(--bg-tertiary); padding:10px; border-radius:8px; margin-bottom:15px; font-size:0.8rem;">
-                            <strong>Selected Patient:</strong> <span id="walkinPatientName">Guest Patient</span>
+                    </div>
+                </div>
+
+                <!-- Panel 4: Patient Registry & Directory Search -->
+                <div id="panel-patients" class="reception-panel" style="display: none;">
+                    <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:20px;">
+                        
+                        <!-- Guest Patient Registration Form -->
+                        <div class="card" style="text-align: left;">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-user-plus"></i> Walk-In guest Registration</h3>
+                            </div>
+                            
+                            <!-- Walk-in step sequence -->
+                            <div id="walkinStepSearch">
+                                <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:12px;">Lookup existing health card database first:</p>
+                                <div class="input-group" style="display:flex; gap:8px;">
+                                    <input class="input-field" type="text" id="patientQuery" placeholder="Search by name, phone or Health ID...">
+                                    <button class="btn btn-secondary" onclick="searchPatientDirectory()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                                </div>
+                                <div id="patientSearchResults" style="max-height:180px; overflow-y:auto; margin-bottom:15px; border-radius:8px; border: 1px solid var(--border-color); display:none;">
+                                </div>
+                                <button class="btn btn-secondary" onclick="showQuickRegisterForm()" style="width:100%; font-size:0.8rem;">
+                                    <i class="fa-solid fa-plus"></i> Patient Not Found - Create Guest Profile
+                                </button>
+                            </div>
+
+                            <!-- Guest register inputs -->
+                            <div id="walkinStepRegister" style="display:none;">
+                                <div class="input-group">
+                                    <label class="input-label">Patient Full Name *</label>
+                                    <input class="input-field" type="text" id="guestName" placeholder="e.g. Rahul Kumar">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Contact Mobile *</label>
+                                    <input class="input-field" type="text" id="guestPhone" placeholder="e.g. +91 9999999999">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Date of Birth</label>
+                                    <input class="input-field" type="date" id="guestDob">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Gender</label>
+                                    <select class="input-field" id="guestGender">
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div style="display:flex; gap:8px; margin-top:10px;">
+                                    <button class="btn btn-secondary" onclick="cancelGuestRegister()" style="flex:1;">Cancel</button>
+                                    <button class="btn btn-primary" onclick="submitGuestRegister()" style="flex:1;">Save Guest & Proceed</button>
+                                </div>
+                            </div>
+
+                            <!-- Booking parameters assignment -->
+                            <div id="walkinStepBook" style="display:none;">
+                                <div class="card-inner" style="background:var(--bg-tertiary); padding:10px; border-radius:8px; margin-bottom:15px; font-size:0.8rem;">
+                                    <strong>Selected Patient:</strong> <span id="walkinPatientName">Guest Patient</span>
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Assign Doctor</label>
+                                    <select class="input-field" id="walkinDoctor">
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Appointment Reason / Speciality</label>
+                                    <input class="input-field" type="text" id="walkinSymptoms" placeholder="e.g. Headache checkup, viral fever">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Appointment Time</label>
+                                    <input class="input-field" type="time" id="walkinTime" value="10:00">
+                                </div>
+                                <div style="display:flex; gap:8px;">
+                                    <button class="btn btn-secondary" onclick="backToPatientSelection()" style="flex:1;">Back</button>
+                                    <button class="btn btn-primary" onclick="submitWalkInBooking()" style="flex:1;">Confirm Queue Booking</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <label class="input-label">Select Practitioner</label>
-                            <select class="input-field" id="walkinDoctor">
-                            </select>
+
+                        <!-- Existing Patient Search Directory Lookup -->
+                        <div class="card" style="text-align: left;">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-address-book"></i> Existing Patient Lookup</h3>
+                            </div>
+                            <div class="input-group" style="display:flex; gap:8px;">
+                                <input class="input-field" type="text" id="dirSearchQuery" placeholder="Search by name, phone or ID...">
+                                <button class="btn btn-primary" onclick="lookupPatientDirectory()"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                            </div>
+                            
+                            <!-- Search Result Details Card -->
+                            <div id="directoryResultCard" style="display:none; background: var(--bg-tertiary); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 15px;">
+                                <h4 style="margin-top:0; font-size:0.95rem; border-bottom:1px solid var(--border-color); padding-bottom:5px;" id="dirPatientName">John Doe</h4>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size:0.75rem; color:var(--text-secondary);">
+                                    <div>Phone: <strong id="dirPatientPhone" style="color:var(--text-primary);">-</strong></div>
+                                    <div>ID: <strong id="dirPatientID" style="color:var(--text-primary);">-</strong></div>
+                                    <div>Previous Visits: <strong id="dirPatientVisits" style="color:var(--text-primary);">-</strong></div>
+                                    <div>Last Visit Date: <strong id="dirPatientLastDate" style="color:var(--text-primary);">-</strong></div>
+                                    <div>Attending Doctor: <strong id="dirPatientLastDoc" style="color:var(--text-primary);">-</strong></div>
+                                </div>
+                                <div style="background: rgba(245, 158, 11, 0.05); color: #f59e0b; padding: 10px; border-radius: 8px; font-size:0.7rem; font-weight:600; margin-top: 12px; border: 1px solid rgba(245, 158, 11, 0.15);">
+                                    ⚠️ Role-based access: Patient's clinical records, diagnoses, and doctor prescriptions are hidden from front-desk staff.
+                                </div>
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <label class="input-label">Symptoms & Reason</label>
-                            <input class="input-field" type="text" id="walkinSymptoms" placeholder="e.g. Chest pain, cold, routine checkup">
+
+                    </div>
+                </div>
+
+                <!-- Panel 5: Billing & Payments -->
+                <div id="panel-billing" class="reception-panel" style="display: none;">
+                    <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:20px;">
+                        
+                        <!-- Select Billing Target -->
+                        <div class="card" style="text-align: left;">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-cash-register"></i> Collect Fees</h3>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Select Active Session Appointment</label>
+                                <select class="input-field" id="billingApptSelect" onchange="loadBillingInvoiceDetails()" style="height:auto;">
+                                    <option value="">-- Select Patient Appointment --</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Payment Method</label>
+                                <select class="input-field" id="billingPaymentMethod" style="height:auto;">
+                                    <option value="Cash">Cash Payment</option>
+                                    <option value="UPI">UPI / QR Code Scan</option>
+                                    <option value="Card">Credit / Debit Card</option>
+                                    <option value="Online">Online Gateway Link</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" style="width:100%;" onclick="submitCollectPayment()"><i class="fa-solid fa-circle-check"></i> Collect Payment & Mark Paid</button>
                         </div>
-                        <div class="input-group">
-                            <label class="input-label">Appt Time Slot</label>
-                            <input class="input-field" type="time" id="walkinTime" value="10:00">
+
+                        <!-- Invoice Preview -->
+                        <div class="card" style="text-align: left;">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-receipt"></i> Clinical Invoice preview</h3>
+                            </div>
+                            <div id="invoicePreviewContent" style="background:var(--bg-tertiary); padding: 20px; border-radius:12px; border: 1px dashed var(--border-color); font-family: monospace; font-size:0.75rem;">
+                                Select an appointment session to generate dynamic billing details.
+                            </div>
                         </div>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn btn-secondary" onclick="backToPatientSelection()" style="flex:1;">Back</button>
-                            <button class="btn btn-primary" onclick="submitWalkInBooking()" style="flex:1;">Confirm Queue Slot</button>
+
+                    </div>
+                </div>
+
+                <!-- Panel 6: Doctor Availability Status -->
+                <div id="panel-doctors" class="reception-panel" style="display: none;">
+                    <div class="card" style="text-align: left;">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-user-doctor"></i> Clinic Doctors Status</h3>
+                        </div>
+                        <div id="doctorAvailabilityRoster" style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top:10px;">
+                            <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); grid-column:span 2;">Loading doctor registry status...</p>
                         </div>
                     </div>
                 </div>
+
+                <!-- Panel 7: Commission Tracker -->
+                <div id="panel-commission" class="reception-panel" style="display: none;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                        
+                        <!-- Metrics -->
+                        <div class="card" style="text-align: left;">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-percent"></i> Platform vs Roster Bookings</h3>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; border-bottom: 1px solid var(--border-color); padding-bottom:5px;">
+                                    <span>Online Platform Bookings:</span>
+                                    <strong id="commPlatformBookings">0</strong>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; border-bottom: 1px solid var(--border-color); padding-bottom:5px;">
+                                    <span>Completed Bookings:</span>
+                                    <strong id="commCompletedBookings" style="color:#10b981;">0</strong>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; border-bottom: 1px solid var(--border-color); padding-bottom:5px;">
+                                    <span>Cancelled Platform Sessions:</span>
+                                    <strong id="commCancelledBookings" style="color:#ef4444;">0</strong>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; border-bottom: 1px solid var(--border-color); padding-bottom:5px;">
+                                    <span>No-Shows Recorded:</span>
+                                    <strong id="commNoShows">0</strong>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:1.1rem; font-weight:700; border-top:2px solid var(--border-color); padding-top:10px; margin-top:10px;">
+                                    <span>Commission Payable:</span>
+                                    <span id="commPayable" style="color:hsl(var(--accent-hsl));">₹0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Info Card -->
+                        <div class="card" style="text-align: left; background: var(--bg-tertiary);">
+                            <h3 style="font-family:var(--font-heading); font-size:1.1rem; color:hsl(var(--accent-hsl)); margin-bottom:10px;"><i class="fa-solid fa-calculator"></i> Commission Rationale</h3>
+                            <p style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">
+                                One Minute charges a platform processing fee of <strong>₹150</strong> per completed online appointment booked through the patient application.
+                            </p>
+                            <p style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4; margin-top: 10px;">
+                                ⚠️ Walk-in patients registered at the reception desk directly are <strong>exempted</strong> from online platform fees and are tracked separately for clinic transparency.
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Right Side: Today's Clinic Roster -->
-            <div class="card" style="display: flex; flex-direction:column;">
-                <div class="card-header">
-                    <h3><i class="fa-solid fa-list-check"></i> Today's Appointment Roster</h3>
-                    <button class="btn btn-secondary" onclick="loadClinicRoster()" style="padding:6px 12px; font-size:0.75rem;"><i class="fa-solid fa-rotate"></i> Refresh</button>
-                </div>
-                <div style="overflow-x:auto;">
-                    <div class="appointment-row header">
-                        <span>Patient</span>
-                        <span>Practitioner</span>
-                        <span>Time</span>
-                        <span>Visit Token</span>
-                        <span>Action</span>
-                    </div>
-                    <div id="clinicRosterList" style="min-height:350px;">
-                        <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); padding:60px;">Roster loading...</p>
-                    </div>
-                </div>
-            </div>
-            
         </div>
     </div>
 
@@ -628,20 +1077,66 @@
             // Load static databases and initial dashboard arrays
             await db.loadHospitalsAndDoctorsFromSupabase();
             loadClinicDoctors();
-            loadClinicRoster();
+            loadClinicRoster();        let activeRescheduleApptId = null;
+        let activeTabId = 'dashboard';
+        const notificationLogs = [
+            { time: "09:30 AM", message: "Automated confirmed reminder sent to patient Rahul Kumar (Token T-105)" },
+            { time: "10:15 AM", message: "Checked-in alert dispatched to Dr. elizabeth.vance for Amit Sharma (Token T-106)" },
+            { time: "11:00 AM", message: "Platform commission verified for Completed appointment T-102 (Payable: ₹150)" }
+        ];
+
+        // Switch Tab Panels
+        window.switchWorkspaceTab = function(tabId) {
+            activeTabId = tabId;
+            document.querySelectorAll('.reception-panel').forEach(p => p.style.display = 'none');
+            const targetPanel = document.getElementById('panel-' + tabId);
+            if (targetPanel) targetPanel.style.display = 'block';
+
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+            const targetBtn = document.getElementById('btn-tab-' + tabId);
+            if (targetBtn) targetBtn.classList.add('active');
+
+            if (tabId === 'dashboard') {
+                renderNotificationLogs();
+            }
+        };
+
+        function renderNotificationLogs() {
+            const container = document.getElementById('notificationLogList');
+            if (!container) return;
+            container.innerHTML = notificationLogs.map(log => `
+                <div class="timeline-item">
+                    <span class="timeline-time">${log.time}</span>
+                    <p style="margin: 2px 0 0 0; font-size: 0.75rem; font-weight: 500;">${log.message}</p>
+                </div>
+            `).join('');
         }
+
+        window.logNotificationSMS = function(msg) {
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            notificationLogs.unshift({ time: timeStr, message: msg });
+            renderNotificationLogs();
+        };
 
         // Load Doctors at receptionist's clinic
         function loadClinicDoctors() {
-            const container = document.getElementById('doctorQueueList');
+            const container = document.getElementById('doctorAvailabilityRoster');
             const select = document.getElementById('walkinDoctor');
-            
+            if (!container || !select) return;
+
             const docs = Object.values(db.data.doctors).filter(d => d.hospitalId === receptionistProfile.hospital_id);
             container.innerHTML = '';
             select.innerHTML = '';
 
+            const docFilter = document.getElementById('filterDoctorSelect');
+            if (docFilter && docFilter.options.length <= 1) {
+                docs.forEach(d => {
+                    docFilter.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+                });
+            }
+
             if (docs.length === 0) {
-                container.innerHTML = `<p style="font-size:0.75rem; text-align:center; color:var(--text-muted); padding:10px;">No physicians registered at this clinic.</p>`;
+                container.innerHTML = `<p style="font-size:0.75rem; text-align:center; color:var(--text-muted); grid-column:span 2;">No physicians registered at this clinic.</p>`;
                 return;
             }
 
@@ -650,23 +1145,37 @@
                 
                 // Count queue size for today
                 const appts = db.data.appointments || [];
-                const queueCount = appts.filter(a => 
-                    a.doctorId === d.id && 
-                    a.date === new Date().toISOString().split('T')[0] && 
+                const todayStr = new Date().toISOString().split('T')[0];
+                const todayAppts = appts.filter(a => a.doctorId === d.id && a.date === todayStr);
+                const queueCount = todayAppts.filter(a => 
                     (a.checkInStatus === 'Checked In' || a.checkInStatus === 'Verified') &&
                     a.status !== 'Completed' && a.status !== 'Cancelled'
                 ).length;
 
+                // Determine doctor availability state (Available, On Leave, Fully Booked)
+                let statusBadge = `<span class="status-badge status-verified">Available</span>`;
+                if (todayAppts.length >= 8) {
+                    statusBadge = `<span class="status-badge status-pending">Fully Booked</span>`;
+                }
+                
+                // Let's check blocked dates from DB config simulation
+                if (d.qualification && d.qualification.includes("Leave")) {
+                    statusBadge = `<span class="status-badge status-cancelled">On Leave</span>`;
+                }
+
                 container.innerHTML += `
-                    <div class="doctor-pill">
+                    <div class="doctor-pill" style="margin:0;">
                         <div class="info">
                             <img src="${d.image || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300'}" class="doctor-avatar">
                             <div>
                                 <span class="doctor-name">${d.name}</span>
-                                <div class="doctor-spec">${d.specialty}</div>
+                                <div class="doctor-spec">${d.specialty} | Slots full: ${todayAppts.length}/8</div>
                             </div>
                         </div>
-                        <span class="queue-badge">${queueCount} Waiting</span>
+                        <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+                            ${statusBadge}
+                            <span style="font-size:0.65rem; color:var(--text-secondary); font-weight:700;">Wait queue: ${queueCount} waiting</span>
+                        </div>
                     </div>
                 `;
 
@@ -676,9 +1185,6 @@
 
         // Load Today's Clinic Appointments Roster
         async function loadClinicRoster() {
-            const container = document.getElementById('clinicRosterList');
-            container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:var(--text-muted); padding:60px;">Fetching rosters from cloud...</p>`;
-            
             const today = new Date().toISOString().split('T')[0];
 
             try {
@@ -689,10 +1195,7 @@
                     .eq('hospital_id', receptionistProfile.hospital_id)
                     .eq('date', today);
 
-                if (error) throw error;
-
-                // Sync appointments into local storage db
-                if (appts) {
+                if (!error && appts) {
                     appts.forEach(a => {
                         const localIdx = db.data.appointments.findIndex(la => la.id === a.id);
                         const mapped = {
@@ -726,11 +1229,11 @@
                 console.warn("Using offline local appointments fallback:", err);
             }
 
+            const activeDocFilter = document.getElementById('filterDoctorSelect').value;
             const todayAppts = db.data.appointments.filter(a => 
                 a.hospitalId === receptionistProfile.hospital_id && 
                 a.date === today &&
-                a.status !== 'Completed' &&
-                a.status !== 'Cancelled'
+                (activeDocFilter === 'all' || a.doctorId === activeDocFilter)
             );
 
             // Fetch any missing patient profile details
@@ -758,48 +1261,175 @@
                 }
             }
 
-            container.innerHTML = '';
+            // 1. CALCULATE DASHBOARD STATS
+            const totalTodayCount = todayAppts.length;
+            const waitingCount = todayAppts.filter(a => (a.checkInStatus === 'Checked In' || a.checkInStatus === 'Verified' || a.checkInStatus === 'Arrived') && a.status !== 'Completed' && a.status !== 'Cancelled' && a.status !== 'No-Show' && a.status !== 'In-Progress').length;
+            const inConsultCount = todayAppts.filter(a => a.status === 'In-Progress' || a.status === 'In consultation').length;
+            const completedCount = todayAppts.filter(a => a.status === 'Completed').length;
+            const cancelledCount = todayAppts.filter(a => a.status === 'Cancelled' || a.status === 'No-Show').length;
+            const checkedInCount = todayAppts.filter(a => a.checkInStatus === 'Checked In' || a.checkInStatus === 'Verified' || a.checkInStatus === 'Arrived').length;
+            const unpaidCount = todayAppts.filter(a => a.paymentStatus === 'Unpaid' && a.status !== 'Cancelled').length;
+            const onlineCount = todayAppts.filter(a => a.id && !a.id.startsWith('a_')).length; // Online bookings don't start with walk-in prefix
 
+            // Populate dashboard labels
+            document.getElementById('statTotalAppts').innerText = totalTodayCount;
+            document.getElementById('statWaiting').innerText = waitingCount;
+            document.getElementById('statConsulting').innerText = inConsultCount;
+            document.getElementById('statCompleted').innerText = completedCount;
+            document.getElementById('statCancelled').innerText = cancelledCount;
+            document.getElementById('statCheckedIn').innerText = checkedInCount;
+            document.getElementById('statUnpaid').innerText = unpaidCount;
+            document.getElementById('statPlatform').innerText = onlineCount;
+
+            // 2. RENDER APPOINTMENTS TABLE
+            const apptsTableBody = document.getElementById('appointmentsTableBody');
+            apptsTableBody.innerHTML = '';
             if (todayAppts.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center; padding:60px; color:var(--text-muted);">
-                        <i class="fa-solid fa-calendar-day" style="font-size:3rem; opacity:0.1; margin-bottom:10px;"></i>
-                        <p style="font-size:0.8rem;">No appointments scheduled for today.</p>
-                    </div>
-                `;
-                return;
+                apptsTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">No appointments found matching this doctor roster.</td></tr>`;
+            } else {
+                todayAppts.sort((x, y) => x.time.localeCompare(y.time));
+                todayAppts.forEach(a => {
+                    const docName = doctorsMap[a.doctorId] || "Practitioner";
+                    const customDetails = a.healthIdDetails || a.queue?.healthIdDetails;
+                    const patientName = customDetails?.name || db.data.patients[a.patientId]?.name || "Unknown Patient";
+                    
+                    const isOnline = !a.id.startsWith('a_');
+                    const sourceTag = isOnline ? 
+                        `<span style="color:#6366f1; font-weight:700;"><i class="fa-solid fa-globe"></i> Platform</span>` :
+                        `<span style="color:var(--text-secondary);"><i class="fa-solid fa-walkie-talkie"></i> Walk-In</span>`;
+                    
+                    let statusBadgeClass = 'status-pending';
+                    if (a.status === 'Completed') statusBadgeClass = 'status-completed';
+                    else if (a.status === 'In-Progress') statusBadgeClass = 'status-in-progress';
+                    else if (a.status === 'Cancelled' || a.status === 'No-Show') statusBadgeClass = 'status-cancelled';
+                    else if (a.checkInStatus === 'Verified') statusBadgeClass = 'status-verified';
+
+                    const checkInBtn = (a.checkInStatus === 'Verified' || a.status === 'Completed' || a.status === 'Cancelled') ? 
+                        `<button class="btn btn-secondary" disabled style="padding:4px 8px; font-size:0.7rem; opacity:0.5;"><i class="fa-solid fa-check"></i> Checked-In</button>` :
+                        `<button class="btn btn-primary" onclick="verifyToken('${a.id}')" style="padding:4px 8px; font-size:0.7rem;"><i class="fa-solid fa-circle-check"></i> Check In</button>`;
+
+                    const actionDropdown = (a.status === 'Completed' || a.status === 'Cancelled') ? 
+                        `<span style="font-size:0.75rem; color:var(--text-muted);">Session Finalized</span>` : `
+                        <div style="display:flex; gap:4px;">
+                            ${checkInBtn}
+                            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.7rem;" onclick="startReschedule('${a.id}', '${patientName}', '${a.time}')"><i class="fa-solid fa-pencil"></i> Time</button>
+                            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.7rem; color:#ef4444;" onclick="cancelAppointment('${a.id}', 'clinic')"><i class="fa-solid fa-rectangle-xmark"></i> Cancel</button>
+                            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.7rem; color:#f59e0b;" onclick="markNoShow('${a.id}')"><i class="fa-solid fa-user-slash"></i> No-Show</button>
+                        </div>
+                    `;
+
+                    const payBadge = a.paymentStatus === 'Paid' ? 
+                        `<span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> Paid</span>` :
+                        `<span style="color:#ef4444; font-weight:700; cursor:pointer;" onclick="switchWorkspaceTab('billing')"><i class="fa-solid fa-wallet"></i> Unpaid</span>`;
+
+                    apptsTableBody.innerHTML += `
+                        <tr>
+                            <td><strong>${patientName}</strong></td>
+                            <td>${docName}</td>
+                            <td><strong style="color:hsl(var(--accent-hsl));">${a.time}</strong></td>
+                            <td><code style="background:var(--bg-tertiary); padding:2px 6px; border-radius:4px; font-weight:700;">${a.visitToken}</code></td>
+                            <td>${sourceTag}</td>
+                            <td><span class="status-badge ${statusBadgeClass}">${a.status || 'Upcoming'}</span></td>
+                            <td>${payBadge}</td>
+                            <td>${actionDropdown}</td>
+                        </tr>
+                    `;
+                });
             }
 
-            // Sort appointments by time
-            todayAppts.sort((x, y) => x.time.localeCompare(y.time));
+            // 3. RENDER LIVE QUEUE LISTS & TOKENS PANEL
+            const waitingQueueTableBody = document.getElementById('waitingQueueTableBody');
+            waitingQueueTableBody.innerHTML = '';
+            
+            const waitingQueue = todayAppts.filter(a => 
+                (a.checkInStatus === 'Checked In' || a.checkInStatus === 'Verified' || a.checkInStatus === 'Arrived') &&
+                a.status !== 'Completed' && a.status !== 'Cancelled' && a.status !== 'No-Show'
+            );
+            waitingQueue.sort((x, y) => x.time.localeCompare(y.time));
 
-            todayAppts.forEach(a => {
-                const doctorName = doctorsMap[a.doctorId] || "Practitioner";
-                // Get patient name (favor walk-in custom details first if available)
-                const customDetails = a.healthIdDetails || a.queue?.healthIdDetails;
-                const patientName = customDetails?.name || db.data.patients[a.patientId]?.name || "Unknown Patient";
-                
-                const isVerified = a.checkInStatus === 'Verified';
-                const badgeClass = isVerified ? 'status-verified' : 'status-pending';
-                const badgeLabel = isVerified ? 'Checked In' : 'Pending Check-In';
-                
-                const actionButton = isVerified ? 
-                    `<button class="btn btn-secondary" disabled style="padding: 4px 10px; font-size:0.7rem; opacity:0.5;"><i class="fa-solid fa-check"></i> Arrived</button>` :
-                    `<button class="btn btn-primary" onclick="verifyToken('${a.id}')" style="padding: 4px 10px; font-size:0.7rem;"><i class="fa-solid fa-circle-check"></i> Check In</button>`;
+            if (waitingQueue.length === 0) {
+                waitingQueueTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">No patients checked in or waiting in lobby.</td></tr>`;
+            } else {
+                waitingQueue.forEach((a, idx) => {
+                    const customDetails = a.healthIdDetails || a.queue?.healthIdDetails;
+                    const patientName = customDetails?.name || db.data.patients[a.patientId]?.name || "Unknown Patient";
+                    const docName = doctorsMap[a.doctorId] || "Practitioner";
 
-                container.innerHTML += `
-                    <div class="appointment-row">
-                        <strong style="color:var(--text-primary); font-size:0.85rem;">${patientName}</strong>
-                        <span style="color:var(--text-secondary);">${doctorName}</span>
-                        <span style="font-weight:500;">${a.time}</span>
-                        <span><code style="background:var(--bg-tertiary); padding:2px 6px; border-radius:4px; font-weight:700;">${a.visitToken}</code></span>
-                        <div>${actionButton}</div>
-                    </div>
-                `;
-            });
+                    // Simulate wait elapsed duration (assuming checked-in 12 mins ago for mock demonstration)
+                    const waitMin = 5 + (idx * 7); 
+                    
+                    const actionBuzzer = a.status === 'In-Progress' ?
+                        `<span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-user-doctor"></i> Inside Room</span>` :
+                        `<button class="btn btn-primary" style="padding:4px 8px; font-size:0.7rem;" onclick="sendToDoctor('${a.id}')"><i class="fa-solid fa-bullhorn"></i> Send to Doctor</button>`;
 
-            // Re-render doctor list queue counts
-            loadClinicDoctors();
+                    waitingQueueTableBody.innerHTML += `
+                        <tr>
+                            <td style="font-weight:700; text-align:center;">#${idx + 1}</td>
+                            <td><strong>${patientName}</strong> <br><small style="color:var(--text-secondary);">Token: ${a.visitToken}</small></td>
+                            <td>${docName}</td>
+                            <td>${a.time}</td>
+                            <td><span style="color:#ef4444; font-weight:600;"><i class="fa-solid fa-clock"></i> Waiting ${waitMin} min</span></td>
+                            <td>${actionBuzzer}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Doctor Live Token Stats list
+            const doctorQueueStatsList = document.getElementById('doctorQueueStatsList');
+            if (doctorQueueStatsList) {
+                doctorQueueStatsList.innerHTML = '';
+                const docs = Object.values(db.data.doctors).filter(d => d.hospitalId === receptionistProfile.hospital_id);
+                docs.forEach(d => {
+                    const docWaiting = todayAppts.filter(a => a.doctorId === d.id && (a.checkInStatus === 'Checked In' || a.checkInStatus === 'Verified') && a.status !== 'Completed' && a.status !== 'Cancelled' && a.status !== 'In-Progress');
+                    const docConsulting = todayAppts.find(a => a.doctorId === d.id && a.status === 'In-Progress');
+                    
+                    const curToken = docConsulting ? docConsulting.visitToken : 'None';
+                    const aheadCount = docWaiting.length;
+
+                    doctorQueueStatsList.innerHTML += `
+                        <div style="background:var(--bg-tertiary); padding:10px; border-radius:10px; border:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <strong style="font-size:0.8rem; display:block;">${d.name}</strong>
+                                <span style="font-size:0.7rem; color:var(--text-secondary);">${d.specialty}</span>
+                            </div>
+                            <div style="text-align:right; font-size:0.75rem;">
+                                <div>Serving: <strong style="color:hsl(var(--accent-hsl));">${curToken}</strong></div>
+                                <div style="color:var(--text-muted);">${aheadCount} patients ahead</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // 4. SYNC BILLING TARGET SELECTION
+            const billingApptSelect = document.getElementById('billingApptSelect');
+            if (billingApptSelect) {
+                const currentVal = billingApptSelect.value;
+                billingApptSelect.innerHTML = '<option value="">-- Select Patient Appointment --</option>';
+                todayAppts.forEach(a => {
+                    const customDetails = a.healthIdDetails || a.queue?.healthIdDetails;
+                    const patientName = customDetails?.name || db.data.patients[a.patientId]?.name || "Unknown Patient";
+                    const paidText = a.paymentStatus === 'Paid' ? ' [Paid]' : ' [Unpaid]';
+                    billingApptSelect.innerHTML += `<option value="${a.id}">${patientName} - ${a.time} (Token: ${a.visitToken})${paidText}</option>`;
+                });
+                if (currentVal && Array.from(billingApptSelect.options).some(o => o.value === currentVal)) {
+                    billingApptSelect.value = currentVal;
+                }
+            }
+
+            // 5. UPDATE COMMISSION STATISTICS
+            const platformBookingsCount = todayAppts.filter(a => a.id && !a.id.startsWith('a_')).length;
+            const platformCompletedCount = todayAppts.filter(a => a.status === 'Completed' && !a.id.startsWith('a_')).length;
+            const platformCancelledCount = todayAppts.filter(a => (a.status === 'Cancelled' || a.status === 'No-Show') && !a.id.startsWith('a_')).length;
+            const platformNoShows = todayAppts.filter(a => a.status === 'No-Show' && !a.id.startsWith('a_')).length;
+            const payableAmount = platformCompletedCount * 150;
+
+            document.getElementById('commPlatformBookings').innerText = platformBookingsCount;
+            document.getElementById('commCompletedBookings').innerText = platformCompletedCount;
+            document.getElementById('commCancelledBookings').innerText = platformCancelledCount;
+            document.getElementById('commNoShows').innerText = platformNoShows;
+            document.getElementById('commPayable').innerText = `₹${payableAmount}`;
         }
 
         // Verify patient checkin token
@@ -808,20 +1438,27 @@
                 // Update in local cache
                 const apptIdx = db.data.appointments.findIndex(la => la.id === apptId);
                 if (apptIdx !== -1) {
-                    db.data.appointments[apptIdx].checkInStatus = 'Verified';
+                    const a = db.data.appointments[apptIdx];
+                    a.checkInStatus = 'Verified';
+                    a.status = 'Upcoming';
                     db.save();
+                    
+                    logNotificationSMS(`Check-In verification completed for token ${a.visitToken}. Lobby wait timer started.`);
                 }
 
                 // Sync update to Supabase
                 const { error } = await supabaseClient
                     .from('appointments')
-                    .update({ check_in_status: 'Verified' })
+                    .update({ 
+                        check_in_status: 'Verified',
+                        status: 'Upcoming'
+                    })
                     .eq('id', apptId);
 
                 if (error) throw error;
                 
                 alert("Patient checked in and marked as verified in queue!");
-                loadClinicRoster();
+                await loadClinicRoster();
             } catch (err) {
                 alert("Failed to verify check-in: " + err.message);
             }
@@ -884,7 +1521,6 @@
                 if (error) throw error;
 
                 if (profiles) {
-                    // Filter locally to catch all search dimensions easily
                     const q = query.toLowerCase();
                     const filtered = profiles.filter(p => 
                         (p.name && p.name.toLowerCase().includes(q)) ||
@@ -956,7 +1592,7 @@
 
             // Create temporary guest patient object (satisfies booking details)
             selectedWalkInPatient = {
-                id: receptionistProfile.id, // satisfying foreign key constraints, details stored in healthIdDetails
+                id: 'p_' + Date.now(), // Unique random guest ID
                 name: name,
                 phone: phone,
                 dob: dob,
@@ -1021,7 +1657,7 @@
                 symptoms: symptoms,
                 reports: [],
                 insurance: "None",
-                paymentStatus: "Paid",
+                paymentStatus: "Unpaid", // Unpaid by default until collected at receptionist panel
                 paymentAmount: parseFloat(doc.consultingFee || 100),
                 qrCode: `${window.location.origin}/doctor.html?appt=${apptId}`,
                 visitToken: tokenVal,
@@ -1052,7 +1688,7 @@
                         symptoms: symptoms,
                         reports: [],
                         insurance: "None",
-                        payment_status: "Paid",
+                        payment_status: "Unpaid",
                         payment_amount: parseFloat(doc.consultingFee || 100),
                         qr_code: newApp.qrCode,
                         visit_token: tokenVal,
@@ -1066,6 +1702,8 @@
                 // Save locally
                 db.data.appointments.push(newApp);
                 db.save();
+
+                logNotificationSMS(`Walk-in guest ${selectedWalkInPatient.name} registered. SMS Confirmation sent.`);
 
                 alert(`Walk-In Appointment booked successfully!\nToken: ${tokenVal}\nPosition: Added to Doctor queue.`);
                 
@@ -1081,6 +1719,242 @@
                 alert("Failed to book walk-in: " + err.message);
             }
         }
+
+        // Cancel appointment
+        window.cancelAppointment = async function(apptId, byWho) {
+            if (!confirm("Are you sure you want to cancel this appointment session?")) return;
+            try {
+                const apptIdx = db.data.appointments.findIndex(la => la.id === apptId);
+                if (apptIdx !== -1) {
+                    db.data.appointments[apptIdx].status = 'Cancelled';
+                    db.save();
+                    logNotificationSMS(`Session Cancelled: Appointment token ${db.data.appointments[apptIdx].visitToken} marked Cancelled by ${byWho}.`);
+                }
+
+                const { error } = await supabaseClient
+                    .from('appointments')
+                    .update({ status: 'Cancelled' })
+                    .eq('id', apptId);
+
+                if (error) throw error;
+                await loadClinicRoster();
+            } catch (e) {
+                alert("Cancellation failed: " + e.message);
+            }
+        };
+
+        // Mark patient as No-Show
+        window.markNoShow = async function(apptId) {
+            try {
+                const apptIdx = db.data.appointments.findIndex(la => la.id === apptId);
+                if (apptIdx !== -1) {
+                    db.data.appointments[apptIdx].status = 'No-Show';
+                    db.save();
+                    logNotificationSMS(`No-Show Flagged: Patient token ${db.data.appointments[apptIdx].visitToken} marked No-Show.`);
+                }
+
+                const { error } = await supabaseClient
+                    .from('appointments')
+                    .update({ status: 'No-Show' })
+                    .eq('id', apptId);
+
+                if (error) throw error;
+                await loadClinicRoster();
+            } catch (e) {
+                alert("No-Show sync failed: " + e.message);
+            }
+        };
+
+        // Rescheduling helpers
+        window.startReschedule = function(apptId, patientName, currentTime) {
+            activeRescheduleApptId = apptId;
+            document.getElementById('reschedulePatientLabel').innerText = `${patientName} (Current slot: ${currentTime})`;
+            document.getElementById('rescheduleTimeInput').value = currentTime;
+            document.getElementById('rescheduleQuickForm').style.display = 'block';
+            
+            // Focus time field
+            document.getElementById('rescheduleTimeInput').focus();
+        };
+
+        window.submitQuickReschedule = async function() {
+            const time = document.getElementById('rescheduleTimeInput').value;
+            if (!time || !activeRescheduleApptId) {
+                alert("Please pick a valid time slot.");
+                return;
+            }
+
+            try {
+                const apptIdx = db.data.appointments.findIndex(la => la.id === activeRescheduleApptId);
+                if (apptIdx !== -1) {
+                    db.data.appointments[apptIdx].time = time;
+                    db.save();
+                    logNotificationSMS(`Rescheduled: Token ${db.data.appointments[apptIdx].visitToken} shifted to ${time}. SMS Notification dispatched.`);
+                }
+
+                const { error } = await supabaseClient
+                    .from('appointments')
+                    .update({ time: time })
+                    .eq('id', activeRescheduleApptId);
+
+                if (error) throw error;
+
+                document.getElementById('rescheduleQuickForm').style.display = 'none';
+                activeRescheduleApptId = null;
+                await loadClinicRoster();
+            } catch (e) {
+                alert("Failed to reschedule slot: " + e.message);
+            }
+        };
+
+        // Send waiting patient to Doctor's room
+        window.sendToDoctor = async function(apptId) {
+            try {
+                const apptIdx = db.data.appointments.findIndex(la => la.id === apptId);
+                if (apptIdx !== -1) {
+                    const a = db.data.appointments[apptIdx];
+                    a.status = 'In-Progress';
+                    a.checkInStatus = 'Verified';
+                    if (!a.queue) a.queue = {};
+                    a.queue.position = 0;
+                    a.queue.estWaitTime = 0;
+                    a.queue.currentSpeaker = a.visitToken;
+                    db.save();
+
+                    logNotificationSMS(`🛎️ Handover: Patient Token ${a.visitToken} directed to room. Doctor app buzzed.`);
+                }
+
+                const { error } = await supabaseClient
+                    .from('appointments')
+                    .update({ 
+                        status: 'In-Progress',
+                        check_in_status: 'Verified',
+                        queue: db.data.appointments[apptIdx].queue
+                    })
+                    .eq('id', apptId);
+
+                if (error) throw error;
+                alert("Patient directed to room! Roster status updated to Consulting.");
+                await loadClinicRoster();
+            } catch (e) {
+                alert("Buzzer handover failed: " + e.message);
+            }
+        };
+
+        // Existing Patient Search directory details
+        window.lookupPatientDirectory = async function() {
+            const query = document.getElementById('dirSearchQuery').value.trim();
+            const card = document.getElementById('directoryResultCard');
+            if (!query) {
+                alert("Please enter patient name or mobile number.");
+                return;
+            }
+
+            try {
+                const { data: profiles, error } = await supabaseClient.from('profiles').select('*');
+                if (error) throw error;
+
+                const q = query.toLowerCase();
+                const match = profiles.find(p => 
+                    (p.name && p.name.toLowerCase().includes(q)) ||
+                    (p.phone && p.phone.includes(q)) ||
+                    (p.health_id && p.health_id.toLowerCase().includes(q))
+                );
+
+                if (!match) {
+                    alert("Patient details not found in directory.");
+                    card.style.display = 'none';
+                    return;
+                }
+
+                // Count visits for this patient
+                const visits = db.data.appointments.filter(a => a.patientId === match.id && a.status === 'Completed');
+                const lastVisit = visits[visits.length - 1] || null;
+                const lastDoc = lastVisit ? (doctorsMap[lastVisit.doctorId] || 'Practitioner') : 'None';
+
+                document.getElementById('dirPatientName').innerText = match.name;
+                document.getElementById('dirPatientPhone').innerText = match.phone || 'No Contact';
+                document.getElementById('dirPatientID').innerText = match.health_id || 'Guest';
+                document.getElementById('dirPatientVisits').innerText = `${visits.length} Completed Visit(s)`;
+                document.getElementById('dirPatientLastDate').innerText = lastVisit ? lastVisit.date : 'N/A';
+                document.getElementById('dirPatientLastDoc').innerText = lastDoc;
+
+                card.style.display = 'block';
+            } catch (e) {
+                alert("Search failed: " + e.message);
+            }
+        };
+
+        // Billing dynamic invoice generation
+        window.loadBillingInvoiceDetails = function() {
+            const apptId = document.getElementById('billingApptSelect').value;
+            const container = document.getElementById('invoicePreviewContent');
+            if (!apptId) {
+                container.innerHTML = 'Select an appointment session to generate dynamic billing details.';
+                return;
+            }
+
+            const appt = db.data.appointments.find(a => a.id === apptId);
+            if (!appt) return;
+
+            const customDetails = appt.healthIdDetails || appt.queue?.healthIdDetails;
+            const patientName = customDetails?.name || db.data.patients[appt.patientId]?.name || "Unknown Patient";
+            const docName = doctorsMap[appt.doctorId] || "Practitioner";
+
+            const fee = appt.paymentAmount || 500;
+            const gst = fee * 0.18;
+            const total = fee + gst;
+
+            container.innerHTML = `
+=========================================
+          ONE MINUTE CLINICAL
+=========================================
+Invoice Ref  : INV-${appt.visitToken}
+Date         : ${appt.date} ${appt.time}
+Patient Name : ${patientName}
+Health ID    : ${customDetails?.health_id || 'Registered Account'}
+Attending Dr : ${docName}
+-----------------------------------------
+Consultation Fee    : ₹${fee.toFixed(2)}
+Clinic GST (18%)    : ₹${gst.toFixed(2)}
+-----------------------------------------
+TOTAL AMOUNT DUE    : ₹${total.toFixed(2)}
+-----------------------------------------
+PAYMENT STATUS      : [ ${appt.paymentStatus.toUpperCase()} ]
+=========================================
+Role check: Frontdesk Billing Voucher.
+            `;
+        };
+
+        window.submitCollectPayment = async function() {
+            const apptId = document.getElementById('billingApptSelect').value;
+            const method = document.getElementById('billingPaymentMethod').value;
+            if (!apptId) {
+                alert("Please select a target patient session.");
+                return;
+            }
+
+            try {
+                const apptIdx = db.data.appointments.findIndex(la => la.id === apptId);
+                if (apptIdx !== -1) {
+                    const a = db.data.appointments[apptIdx];
+                    a.paymentStatus = 'Paid';
+                    db.save();
+                    logNotificationSMS(`Fee Collected: ₹${a.paymentAmount} paid via ${method} for token ${a.visitToken}. Receipt printed.`);
+                }
+
+                const { error } = await supabaseClient
+                    .from('appointments')
+                    .update({ payment_status: 'Paid' })
+                    .eq('id', apptId);
+
+                if (error) throw error;
+                alert("Payment collected successfully! Receipt marked as paid.");
+                loadBillingInvoiceDetails();
+                await loadClinicRoster();
+            } catch (e) {
+                alert("Failed to record payment: " + e.message);
+            }
+        };
 
         // Toggle Theme
         function toggleTheme() {

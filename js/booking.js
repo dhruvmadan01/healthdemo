@@ -738,22 +738,48 @@ class BookingFlow {
         const doc = db.getDoctor(appt.doctorId);
         const hospital = db.getHospital(appt.hospitalId);
 
+        // Fetch latest state from cloud to react immediately to receptionist/doctor calls
+        try {
+            const { data, error } = await supabaseClient
+                .from('appointments')
+                .select('*')
+                .eq('id', appt.id)
+                .maybeSingle();
+            if (!error && data) {
+                appt.status = data.status;
+                appt.checkInStatus = data.check_in_status;
+                if (data.queue) appt.queue = data.queue;
+            }
+        } catch (e) {}
+
         // Retrieve live queue position dynamically
         const liveQueue = await db.getLiveQueueDetails(appt);
-        const qPos = liveQueue ? liveQueue.position : appt.queue.position;
+        const isCalled = (appt.status === 'In-Progress' || appt.status === 'In consultation');
+        
+        const qPos = isCalled ? 0 : (liveQueue ? liveQueue.position : appt.queue.position);
         const qRoom = liveQueue ? liveQueue.room : appt.queue.room;
-        const qWait = liveQueue ? liveQueue.estWaitTime : appt.queue.estWaitTime;
+        const qWait = isCalled ? 0 : (liveQueue ? liveQueue.estWaitTime : appt.queue.estWaitTime);
         const qDelay = liveQueue ? liveQueue.delay : appt.queue.delay;
-        const qSpeaker = liveQueue ? liveQueue.currentSpeaker : appt.queue.currentSpeaker;
+        const qSpeaker = isCalled ? appt.visitToken : (liveQueue ? liveQueue.currentSpeaker : appt.queue.currentSpeaker);
 
         document.getElementById('queuePosVal').innerText = qPos;
         document.getElementById('queueDoctorName').innerText = doc.name;
         document.getElementById('queueHospitalName').innerText = hospital.name;
         document.getElementById('queueTokenVal').innerText = appt.visitToken;
         document.getElementById('queueRoomVal').innerText = qRoom;
-        document.getElementById('queueWaitVal').innerText = qWait === '-' ? '-' : `${qWait} mins`;
+        document.getElementById('queueWaitVal').innerText = qWait === 0 ? 'Now consulting' : (qWait === '-' ? '-' : `${qWait} mins`);
         document.getElementById('queueDelayVal').innerText = qDelay === 0 ? 'No delay' : `+${qDelay} mins delay`;
         document.getElementById('queueCurrentSpeakerVal').innerText = qSpeaker;
+
+        // Toggle proceeding buzzer alert
+        const banner = document.getElementById('patientProceedAlertBanner');
+        if (banner) {
+            if (isCalled) {
+                banner.style.display = 'flex';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
     }
 }
 
