@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="A comprehensive Healthcare and Patient Management Mobile App">
+    <title>One Minute - Patient Portal</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Desktop Smartphone Mockup Container -->
+    <div class="device-shell">
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span id="statusBarTime">09:41</span>
+            <div class="right-icons">
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-signal"></i>
+                <i class="fa-solid fa-battery-three-quarters"></i>
+            </div>
+        </div>
+
+        <!-- Screens Holder -->
+        <div class="screen-container">
+
+            <section id="splash-screen" class="screen active">
+                <div class="splash-logo" style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                    <img src="logo.jpg" alt="One Minute" style="width: 140px; height: 140px; border-radius: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+                    <span style="font-family: var(--font-heading); font-weight: 800; font-size: 1.8rem; color: hsl(var(--accent-hsl));">One Minute</span>
+                </div>
+            </section>
+
+            <!-- 2. WELCOME SCREEN -->
+            <section id="welcome-screen" class="screen">
+                <div class="screen-content" style="display: flex; flex-direction: column; justify-content: space-between; padding-top: 50px;">
+                    <div class="auth-logo-area" style="text-align: center;">
+                        <img src="logo.jpg" alt="One Minute" style="width: 90px; height: 90px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <h2>Welcome to One Minute</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">
+                            Your secure, real-time clinical assistant and healthcare partner.
+                        </p>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="app.navigateTo('login-screen')" style="margin-bottom: 12px;">
+                            Sign In with Email
+                        </button>
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                            <button class="btn btn-secondary" onclick="app.signInWithGoogle()" style="flex: 1;">
+                                <i class="fa-brands fa-google" style="color: #ea4335;"></i> Google
+                            </button>
+                            <button class="btn btn-secondary" onclick="app.simulateOAuth('Apple')" style="flex: 1;">
+                                <i class="fa-brands fa-apple"></i> Apple
+                            </button>
+                        </div>
+                        <div class="biometrics-trigger-area" onclick="app.triggerBiometricLogin()">
+                            <div class="biometrics-ring">
+                                <i class="fa-solid fa-fingerprint"></i>
+                            </div>
+                            <span class="biometrics-label">Use Biometrics (Face ID/Fingerprint)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. LOGIN SCREEN -->
+            <section id="login-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('welcome-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Sign In</h3>
+                </div>
+                <div class="screen-content">
+                    <form id="loginForm" onsubmit="app.handleEmailLogin(event)">
+                        <div class="input-group">
+                            <label class="input-label" for="loginEmail">Email Address</label>
+                            <input class="input-field" type="email" id="loginEmail" placeholder="name@example.com" required value="alex.mercer@email.com">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label" for="loginPassword">Password</label>
+                            <input class="input-field" type="password" id="loginPassword" placeholder="Enter secure password" required value="Password123">
+                        </div>
+                        <div style="text-align: right; margin-bottom: 20px;">
+                            <span class="section-link" onclick="app.navigateTo('forgot-password-screen')">Forgot Password?</span>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Sign In</button>
+                    </form>
+                    <div style="text-align: center; margin-top: 30px; color: var(--text-muted); font-size: 0.8rem;">
+                        <span>Don't have an account? <b style="color: hsl(var(--accent-hsl)); cursor: pointer;" onclick="app.navigateTo('register-screen')">Register</b></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REGISTRATION SCREEN -->
+            <section id="register-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('login-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Create Account</h3>
+                </div>
+                <div class="screen-content">
+                    <!-- Progress Stepper Indicator -->
+                    <div class="step-indicator-container">
+                        <div class="step-node active" id="registerStepNode1">1</div>
+                        <div class="step-line" id="registerStepLine1"></div>
+                        <div class="step-node" id="registerStepNode2">2</div>
+                        <div class="step-line" id="registerStepLine2"></div>
+                        <div class="step-node" id="registerStepNode3">3</div>
+                        <div class="step-line" id="registerStepLine3"></div>
+                        <div class="step-node" id="registerStepNode4">4</div>
+                    </div>
+
+                    <form id="registerForm" onsubmit="app.handleEmailRegister(event)">
+                        
+                        <!-- STEP 1: Account Credentials -->
+                        <div class="register-step active" id="registerStep1">
+                            <div style="margin-bottom: 20px; text-align: center;">
+                                <h4 style="font-family: var(--font-heading); color: hsl(var(--accent-hsl));">Account Credentials</h4>
+                                <p style="font-size: 0.8rem; color: var(--text-muted);">Let's set up your basic login info.</p>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerName">Full Name</label>
+                                <input class="input-field" type="text" id="registerName" placeholder="John Doe" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerEmail">Email Address</label>
+                                <input class="input-field" type="email" id="registerEmail" placeholder="name@example.com" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerPassword">Password</label>
+                                <input class="input-field" type="password" id="registerPassword" placeholder="Secure password (min 6 chars)" required minlength="6">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerPhone">Phone Number</label>
+                                <input class="input-field" type="tel" id="registerPhone" placeholder="+1 (555) 019-XXXX" required>
+                            </div>
+                        </div>
+
+                        <!-- STEP 2: Personal Profile & Photo -->
+                        <div class="register-step" id="registerStep2">
+                            <div style="margin-bottom: 20px; text-align: center;">
+                                <h4 style="font-family: var(--font-heading); color: hsl(var(--accent-hsl));">Personal Profile</h4>
+                                <p style="font-size: 0.8rem; color: var(--text-muted);">Add your identity details and photo.</p>
+                            </div>
+
+                            <!-- Photo Picker -->
+                            <div class="photo-picker-container">
+                                <input type="file" id="registerPhotoInput" accept="image/*" style="display: none;" onchange="app.handleRegisterPhotoSelect(event)">
+                                <div class="photo-preview-circle" id="registerPhotoPreview" onclick="document.getElementById('registerPhotoInput').click()">
+                                    <i class="fa-solid fa-camera" style="font-size: 1.5rem; color: var(--text-muted);" id="registerPhotoPlaceholderIcon"></i>
+                                    <img id="registerPhotoPreviewImg" src="" style="display: none;">
+                                </div>
+                                <span class="photo-picker-label">Upload Profile Photo</span>
+                            </div>
+
+                            <div style="display: flex; gap: 10px;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerDOB">Date of Birth <span id="registerAgeDisplay" style="font-weight: bold; color: hsl(var(--accent-hsl)); margin-left: 4px;"></span></label>
+                                    <input class="input-field" type="date" id="registerDOB" onchange="app.calculateRegisterAge()" required>
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerGender">Gender</label>
+                                    <select class="input-field" id="registerGender" required>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                        <option value="Prefer not to say">Prefer not to say</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerLanguage">Preferred Language</label>
+                                <select class="input-field" id="registerLanguage" required>
+                                    <option value="English">English</option>
+                                    <option value="Spanish">Spanish</option>
+                                    <option value="Hindi">Hindi</option>
+                                    <option value="French">French</option>
+                                    <option value="German">German</option>
+                                    <option value="Arabic">Arabic</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerAddress">Residential Address</label>
+                                <textarea class="input-field" id="registerAddress" placeholder="123 Health Ave, Metro City" style="resize: none; height: 75px;" required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3: Vitals & Emergency Contact -->
+                        <div class="register-step" id="registerStep3">
+                            <div style="margin-bottom: 20px; text-align: center;">
+                                <h4 style="font-family: var(--font-heading); color: hsl(var(--accent-hsl));">Vitals & Emergency</h4>
+                                <p style="font-size: 0.8rem; color: var(--text-muted);">Provide health metrics and emergency contacts.</p>
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerHeight">Height (cm)</label>
+                                    <input class="input-field" type="number" id="registerHeight" placeholder="175" required min="30" max="300" oninput="app.calculateRegisterBMI()">
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerWeight">Weight (kg)</label>
+                                    <input class="input-field" type="number" id="registerWeight" placeholder="70" required min="10" max="500" oninput="app.calculateRegisterBMI()">
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 16px; text-align: center;">
+                                <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Calculated BMI: </span>
+                                <span id="registerBMIDisplay" style="font-weight: bold; font-size: 0.9rem; color: var(--text-muted);">Enter Height & Weight</span>
+                            </div>
+
+                            <div style="display: flex; gap: 10px;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerBloodGroup">Blood Group</label>
+                                    <select class="input-field" id="registerBloodGroup" required>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                        <option value="O+">O+</option>
+                                        <option value="O-">O-</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerOrganDonor">Organ Donor</label>
+                                    <select class="input-field" id="registerOrganDonor" required>
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 10px;">
+                                <span class="input-label" style="font-weight: bold; color: var(--text-primary);">Emergency Contact Details</span>
+                                <div class="input-group">
+                                    <label class="input-label" for="registerEmergencyName">Contact Name</label>
+                                    <input class="input-field" type="text" id="registerEmergencyName" placeholder="Sarah Doe" required>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="input-group" style="flex: 1;">
+                                        <label class="input-label" for="registerEmergencyRelation">Relation</label>
+                                        <input class="input-field" type="text" id="registerEmergencyRelation" placeholder="Spouse" required>
+                                    </div>
+                                    <div class="input-group" style="flex: 1.5;">
+                                        <label class="input-label" for="registerEmergencyPhone">Contact Phone</label>
+                                        <input class="input-field" type="tel" id="registerEmergencyPhone" placeholder="+1 (555) 019-XXXX" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 4: Medical History & Lifestyle -->
+                        <div class="register-step" id="registerStep4">
+                            <div style="margin-bottom: 20px; text-align: center;">
+                                <h4 style="font-family: var(--font-heading); color: hsl(var(--accent-hsl));">Medical History & Lifestyle</h4>
+                                <p style="font-size: 0.8rem; color: var(--text-muted);">Almost done! Let's fill out your health history.</p>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label" for="registerAllergies">Allergies (comma-separated)</label>
+                                <input class="input-field" type="text" id="registerAllergies" placeholder="Penicillin, Peanuts, Pollen (or None)">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerChronic">Chronic Diseases (comma-separated)</label>
+                                <input class="input-field" type="text" id="registerChronic" placeholder="Asthma, Hypertension, Diabetes (or None)">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerSurgeries">Surgeries (comma-separated)</label>
+                                <input class="input-field" type="text" id="registerSurgeries" placeholder="Appendectomy (2018), Knee Surgery (or None)">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label" for="registerMedicines">Current Medicines (comma-separated)</label>
+                                <input class="input-field" type="text" id="registerMedicines" placeholder="Albuterol Inhaler, Metformin (or None)">
+                            </div>
+
+                            <div style="display: flex; gap: 10px;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerSmoking">Smoking</label>
+                                    <select class="input-field" id="registerSmoking" required>
+                                        <option value="Never">Never</option>
+                                        <option value="Occasional">Occasional</option>
+                                        <option value="Regular">Regular</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerAlcohol">Alcohol</label>
+                                    <select class="input-field" id="registerAlcohol" required>
+                                        <option value="Never">Never</option>
+                                        <option value="Socially">Socially</option>
+                                        <option value="Regular">Regular</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 10px;">
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerExercise">Exercise</label>
+                                    <select class="input-field" id="registerExercise" required>
+                                        <option value="None">None</option>
+                                        <option value="1-2 times a week">1-2 times/week</option>
+                                        <option value="3-4 times a week">3-4 times/week</option>
+                                        <option value="Active daily">Active daily</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" style="flex: 1;">
+                                    <label class="input-label" for="registerSleep">Sleep</label>
+                                    <select class="input-field" id="registerSleep" required>
+                                        <option value="5-6 hours">5-6 hours</option>
+                                        <option value="7-8 hours">7-8 hours</option>
+                                        <option value="9+ hours">9+ hours</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Wizard Footer Buttons -->
+                        <div class="wizard-buttons">
+                            <button type="button" class="btn btn-secondary" id="registerPrevBtn" onclick="app.prevRegisterStep()" style="display: none; padding: 12px; margin-top: 10px;">Back</button>
+                            <button type="button" class="btn btn-primary" id="registerNextBtn" onclick="app.nextRegisterStep()" style="padding: 12px; margin-top: 10px;">Next</button>
+                        </div>
+                    </form>
+
+                    <div style="text-align: center; margin-top: 30px; color: var(--text-muted); font-size: 0.8rem;">
+                        <span>Already have an account? <b style="color: hsl(var(--accent-hsl)); cursor: pointer;" onclick="app.navigateTo('login-screen')">Sign In</b></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. FORGOT PASSWORD -->
+            <section id="forgot-password-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('login-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Reset Password</h3>
+                </div>
+                <div class="screen-content">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
+                        Enter your registered email address. We'll send a password recovery verification.
+                    </p>
+                    <form onsubmit="app.handleForgotPassword(event)">
+                        <div class="input-group">
+                            <label class="input-label" for="resetEmail">Email Address</label>
+                            <input class="input-field" type="email" id="resetEmail" required placeholder="name@example.com">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Send Link</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 5. OTP VERIFICATION SCREEN -->
+            <section id="otp-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('login-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Verification</h3>
+                </div>
+                <div class="screen-content">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
+                        We sent a 4-digit code to your phone number <b id="otpPhoneText">+1 (555) 019-2834</b>.
+                    </p>
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 24px;">
+                        <input class="input-field" type="text" maxlength="1" style="width: 50px; text-align: center; font-size: 1.5rem; font-weight: 700;" class="otp-box" required value="4">
+                        <input class="input-field" type="text" maxlength="1" style="width: 50px; text-align: center; font-size: 1.5rem; font-weight: 700;" class="otp-box" required value="8">
+                        <input class="input-field" type="text" maxlength="1" style="width: 50px; text-align: center; font-size: 1.5rem; font-weight: 700;" class="otp-box" required value="1">
+                        <input class="input-field" type="text" maxlength="1" style="width: 50px; text-align: center; font-size: 1.5rem; font-weight: 700;" class="otp-box" required value="5">
+                    </div>
+                    <button class="btn btn-primary" onclick="app.handleOTPVerify()">Verify & Proceed</button>
+                    <div style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--text-muted);">
+                        Didn't receive code? <span class="section-link">Resend in 30s</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. BIOMETRIC SCAN SCREEN -->
+            <section id="biometrics-screen" class="screen">
+                <div class="screen-content" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <!-- User Profile Avatar/Name display area -->
+                    <div id="biometricUserCard" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; text-align: center;">
+                        <img id="biometricUserAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid hsl(var(--accent-hsl)); object-fit: cover; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+                        <span id="biometricUserName" style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Alex Mercer</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">Securing Authentication</span>
+                    </div>
+
+                    <div class="biometrics-trigger-area scanning">
+                        <div class="biometrics-ring" style="width: 100px; height: 100px; font-size: 3rem;">
+                            <i class="fa-solid fa-face-id" id="biometricIcon"></i>
+                        </div>
+                        <h3 style="margin-top: 20px;" id="biometricScanTitle">Scanning Face ID...</h3>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; text-align: center; max-width: 250px; margin-top: 10px;" id="biometricScanDesc">
+                            Please align your face inside the indicator ring to authenticate.
+                        </p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="app.cancelBiometric()" style="width: auto; margin-top: 40px; border: 1px solid var(--border-color); background: transparent; cursor: pointer;">
+                        Cancel
+                    </button>
+                </div>
+            </section>
+
+            <!-- 7. HOME DASHBOARD (PATIENT MAIN HUB) -->
+            <section id="home-screen" class="screen">
+                <div class="screen-content">
+                    
+                    <!-- Profile Header -->
+                    <div class="dashboard-header">
+                        <div class="user-badge">
+                            <div class="user-avatar" id="avatarBadge" onclick="app.navigateTo('profile-screen')">AM</div>
+                            <div>
+                                <p style="color: var(--text-muted); font-size: 0.75rem;">Welcome back,</p>
+                                <h4 id="userNameHeading">Alex Mercer</h4>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="back-btn" style="border-radius: 50%;" onclick="app.toggleTheme()">
+                                <i class="fa-solid fa-moon" id="themeIcon"></i>
+                            </div>
+                            <div class="back-btn" style="border-radius: 50%; position: relative;" onclick="app.triggerNotification()">
+                                <i class="fa-solid fa-bell"></i>
+                                <span class="notification-badge" id="notifBadge" style="position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background-color: hsl(var(--danger-hsl)); border-radius: 50%; display: none;"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Health Score Gauge -->
+                    <!-- Health ID Vitals Card -->
+                    <div class="card health-score-card" style="flex-direction: column; align-items: stretch; gap: 12px; padding: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 8px;">
+                            <div style="text-align: left;">
+                                <h4 style="font-size: 1.05rem; font-weight: 700; color: #ffffff;"><i class="fa-solid fa-id-card" style="color: hsl(var(--accent-hsl)); margin-right: 4px;"></i> Health ID Vitals</h4>
+                                <span style="font-size: 0.65rem; color: rgba(255,255,255,0.7);">Verified Clinical Wallet Records</span>
+                            </div>
+                            <div style="font-size: 0.75rem; background: rgba(20, 184, 166, 0.2); color: hsl(var(--accent-hsl)); padding: 4px 8px; border-radius: 6px; font-weight: 700;" id="vitalsCardHealthId">
+                                Loading...
+                            </div>
+                        </div>
+
+                        <!-- Vitals Grid -->
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+                            <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                                <span style="font-size: 0.6rem; color: rgba(255,255,255,0.6); display: block; text-transform: uppercase; margin-bottom: 2px;">Height/Weight</span>
+                                <strong style="font-size: 0.8rem; color: #ffffff; white-space: nowrap;" id="vitalsCardHeightWeight">Loading...</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                                <span style="font-size: 0.6rem; color: rgba(255,255,255,0.6); display: block; text-transform: uppercase; margin-bottom: 2px;">Blood Group</span>
+                                <strong style="font-size: 0.8rem; color: #ffffff;" id="vitalsCardBlood">Loading...</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                                <span style="font-size: 0.6rem; color: rgba(255,255,255,0.6); display: block; text-transform: uppercase; margin-bottom: 2px;">BMI Category</span>
+                                <strong style="font-size: 0.8rem; color: hsl(var(--accent-hsl));" id="vitalsCardBMI">Loading...</strong>
+                            </div>
+                        </div>
+
+                        <!-- Alerts Row -->
+                        <div style="display: flex; gap: 8px; font-size: 0.7rem; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.15); padding: 6px 12px; border-radius: 8px;">
+                            <div style="text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 50%;">
+                                <span style="color: rgba(255,255,255,0.6);">Allergies:</span>
+                                <strong style="color: #ef4444;" id="vitalsCardAllergies">Loading...</strong>
+                            </div>
+                            <div style="width: 1px; height: 12px; background: rgba(255,255,255,0.2);"></div>
+                            <div style="text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 50%;">
+                                <span style="color: rgba(255,255,255,0.6);">Chronic:</span>
+                                <strong style="color: #f59e0b;" id="vitalsCardChronic">Loading...</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Grid -->
+                    <h4 class="section-title">Quick Services</h4>
+                    <div class="quick-actions-grid">
+                        <div class="quick-action-item" onclick="app.navigateTab('search-screen')">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <span>Book Appt</span>
+                        </div>
+                        <div class="quick-action-item emergency" onclick="emergencyFlow.openSOS()">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <span>Emergency</span>
+                        </div>
+                        <div class="quick-action-item" onclick="app.openAIChat()">
+                            <i class="fa-solid fa-robot"></i>
+                            <span>AI Assist</span>
+                        </div>
+                        <div class="quick-action-item" onclick="app.openMyReports()">
+                            <i class="fa-solid fa-file-medical"></i>
+                            <span>My Reports</span>
+                        </div>
+                        <div class="quick-action-item" onclick="app.openMyPrescriptions()">
+                            <i class="fa-solid fa-prescription"></i>
+                            <span>Prescript</span>
+                        </div>
+                        <div class="quick-action-item" onclick="app.openInsurance()">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span>Insurance</span>
+                        </div>
+                        <div class="quick-action-item" onclick="app.openFamilyProfiles()">
+                            <i class="fa-solid fa-users"></i>
+                            <span>Family</span>
+                        </div>
+                        <div class="quick-action-item" onclick="app.navigateTo('history-screen')">
+                            <i class="fa-solid fa-credit-card"></i>
+                            <span>History & Payments</span>
+                        </div>
+                    </div>
+
+                    <!-- Live/Active Widget List -->
+                    <div id="dynamicWidgetsArea">
+                        <!-- Upcoming Appointment / Countdown Widget -->
+                        <!-- Live Queue Tracker Widget -->
+                        <!-- Medicine Reminders -->
+                    </div>
+
+                    <!-- Health Tip of the Day -->
+                    <div class="health-tip-box">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <div>
+                            <strong style="display: block; font-size: 0.75rem; color: var(--text-primary); margin-bottom: 2px;">Daily Health Tip</strong>
+                            <span class="health-tip-text" id="dailyTipText">Stay hydrated! Drinking 2-3 liters of water daily keeps joints lubricated.</span>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- 8. SEARCH & DIRECTORY SCREEN -->
+            <section id="search-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <h3>Find Medical Care</h3>
+                </div>
+                <div class="screen-content" style="padding-top: 8px;">
+                    <!-- Search Input Bar -->
+                    <div class="search-container">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="directorySearchInput" class="search-input" placeholder="Doctor, Specialty, Symptoms..." oninput="app.handleSearch()">
+                        <i class="fa-solid fa-sliders filter-btn-toggle" onclick="app.toggleFilterPanel()"></i>
+                    </div>
+
+                    <!-- Filters Panel (Chips) -->
+                    <div class="filter-panel" id="filterPanel">
+                        <div class="filter-section-title" style="margin-top: 0;">Care Type</div>
+                        <div class="filter-chips" data-filter="consultType">
+                            <span class="chip" data-val="In-person">In-Person</span>
+                            <span class="chip" data-val="Online">Online Consultation</span>
+                        </div>
+
+                        <div class="filter-section-title">Distance Radius</div>
+                        <div class="filter-chips" data-filter="distance">
+                            <span class="chip" data-val="5">< 5 km</span>
+                            <span class="chip" data-val="10">< 10 km</span>
+                            <span class="chip" data-val="25">< 25 km</span>
+                        </div>
+
+                        <div class="filter-section-title">Price Range</div>
+                        <div class="filter-chips" data-filter="price">
+                            <span class="chip" data-val="1000">< ₹1000</span>
+                            <span class="chip" data-val="1500">< ₹1500</span>
+                            <span class="chip" data-val="2000">< ₹2000</span>
+                        </div>
+
+                        <div class="filter-section-title">Availability</div>
+                        <div class="filter-chips" data-filter="availability">
+                            <span class="chip" data-val="today">Available Today</span>
+                        </div>
+
+                        <div class="filter-section-title">Languages</div>
+                        <div class="filter-chips" data-filter="language">
+                            <span class="chip" data-val="English">English</span>
+                            <span class="chip" data-val="Hindi">Hindi</span>
+                        </div>
+
+                        <div class="filter-section-title">Specialty</div>
+                        <div class="filter-chips" data-filter="specialty">
+                            <span class="chip" data-val="Cardiology">Cardiology</span>
+                            <span class="chip" data-val="Pediatrics">Pediatrics</span>
+                            <span class="chip" data-val="Dermatology">Dermatology</span>
+                            <span class="chip" data-val="Neurology">Neurology</span>
+                            <span class="chip" data-val="General Medicine">General Medicine</span>
+                            <span class="chip" data-val="Orthopedics">Orthopedics</span>
+                            <span class="chip" data-val="ENT">ENT</span>
+                        </div>
+
+                        <div class="filter-section-title">Clinical Experience</div>
+                        <div class="filter-chips" data-filter="experience">
+                            <span class="chip" data-val="5">> 5 Years</span>
+                            <span class="chip" data-val="10">> 10 Years</span>
+                            <span class="chip" data-val="15">> 15 Years</span>
+                        </div>
+
+                        <div class="filter-section-title">Rating</div>
+                        <div class="filter-chips" data-filter="rating">
+                            <span class="chip" data-val="4.5">4.5+ Stars</span>
+                            <span class="chip" data-val="4.8">4.8+ Stars</span>
+                        </div>
+                    </div>
+
+                    <!-- Search Output List -->
+                    <div id="searchResultList">
+                        <!-- Entity Cards Rendered Here dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 9. BOOKING WORKFLOW SCREEN (MULTI-STEP FORM) -->
+            <section id="booking-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="bookingFlow.goBack()">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Book Appointment</h3>
+                </div>
+                <div class="screen-content">
+                    
+                    <!-- Progress Steps Node Bar -->
+                    <div class="step-bar">
+                        <div class="step-bar-line"></div>
+                        <div class="step-bar-progress" id="bookingProgressLine"></div>
+                        <div class="step-node active" id="node1">1</div>
+                        <div class="step-node" id="node2">2</div>
+                        <div class="step-node" id="node3">3</div>
+                        <div class="step-node" id="node4">4</div>
+                        <div class="step-node" id="node5">5</div>
+                    </div>
+
+                    <form id="bookingForm" onsubmit="event.preventDefault();">
+                        
+                        <!-- STEP 1: SELECT DOCTOR & TIME -->
+                        <div class="form-step active" id="step1">
+                            <h4 style="margin-bottom: 12px;">Select Doctor & Clinic</h4>
+                            
+                            <div class="input-group">
+                                <label class="input-label" for="bookingDoctor">Doctor</label>
+                                <select class="input-field" id="bookingDoctor" onchange="bookingFlow.onDoctorChange()" required>
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label">Consultation Type</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <label style="flex: 1; display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; background-color: var(--bg-secondary);">
+                                        <input type="radio" name="bookType" value="In-person" checked>
+                                        <span style="font-size: 0.85rem;">In-Person</span>
+                                    </label>
+                                    <label style="flex: 1; display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; background-color: var(--bg-secondary);">
+                                        <input type="radio" name="bookType" value="Online">
+                                        <span style="font-size: 0.85rem;">Online Video</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label" for="bookingDate">Preferred Date</label>
+                                <input class="input-field" type="date" id="bookingDate" required>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label" for="bookingTime">Time Slot</label>
+                                <select class="input-field" id="bookingTime" required>
+                                    <!-- Slots dynamically populated -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- STEP 2: SYMPTOMS & PROFILE -->
+                        <div class="form-step" id="step2">
+                            <h4 style="margin-bottom: 12px;">Patient Details</h4>
+                            
+                            <div class="input-group">
+                                <label class="input-label" for="bookingPatient">Whom is this for?</label>
+                                <select class="input-field" id="bookingPatient">
+                                    <option value="p1">Myself (Alex Mercer)</option>
+                                    <option value="p2">Lily Mercer (Daughter)</option>
+                                    <option value="p3">Sarah Mercer (Spouse)</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label" for="bookingSymptoms">Describe Symptoms</label>
+                                <textarea class="input-field" id="bookingSymptoms" rows="4" placeholder="Enter symptoms (e.g. cough, chest pressure, skin rash)..." required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3: DOCUMENT UPLOAD -->
+                        <div class="form-step" id="step3">
+                            <h4 style="margin-bottom: 12px;">Upload Reports (Optional)</h4>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 16px;">
+                                Attach prior lab reports, prescriptions, or pictures that will help the doctor's diagnosis.
+                            </p>
+                            
+                            <div id="dropZone" style="border: 2px dashed hsl(var(--accent-hsl)); border-radius: 16px; padding: 30px 20px; text-align: center; cursor: pointer; background-color: var(--bg-secondary);">
+                                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: hsl(var(--accent-hsl)); margin-bottom: 10px;"></i>
+                                <p style="font-size: 0.8rem; font-weight: 600;">Drag & Drop Reports</p>
+                                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">PDF, PNG, JPG up to 10MB</p>
+                                <input type="file" id="bookingFiles" multiple style="display: none;">
+                            </div>
+
+                            <div id="selectedFilesList" style="margin-top: 15px;">
+                                <!-- Uploaded list goes here -->
+                            </div>
+
+                            <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px;">
+                                <h5 style="font-size: 0.8rem; margin-bottom: 10px; color: var(--text-secondary); text-align: left;">Or select from your existing records:</h5>
+                                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                                    <button type="button" class="btn" onclick="bookingFlow.toggleRecordsTab('reports')" id="btnTabReports" style="padding: 6px 10px; font-size: 0.7rem; margin: 0; background: var(--bg-card); flex: 1; border: 1px solid var(--border-color);">
+                                        My Reports
+                                    </button>
+                                    <button type="button" class="btn" onclick="bookingFlow.toggleRecordsTab('prescriptions')" id="btnTabPrescriptions" style="padding: 6px 10px; font-size: 0.7rem; margin: 0; background: transparent; flex: 1; border: 1px solid var(--border-color); color: var(--text-secondary);">
+                                        My Prescriptions
+                                    </button>
+                                </div>
+                                <div id="existingRecordsList" style="max-height: 120px; overflow-y: auto; background: var(--bg-secondary); border-radius: 12px; padding: 10px; border: 1px solid var(--border-color); text-align: left;">
+                                    <!-- Existing files render here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 4: INSURANCE & PAYMENT -->
+                        <div class="form-step" id="step4">
+                            <h4 style="margin-bottom: 12px;">Insurance & Copay</h4>
+                            
+                            <div class="input-group">
+                                <label class="input-label" for="bookingInsurance">Accepted Insurance Provider</label>
+                                <select class="input-field" id="bookingInsurance">
+                                    <option value="Self Pay">Self Pay (No Insurance)</option>
+                                    <option value="Blue Cross">Blue Cross</option>
+                                    <option value="Aetna">Aetna</option>
+                                    <option value="Cigna">Cigna</option>
+                                    <option value="UnitedHealth">UnitedHealth</option>
+                                </select>
+                            </div>
+
+                            <div class="card" style="margin-top: 20px; border-left: 4px solid hsl(var(--accent-hsl));">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px;">
+                                    <span>Consulting Fee:</span>
+                                    <span id="bookingFeeAmt">₹1500.00</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px;">
+                                    <span>Insurance Discount:</span>
+                                    <span id="bookingInsDiscount" style="color: hsl(var(--success-hsl));">-₹0.00</span>
+                                </div>
+                                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: 700;">
+                                    <span>Total Payable:</span>
+                                    <span id="bookingTotalPayable">₹1500.00</span>
+                                </div>
+                            </div>
+
+                            <p style="font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-bottom: 12px;">
+                                <i class="fa-solid fa-lock" style="color: hsl(var(--success-hsl));"></i> Secure checkout, HIPAA-compliant encryption standards.
+                            </p>
+                        </div>
+
+                        <!-- STEP 5: FINAL CHECKOUT & DATA TRANSFER -->
+                        <div class="form-step" id="step5">
+                            <h4 style="margin-bottom: 12px;">Final Checkout</h4>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 15px;">
+                                Please review your appointment details and confirm the transfer of your Health ID records to the physician.
+                            </p>
+                            
+                            <!-- Appointment Summary -->
+                            <div class="card" style="margin-bottom: 15px; border-left: 4px solid hsl(var(--primary-hsl));">
+                                <h5 style="font-size: 0.85rem; color: hsl(var(--primary-hsl)); margin-bottom: 8px;"><i class="fa-solid fa-calendar-check"></i> Appointment Summary</h5>
+                                <div class="detail-row">
+                                    <span class="detail-label" style="font-size: 0.75rem;">Physician:</span>
+                                    <span class="detail-value" id="checkoutDoctorName" style="font-size: 0.75rem; font-weight: 600;">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label" style="font-size: 0.75rem;">Date & Time:</span>
+                                    <span class="detail-value" id="checkoutDateTime" style="font-size: 0.75rem; font-weight: 600;">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label" style="font-size: 0.75rem;">Patient:</span>
+                                    <span class="detail-value" id="checkoutPatientName" style="font-size: 0.75rem; font-weight: 600;">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label" style="font-size: 0.75rem;">Consultation Type:</span>
+                                    <span class="detail-value" id="checkoutConsultType" style="font-size: 0.75rem; font-weight: 600;">Loading...</span>
+                                </div>
+                                <div class="detail-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                                    <span class="detail-label" style="font-size: 0.75rem;">Symptoms:</span>
+                                    <span class="detail-value" id="checkoutSymptoms" style="font-size: 0.75rem; line-height: 1.3; max-height: 60px; overflow-y: auto; display: block; border-left: 2px solid var(--border-color); padding-left: 8px;">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label" style="font-size: 0.75rem;">Attached Files:</span>
+                                    <span class="detail-value" id="checkoutAttachedFiles" style="font-size: 0.75rem; font-weight: 600;">None</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label" style="font-size: 0.75rem;">Total Cost:</span>
+                                    <span class="detail-value" id="checkoutTotalPayable" style="font-size: 0.75rem; font-weight: 700; color: hsl(var(--accent-hsl));">Loading...</span>
+                                </div>
+                            </div>
+
+                            <!-- Health ID Records to Transfer -->
+                            <div class="card" style="margin-bottom: 15px; border-left: 4px solid hsl(var(--accent-hsl));">
+                                <h5 style="font-size: 0.85rem; color: hsl(var(--accent-hsl)); margin-bottom: 8px;"><i class="fa-solid fa-id-card"></i> Health ID Records to Transfer</h5>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; background: rgba(20, 184, 166, 0.05); padding: 8px; border-radius: 8px;">
+                                    <i class="fa-solid fa-circle-info" style="color: hsl(var(--accent-hsl));"></i>
+                                    The following information associated with Health ID <strong id="checkoutHealthId">MED-000000</strong> will be securely transmitted to the doctor.
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                                    <div>
+                                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">DOB / Gender</span>
+                                        <strong style="font-size: 0.75rem;" id="checkoutPatientBio">Loading...</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Height / Weight</span>
+                                        <strong style="font-size: 0.75rem;" id="checkoutPatientVitals">Loading...</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Blood Group / BMI</span>
+                                        <strong style="font-size: 0.75rem;" id="checkoutPatientMedical">Loading...</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Emergency Contact</span>
+                                        <strong style="font-size: 0.75rem;" id="checkoutPatientEmergency">Loading...</strong>
+                                    </div>
+                                </div>
+
+                                <div style="border-top: 1px solid var(--border-color); padding-top: 8px; text-align: left;">
+                                    <div style="margin-bottom: 6px;">
+                                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Chronic Conditions & Allergies</span>
+                                        <span style="font-size: 0.75rem; font-weight: 600; color: #ef4444;" id="checkoutPatientAllergies">Loading...</span>
+                                    </div>
+                                    <div style="margin-bottom: 6px;">
+                                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Current Active Medications</span>
+                                        <span style="font-size: 0.75rem; font-weight: 600;" id="checkoutPatientMeds">Loading...</span>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Lifestyle Profile</span>
+                                        <span style="font-size: 0.75rem; color: var(--text-secondary);" id="checkoutPatientLifestyle">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Security Consent Checklist -->
+                            <div style="display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; background: rgba(16, 185, 129, 0.05); padding: 10px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.1);">
+                                <input type="checkbox" id="checkoutConsentCheck" checked disabled style="margin-top: 3px;">
+                                <label for="checkoutConsentCheck" style="font-size: 0.7rem; color: var(--text-primary); text-align: left; line-height: 1.3;">
+                                    <strong>HIPAA Security Consent:</strong> By proceeding, you authorize the secure end-to-end encrypted transfer of your health history, vitals, active medications, lifestyle data, and files to the doctor.
+                                </label>
+                            </div>
+                        </div>
+
+                    </form>
+
+                    <!-- Nav Buttons inside Steps -->
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button class="btn btn-secondary" id="btnPrevStep" onclick="bookingFlow.prevStep()" style="display: none;">Back</button>
+                        <button class="btn btn-primary" id="btnNextStep" onclick="bookingFlow.nextStep()">Next</button>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- 10. BOOKING CONFIRMATION SCREEN -->
+            <section id="booking-confirm-screen" class="screen">
+                <div class="screen-content" style="display: flex; flex-direction: column; justify-content: space-between; text-align: center; padding-top: 40px;">
+                    <div>
+                        <div style="width: 70px; height: 70px; border-radius: 50%; background-color: rgba(16, 185, 129, 0.1); color: hsl(var(--success-hsl)); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 20px auto;">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <h3>Booking Confirmed!</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">
+                            Your appointment has been registered successfully.
+                        </p>
+
+                        <!-- Dynamic QR Card -->
+                        <div class="card" style="margin: 24px auto; max-width: 280px; padding: 20px;">
+                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 10px;">Visit Registration Token</div>
+                            <div style="font-size: 1.8rem; font-weight: 800; font-family: var(--font-heading); color: hsl(var(--primary-hsl));" id="confirmVisitToken">T-804</div>
+                            
+                            <!-- QR Placement -->
+                            <div style="width: 140px; height: 140px; background-color: #f1f5f9; margin: 15px auto; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color);" id="confirmQRHolder">
+                                <!-- QR Image will go here -->
+                            </div>
+                            
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.4;">
+                                Show this QR code or token to the receptionist desk upon arrival to check in.
+                            </div>
+                        </div>
+
+                        <div class="detail-row" style="max-width: 280px; margin: 0 auto;">
+                            <span class="detail-label">Doctor:</span>
+                            <span class="detail-value" id="confirmDoctorName">Dr. Vance</span>
+                        </div>
+                        <div class="detail-row" style="max-width: 280px; margin: 0 auto;">
+                            <span class="detail-label">Date & Time:</span>
+                            <span class="detail-value" id="confirmDateTime">July 21, 10:30 AM</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="app.navigateTo('home-screen')">Back to Home</button>
+                </div>
+            </section>
+
+            <!-- 11. ARRIVAL CHECK-IN & CONSENT FORM -->
+            <section id="checkin-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('home-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Hospital Arrival</h3>
+                </div>
+                <div class="screen-content">
+                    <!-- Scanner simulation or raw token insert -->
+                    <div id="checkinScannerArea">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px; text-align: center;">
+                            Scan the QR code at the clinic desk or enter your appointment visit token.
+                        </p>
+                        
+                        <div style="width: 200px; height: 200px; border: 3px solid hsl(var(--accent-hsl)); border-radius: 16px; position: relative; margin: 20px auto; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #0b0f19;">
+                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background-color: hsl(var(--danger-hsl)); animation: scanLine 2.5s linear infinite;"></div>
+                            <i class="fa-solid fa-qrcode" style="font-size: 5rem; color: rgba(255,255,255,0.2);"></i>
+                        </div>
+                        
+                        @keyframes scanLine {
+                            0% { top: 0%; }
+                            50% { top: 100%; }
+                            100% { top: 0%; }
+                        }
+
+                        <div class="input-group" style="margin-top: 20px;">
+                            <label class="input-label" for="checkinTokenInput">Or Enter Visit Token</label>
+                            <input class="input-field" type="text" id="checkinTokenInput" placeholder="e.g. T-804" style="text-align: center; text-transform: uppercase;">
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="bookingFlow.processCheckInToken()" style="margin-top: 10px;">Check In</button>
+                    </div>
+
+                    <!-- Registration / HIPAA Consent Page with signature pad -->
+                    <div id="checkinConsentArea" style="display: none;">
+                        <h4 style="margin-bottom: 8px;">Registration & Consent</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 14px;">
+                            Please verify profile details and sign clinical consent policies.
+                        </p>
+
+                        <div class="card" style="padding: 12px; font-size: 0.75rem; line-height: 1.4; max-height: 140px; overflow-y: auto; margin-bottom: 14px; background-color: var(--bg-tertiary);">
+                            <strong>HIPAA Privacy & Disclosure Terms</strong><br>
+                            I hereby authorize One Minute and its medical networks to transmit patient clinical data, symptoms descriptions, and uploaded diagnostic files securely to the assigned physician. I acknowledge that I have been provided with the HIPAA Privacy Notice outlining how my diagnostic files, lab report records, and prescriptions will be handled under strict privacy standards. I declare that the details provided are accurate to the best of my knowledge.
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label" style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="consentCheck" style="width: 16px; height: 16px;">
+                                <span style="font-size: 0.75rem; font-weight: 500;">I accept the terms and clinical guidelines.</span>
+                            </label>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label">Digital Signature Pad</label>
+                            <div class="signature-canvas-container">
+                                <canvas class="sig-canvas" id="sigPad"></canvas>
+                                <div class="canvas-controls">
+                                    <span class="section-link" onclick="bookingFlow.clearSignature()">Clear Pad</span>
+                                    <span style="font-size: 0.7rem; color: var(--text-muted);">Sign inside box</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-accent" id="btnSubmitConsent" onclick="bookingFlow.submitConsent()" style="margin-top: 10px;">Submit Signature</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 12. LIVE QUEUE SCREEN -->
+            <section id="queue-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('home-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Live Queue Tracker</h3>
+                </div>
+                <div class="screen-content">
+                    
+                    <!-- Proceed Room Alert Banner (hidden by default) -->
+                    <div id="patientProceedAlertBanner" style="display: none; background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; color: #10b981; margin: 15px; border-radius: 12px; padding: 15px; align-items: center; gap: 12px; text-align: left;">
+                        <i class="fa-solid fa-bell-concierge" style="font-size: 1.5rem; color: #10b981;"></i>
+                        <div>
+                            <strong style="display: block; font-size: 0.9rem;">🛎️ Proceed to Consultation Room!</strong>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Your token is currently being called. Please proceed immediately to the consultation room.</span>
+                        </div>
+                    </div>
+
+                    <div class="queue-status-circle">
+                        <span class="queue-num" id="queuePosVal">4</span>
+                        <span class="queue-lbl">Patients Ahead</span>
+                    </div>
+
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h4 id="queueDoctorName">Dr. Elizabeth Vance</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-muted);" id="queueHospitalName">St. Elizabeth Medical Center</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="detail-row">
+                            <span class="detail-label">Your Token:</span>
+                            <span class="detail-value" id="queueTokenVal">T-804</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Room Number:</span>
+                            <span class="detail-value" id="queueRoomVal">Suite 302</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Estimated Wait Time:</span>
+                            <span class="detail-value" id="queueWaitVal" style="color: hsl(var(--warning-hsl));">45 mins</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Doctor Delay Status:</span>
+                            <span class="detail-value" id="queueDelayVal" style="color: hsl(var(--danger-hsl));">+10 mins delay</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Now Serving Token:</span>
+                            <span class="detail-value" id="queueCurrentSpeakerVal" style="color: hsl(var(--success-hsl)); font-weight: 800;">T-801</span>
+                        </div>
+                    </div>
+
+                    <!-- Simulated trigger to fast-track queue or trigger room notification -->
+                    <button class="btn btn-secondary" onclick="app.simulateRoomAlert()" style="margin-bottom: 12px;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Sim Next Queue Step
+                    </button>
+
+                    <!-- Access Consultation Portal (Doctor Simulation Switcher) -->
+                    <div class="card" style="background-color: rgba(15, 76, 129, 0.05); border-color: rgba(15, 76, 129, 0.2);">
+                        <p style="font-size: 0.75rem; text-align: center; margin-bottom: 8px;">
+                            <b>Doctor Dashboard View</b>: Simulate entering consultation as the physician.
+                        </p>
+                        <button class="btn btn-primary" onclick="consultationModule.enterConsultation()">
+                            Open Doctor Screen
+                        </button>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- 13. CONSULTATION & PRESCRIPTION SCREEN (DOCTOR & PATIENT COMBINED PORTAL) -->
+            <section id="consultation-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('queue-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Consultation Room</h3>
+                    <div class="consultation-timer" id="consultTimer">
+                        <i class="fa-solid fa-clock"></i> <span>00:00</span>
+                    </div>
+                </div>
+                <div class="screen-content">
+                    
+                    <div class="card">
+                        <h4 style="font-size: 0.9rem; margin-bottom: 6px;">Patient Profile</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">Name & Age:</span>
+                            <span class="detail-value" id="consPatientName">Alex Mercer (35 yrs)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Allergies:</span>
+                            <span class="detail-value" id="consPatientAllergies" style="color: hsl(var(--danger-hsl));">Penicillin, Peanuts</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Current Medication:</span>
+                            <span class="detail-value" id="consPatientMeds">Albuterol Inhaler</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Symptoms Reported:</span>
+                            <span class="detail-value" id="consPatientSymptoms" style="font-style: italic;">Chest tightness during light cardio</span>
+                        </div>
+                    </div>
+
+                    <!-- AI Clinical Summary Box -->
+                    <div class="card" style="background-color: rgba(20, 184, 166, 0.05); border: 1.5px solid rgba(20, 184, 166, 0.2);">
+                        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
+                            <i class="fa-solid fa-brain" style="color: hsl(var(--accent-hsl));"></i>
+                            <h4 style="font-size: 0.85rem; color: hsl(var(--accent-hsl));">AI Clinical Diagnosis Copilot</h4>
+                        </div>
+                        <p id="consAISummary" style="font-size: 0.75rem; line-height: 1.4; color: var(--text-secondary);">
+                            Parsing symptoms... Click button below to generate diagnostic assistant.
+                        </p>
+                        <button class="btn btn-secondary" onclick="consultationModule.generateAISummary()" style="padding: 6px 12px; font-size: 0.7rem; width: auto; margin-top: 8px;">
+                            Generate AI Summary
+                        </button>
+                    </div>
+
+                    <!-- Rich Clinical Notes Input -->
+                    <div class="input-group">
+                        <label class="input-label">Consultation / Physician Notes</label>
+                        <div class="rich-editor" contenteditable="true" id="consultNotes">
+                            Patient reported chest tightness. Resting heart rate 72 bpm. Lungs clear to auscultation. Advised to reduce high-intensity exercises.
+                        </div>
+                    </div>
+
+                    <!-- Prescription Builder Form -->
+                    <h4 class="section-title">Prescribe Medicines</h4>
+                    
+                    <div class="med-item-row">
+                        <input class="input-field" type="text" id="medName" placeholder="Medicine Name" style="flex: 2;">
+                        <input class="input-field" type="text" id="medDose" placeholder="Dose (e.g. 1 tab)" style="flex: 1;">
+                    </div>
+                    <div class="med-item-row" style="margin-bottom: 12px;">
+                        <input class="input-field" type="text" id="medDuration" placeholder="Duration (e.g. 7 days)" style="flex: 1;">
+                        <input class="input-field" type="text" id="medInstructions" placeholder="e.g. Once daily after meal" style="flex: 2;">
+                    </div>
+                    <button class="btn btn-secondary" onclick="consultationModule.addMedicine()" style="padding: 8px 12px; font-size: 0.8rem; margin-bottom: 12px;">
+                        <i class="fa-solid fa-plus"></i> Add to Prescription
+                    </button>
+
+                    <div id="consPrescriptionList" style="margin-bottom: 20px;">
+                        <!-- Pill items here -->
+                    </div>
+
+                    <button class="btn btn-accent" onclick="consultationModule.completeConsultation()">
+                        Complete & Generate Prescription
+                    </button>
+
+                </div>
+            </section>
+
+            <!-- 14. DIGITAL PRESCRIPTION VIEW & DOWNLOAD SCREEN -->
+            <section id="prescription-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('home-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Digital Prescription</h3>
+                </div>
+                <div class="screen-content">
+                    
+                    <!-- Clinical PDF Mock Design card -->
+                    <div class="card" id="prescriptionPDFLayout" style="padding: 24px; font-family: 'Inter', sans-serif; background-color: #ffffff; color: #000000; border: 1px solid #d1d5db;">
+                        <!-- Clinic Header -->
+                        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #000000; padding-bottom: 10px; margin-bottom: 15px;">
+                            <div>
+                                <h3 style="color: #0F4C81; font-size: 1.1rem; margin: 0;" id="pdfHospitalName">St. Elizabeth Medical Center</h3>
+                                <p style="font-size: 0.65rem; color: #4b5563; margin-top: 2px;">736 Medical Parkway, Metro City</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <h4 style="margin: 0; font-size: 0.85rem;" id="pdfDoctorName">Dr. E. Vance, MD</h4>
+                                <p style="font-size: 0.65rem; color: #4b5563; margin-top: 2px;">Cardiology Specialist</p>
+                            </div>
+                        </div>
+
+                        <!-- Patient Metadata -->
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.7rem; margin-bottom: 15px; background-color: #f3f4f6; padding: 8px; border-radius: 6px;">
+                            <div><b>Patient:</b> <span id="pdfPatientName">Alex Mercer</span></div>
+                            <div><b>Age/Gender:</b> <span id="pdfPatientAgeGender">35 yrs / Male</span></div>
+                            <div><b>Date:</b> <span id="pdfPrescDate">July 20, 2026</span></div>
+                            <div><b>Rx ID:</b> <span id="pdfPrescID">RX-89472</span></div>
+                        </div>
+
+                        <!-- Rx Logo Symbol -->
+                        <div style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; color: #0F4C81; margin-bottom: 10px;">Rx</div>
+
+                        <!-- Prescribed Medicines Table -->
+                        <div style="min-height: 120px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.7rem; text-align: left;" id="pdfMedicinesTable">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid #000000;">
+                                        <th style="padding: 4px;">Medicine Name</th>
+                                        <th style="padding: 4px;">Dose</th>
+                                        <th style="padding: 4px;">Duration</th>
+                                        <th style="padding: 4px;">Instructions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Table Rows Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Clinical Notes -->
+                        <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 15px; font-size: 0.65rem; line-height: 1.4;">
+                            <b>Doctor's Advisory Notes:</b>
+                            <p id="pdfDoctorNotes" style="font-style: italic; color: #374151; margin-top: 2px;">
+                                Rest, avoid heavy workouts. Take medicines on time. Revisit in 2 weeks.
+                            </p>
+                        </div>
+
+                        <!-- Doctor Signature representation -->
+                        <div style="display: flex; justify-content: flex-end; margin-top: 25px;">
+                            <div style="text-align: center; width: 120px;">
+                                <div style="font-family: cursive; font-size: 0.9rem; border-bottom: 1px solid #9ca3af; padding-bottom: 2px;" id="pdfDoctorSignature">Dr. Vance</div>
+                                <span style="font-size: 0.55rem; color: #6b7280; display: block; margin-top: 2px;">Authorized Signatory</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PDF Action Buttons -->
+                    <button class="btn btn-accent" id="btnUploadPrescription" onclick="consultationModule.uploadPrescriptionPDF()" style="margin-bottom: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Save to Cloud (Supabase)
+                    </button>
+
+                    <button class="btn btn-primary" onclick="consultationModule.downloadPrescriptionPDF()" style="margin-bottom: 12px;">
+                        <i class="fa-solid fa-download"></i> Download PDF Document
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="consultationModule.sharePrescription()">
+                        <i class="fa-solid fa-share-nodes"></i> Share with Pharmacy
+                    </button>
+
+                </div>
+            </section>
+
+            <!-- 15. AI ASSISTANT CHAT SCREEN -->
+            <section id="ai-chat-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('home-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>AI Clinical Assistant</h3>
+                </div>
+                <div class="screen-content" style="display: flex; flex-direction: column; padding-bottom: 20px;">
+                    <div class="chat-messages" id="aiChatMessages">
+                        <div class="chat-bubble bot">
+                            Hello! I am your AI Health Copilot. Tell me about any symptoms you're experiencing, or ask medical questions.
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input class="input-field" type="text" id="aiChatInput" placeholder="Describe symptoms or ask questions..." style="flex: 1;" onkeypress="if(event.key === 'Enter') aiChat.sendMessage()">
+                        <button class="btn btn-accent" onclick="aiChat.sendMessage()" style="width: auto; padding: 12px 16px;">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 16. SOS EMERGENCY PULSER SCREEN -->
+            <section id="emergency-screen" class="screen">
+                <div class="sos-container">
+                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 30px;">
+                        <div class="back-btn" style="background-color: var(--bg-tertiary); border: none; color: #fff;" onclick="emergencyFlow.cancelSOS()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                        <h4 style="color: #fff; margin: 0;">Emergency Center</h4>
+                        <div style="width: 36px;"></div> <!-- Spacer -->
+                    </div>
+
+                    <p style="font-size: 0.85rem; color: #94a3b8; max-width: 280px; line-height: 1.4;">
+                        SOS trigger will dispatch your current coordinates and profile metadata directly to dispatchers.
+                    </p>
+
+                    <!-- Big Red Countdown Pulser -->
+                    <div class="sos-pulser" onclick="emergencyFlow.triggerSOSImmediate()">
+                        SOS
+                    </div>
+
+                    <div class="sos-countdown" id="sosCountdownNumber">5</div>
+                    <p style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 30px;" id="sosCountdownLabel">
+                        Initializing emergency call to 102... Tap to trigger immediately.
+                    </p>
+
+                    <div class="card" style="width: 100%; background-color: #131c2e; border-color: #334155; color: #ffffff; text-align: left;">
+                        <div style="display: flex; gap: 10px; align-items: center; font-size: 0.8rem; margin-bottom: 10px; color: #ffffff;">
+                            <i class="fa-solid fa-location-crosshairs" style="color: hsl(var(--danger-hsl));"></i>
+                            <span style="color: #cbd5e1;">GPS Location: <b id="sosLocationText" style="color: #ffffff;">40.7128° N, 74.0060° W</b></span>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; font-size: 0.8rem; color: #ffffff;">
+                            <i class="fa-solid fa-house-medical" style="color: hsl(var(--accent-hsl));"></i>
+                            <span style="color: #cbd5e1;">Nearest Care: <b style="color: #ffffff;">St. Elizabeth Medical Center (0.4 mi)</b></span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-danger" onclick="emergencyFlow.cancelSOS()" style="margin-top: 20px;">
+                        Cancel Trigger
+                    </button>
+                </div>
+            </section>
+
+            <!-- 17. PATIENT PROFILE / SETTINGS SCREEN -->
+            <section id="profile-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('home-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>Profile & Settings</h3>
+                </div>
+                <div class="screen-content">
+                    
+                    <!-- Patient Profile Overview -->
+                    <div class="card" style="text-align: center;">
+                        <div class="user-avatar" style="width: 65px; height: 65px; font-size: 1.6rem; margin: 0 auto 10px auto;" id="profileAvatar">AM</div>
+                        <h4 id="profileName">Alex Mercer</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2px;" id="profileEmail">alex.mercer@email.com</p>
+                        <p style="font-size: 0.8rem; font-weight: bold; color: hsl(var(--accent-hsl)); margin: 2px 0 6px 0;" id="profileHealthId">Health ID: Loading...</p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                            <div>
+                                <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Height</span>
+                                <strong style="font-size: 0.85rem;" id="profileHeight">178 cm</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Weight</span>
+                                <strong style="font-size: 0.85rem;" id="profileWeight">76 kg</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">BMI</span>
+                                <strong style="font-size: 0.85rem; color: hsl(var(--accent-hsl));" id="profileBMI">24.0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 12px; margin-bottom: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="app.openEditProfileModal()" style="width: 100%; max-width: 250px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 16px; font-size: 0.8rem; font-weight: 600;">
+                            <i class="fa-solid fa-user-pen"></i> Edit Profile & Settings
+                        </button>
+                    </div>
+
+                    <!-- Medical Bio Records -->
+                    <h4 class="section-title">Medical Credentials</h4>
+                    <div class="card">
+                        <div class="detail-row">
+                            <span class="detail-label">Blood Group:</span>
+                            <span class="detail-value" id="profileBlood">O+</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Chronic Diseases:</span>
+                            <span class="detail-value" id="profileChronic">Mild Asthma</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Allergies:</span>
+                            <span class="detail-value" id="profileAllergies">Penicillin, Peanuts</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Surgeries:</span>
+                            <span class="detail-value" id="profileSurgeries">None</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Current Medicines:</span>
+                            <span class="detail-value" id="profileMedicines">None</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Organ Donor Status:</span>
+                            <label style="display: flex; align-items: center; gap: 6px;">
+                                <input type="checkbox" id="profileOrganDonor" onchange="app.updateOrganDonor(this)">
+                                <span style="font-size: 0.85rem; font-weight: 600;">Donor</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Personal Bio & Lifestyle -->
+                    <h4 class="section-title">Personal Bio & Lifestyle</h4>
+                    <div class="card">
+                        <div class="detail-row">
+                            <span class="detail-label">Age:</span>
+                            <span class="detail-value" id="profileAge">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Address:</span>
+                            <span class="detail-value" id="profileAddress" style="text-align: right; max-width: 60%; word-break: break-word;">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Emergency Contact:</span>
+                            <span class="detail-value" id="profileEmergency" style="text-align: right; max-width: 60%; word-break: break-word;">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Smoking Status:</span>
+                            <span class="detail-value" id="profileSmoking">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Alcohol Intake:</span>
+                            <span class="detail-value" id="profileAlcohol">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Exercise Habit:</span>
+                            <span class="detail-value" id="profileExercise">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Sleep Schedule:</span>
+                            <span class="detail-value" id="profileSleep">--</span>
+                        </div>
+                    </div>
+
+                    <!-- App Customizations Settings -->
+                    <h4 class="section-title">App Settings</h4>
+                    <div class="card">
+                        <div class="detail-row" style="align-items: center;">
+                            <span class="detail-label">Language:</span>
+                            <select class="input-field" id="settingsLanguage" onchange="app.changeLanguage(this.value)" style="width: auto; padding: 6px 12px; font-size: 0.8rem;">
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                            </select>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Dark Theme Mode:</span>
+                            <label style="display: flex; align-items: center; gap: 6px;">
+                                <input type="checkbox" id="settingsDarkMode" onchange="app.toggleThemeCheckbox(this)">
+                                <span style="font-size: 0.85rem;">Enabled</span>
+                            </label>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Enable Biometric Login:</span>
+                            <label style="display: flex; align-items: center; gap: 6px;">
+                                <input type="checkbox" id="settingsBiometrics" onchange="app.toggleBiometrics(this)">
+                                <span style="font-size: 0.85rem;">Face ID</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-danger" onclick="app.handleLogout()" style="margin-top: 10px;">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                    </button>
+
+                </div>
+            </section>
+
+            <!-- 18. HISTORY & PAYMENTS SCREEN -->
+            <section id="history-screen" class="screen">
+                <div class="screen-header" style="padding: 16px 20px 0 20px;">
+                    <div class="back-btn" onclick="app.navigateTo('home-screen')">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                    <h3>History & Payments</h3>
+                </div>
+                <div class="screen-content">
+                    
+                    <!-- Tab Toggle Buttons -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 15px; background: var(--bg-secondary); padding: 4px; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <button type="button" class="btn" onclick="app.toggleHistoryTab('bookings')" id="btnHistBookings" style="padding: 8px; font-size: 0.8rem; margin: 0; background: var(--bg-card); flex: 1; border: none; font-weight: 600; border-radius: 8px; cursor: pointer; color: var(--text-primary);">
+                            <i class="fa-solid fa-calendar-check" style="margin-right: 5px;"></i> Bookings
+                        </button>
+                        <button type="button" class="btn" onclick="app.toggleHistoryTab('transactions')" id="btnHistTransactions" style="padding: 8px; font-size: 0.8rem; margin: 0; background: transparent; flex: 1; border: none; color: var(--text-secondary); font-weight: 600; border-radius: 8px; cursor: pointer;">
+                            <i class="fa-solid fa-receipt" style="margin-right: 5px;"></i> Payments
+                        </button>
+                    </div>
+
+                    <!-- Bookings Tab Content -->
+                    <div id="historyBookingsTab" style="display: block;">
+                        <div id="historyBookingsList" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                            <!-- Bookings render dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Transactions Tab Content -->
+                    <div id="historyTransactionsTab" style="display: none;">
+                        <div id="historyTransactionsList" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                            <!-- Transactions render dynamically -->
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Dynamic Bottom Nav Indicator bar (only shown when user is logged in) -->
+        <nav class="bottom-nav" id="mainBottomNav" style="display: none;">
+            <a class="bottom-nav-item active" id="navHome" onclick="app.navigateTab('home-screen')">
+                <i class="fa-solid fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a class="bottom-nav-item" id="navSearch" onclick="app.navigateTab('search-screen')">
+                <i class="fa-solid fa-magnifying-glass font-medium"></i>
+                <span>Search</span>
+            </a>
+            <a class="bottom-nav-item" id="navQueue" onclick="app.navigateTab('queue-screen')">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Queue</span>
+            </a>
+            <a class="bottom-nav-item" id="navProfile" onclick="app.navigateTab('profile-screen')">
+                <i class="fa-solid fa-circle-user"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
+
+        <!-- Simulated Touch Indicator bar (Mock phone indicator) -->
+        <div style="height: 15px; width: 100%; display: flex; justify-content: center; align-items: center; z-index: 101; background-color: var(--bg-secondary); border-top: 1px solid var(--border-color);">
+            <div style="width: 120px; height: 5px; background-color: var(--text-muted); border-radius: 10px;"></div>
+        </div>
+
+    </div>
+
+    <!-- GLOBAL DYNAMIC MODALS -->
+
+    <!-- Modal 1: Payment Gateway Dialog -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Secure Payment Gateway</h3>
+                <div class="back-btn" onclick="app.closeModal('paymentModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px;">
+                    Amount Payable: <strong id="payModalAmt">₹1500.00</strong>
+                </p>
+                <div class="input-group">
+                    <label class="input-label" for="payCardName">Cardholder Name</label>
+                    <input class="input-field" type="text" id="payCardName" value="Alex Mercer">
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="payCardNum">Credit Card Number</label>
+                    <input class="input-field" type="text" id="payCardNum" placeholder="4111 2222 3333 4444" value="4111 2222 3333 4444">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="input-group" style="flex: 2;">
+                        <label class="input-label" for="payCardExpiry">Expiration Date</label>
+                        <input class="input-field" type="text" id="payCardExpiry" placeholder="MM/YY" value="12/28">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label class="input-label" for="payCardCVV">CVV</label>
+                        <input class="input-field" type="password" id="payCardCVV" placeholder="123" value="123">
+                    </div>
+                </div>
+                <button class="btn btn-accent" onclick="bookingFlow.processPayment()" style="margin-top: 10px;">
+                    <i class="fa-solid fa-shield-check"></i> Complete Payment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Lab Reports Viewer Modal -->
+    <div class="modal-overlay" id="reportsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>My Lab Results</h3>
+                <div class="back-btn" onclick="app.closeModal('reportsModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="reportsModalList">
+                <!-- Lab report items rendered dynamically -->
+            </div>
+            <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <h4 style="font-size: 0.85rem; margin-bottom: 10px;">Upload New Report PDF</h4>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" id="reportFileInput" accept="application/pdf" style="display: none;" onchange="app.handleReportUpload(event)">
+                    <button class="btn btn-secondary" onclick="document.getElementById('reportFileInput').click()" style="margin: 0; font-size: 0.8rem; flex: 1;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Choose & Upload PDF
+                    </button>
+                    <span id="reportUploadStatus" style="font-size: 0.7rem; color: var(--text-muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Insurance Alerts/Coverage Modal -->
+    <div class="modal-overlay" id="insuranceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Insurance & Policies</h3>
+                <div class="back-btn" onclick="app.closeModal('insuranceModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="insuranceModalContent">
+                <!-- Insurance alerts here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Family Members view -->
+    <div class="modal-overlay" id="familyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Linked Family Profiles</h3>
+                <div class="back-btn" onclick="app.closeModal('familyModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="familyModalContent">
+                <!-- Family members list with granular edit permissions -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4A: Add Family Member by Health ID -->
+    <div class="modal-overlay" id="addFamilyMemberModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Family Member</h3>
+                <div class="back-btn" onclick="app.closeModal('addFamilyMemberModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <form id="addFamilyMemberForm" onsubmit="app.handleAddFamilyMember(event)">
+                <div class="input-group">
+                    <label class="input-label" for="familyHealthId">Health ID (e.g. MED-123456)</label>
+                    <input class="input-field" type="text" id="familyHealthId" placeholder="Enter Member's Health ID" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="familyRelation">Relationship</label>
+                    <select class="input-field" id="familyRelation" required style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); width: 100%; padding: 12px; border-radius: 8px;">
+                        <option value="Spouse">Spouse</option>
+                        <option value="Daughter">Daughter</option>
+                        <option value="Son">Son</option>
+                        <option value="Father">Father</option>
+                        <option value="Mother">Mother</option>
+                        <option value="Sibling">Sibling</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="familyPermission">Permission Level</label>
+                    <select class="input-field" id="familyPermission" required style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); width: 100%; padding: 12px; border-radius: 8px;">
+                        <option value="view">View Only (Read clinical records)</option>
+                        <option value="edit">View & Edit (Manage details)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Send Family Request</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 4B: Notification Center -->
+    <div class="modal-overlay" id="notificationsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Notifications</h3>
+                <div class="back-btn" onclick="app.closeModal('notificationsModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="notificationsModalContent" style="max-height: 400px; overflow-y: auto;">
+                <!-- Notifications render dynamically here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4C: Family Member Details -->
+    <div class="modal-overlay" id="familyMemberDetailsModal">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 id="familyMemberDetailsTitle">Family Member Profile</h3>
+                <div class="back-btn" onclick="app.closeModal('familyMemberDetailsModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="familyMemberDetailsContent">
+                <!-- Render detailed profile here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 5: Payments & Receipts log -->
+    <div class="modal-overlay" id="paymentsLogModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Payment History</h3>
+                <div class="back-btn" onclick="app.closeModal('paymentsLogModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="paymentsLogModalContent">
+                <!-- Log items -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 5A: History Item Details (Booking & Transaction) -->
+    <div class="modal-overlay" id="historyDetailModal">
+        <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 id="historyDetailModalTitle">Details</h3>
+                <div class="back-btn" onclick="app.closeModal('historyDetailModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="historyDetailModalContent" style="text-align: left;">
+                <!-- Content injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 6: Prescriptions List Modal -->
+    <div class="modal-overlay" id="prescriptionsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>My Prescriptions</h3>
+                <div class="back-btn" onclick="app.closeModal('prescriptionsModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="prescriptionsModalList" style="margin-bottom: 20px;">
+                <!-- Prescription list items rendered dynamically -->
+            </div>
+            <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <h4 style="font-size: 0.85rem; margin-bottom: 10px;">Upload Personal Prescription (PDF/Image)</h4>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" id="prescriptionFileInput" accept="application/pdf,image/*" style="display: none;" onchange="app.handlePersonalPrescriptionUpload(event)">
+                    <button class="btn btn-secondary" onclick="document.getElementById('prescriptionFileInput').click()" style="margin: 0; font-size: 0.8rem; flex: 1;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Choose Photo/PDF
+                    </button>
+                    <span id="prescriptionUploadStatus" style="font-size: 0.7rem; color: var(--text-muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 7: Complete Profile Modal -->
+    <div class="modal-overlay" id="completeProfileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Complete Your Profile</h3>
+            </div>
+            <div style="padding: 10px 0;">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 15px;">
+                    Please provide your basic health details to complete your patient account setup.
+                </p>
+                <form id="completeProfileForm" onsubmit="app.handleCompleteProfile(event)">
+                    <div class="input-group">
+                        <label class="input-label" for="completePhone">Phone Number</label>
+                        <input class="input-field" type="tel" id="completePhone" placeholder="+1 (555) 019-XXXX" required>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="completeDOB">Date of Birth</label>
+                            <input class="input-field" type="date" id="completeDOB" required>
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="completeGender">Gender</label>
+                            <select class="input-field" id="completeGender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="completeBloodGroup">Blood Group</label>
+                            <select class="input-field" id="completeBloodGroup" required>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="completeHeight">Height (cm)</label>
+                            <input class="input-field" type="number" id="completeHeight" placeholder="175" required min="30" max="300">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="completeWeight">Weight (kg)</label>
+                            <input class="input-field" type="number" id="completeWeight" placeholder="70" required min="10" max="500">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Save Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- OTP Verification Modal -->
+    <div class="modal-overlay" id="otpVerificationModal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h3>OTP Verification</h3>
+                <div class="back-btn" onclick="app.closeModal('otpVerificationModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 15px 0; line-height: 1.5;">
+                We have sent a 4-digit verification code to: <span id="otpTargetContact" style="font-weight: 700; color: hsl(var(--accent-hsl));"></span>.
+            </p>
+            <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.03); border: 1px dashed var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 20px;">
+                💡 Demo Verification OTP is: <strong style="color: hsl(var(--accent-hsl)); letter-spacing: 2px; font-size: 0.95rem;">1234</strong>
+            </div>
+            <div class="input-group">
+                <label class="input-label" for="otpInput" style="text-align: center; display: block; margin-bottom: 10px;">Enter 4-Digit OTP</label>
+                <input class="input-field" type="text" id="otpInput" placeholder="XXXX" maxlength="4" style="text-align: center; letter-spacing: 8px; font-size: 1.4rem; font-weight: 700; max-width: 200px; margin: 0 auto;" required>
+                <div id="otpErrorMsg" style="color: #ef4444; font-size: 0.75rem; margin-top: 6px; display: none;">Invalid OTP code. Please try again.</div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button type="button" class="btn btn-secondary" onclick="app.closeModal('otpVerificationModal')" style="flex: 1; margin: 0;">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="app.verifyOTP()" style="flex: 1; margin: 0;">Verify & Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile & Settings Modal -->
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal-content" style="max-width: 500px; padding: 20px;">
+            <div class="modal-header">
+                <h3>Edit Profile & Settings</h3>
+                <div class="back-btn" onclick="app.closeModal('editProfileModal')" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            
+            <!-- Modal Tabs Navigation -->
+            <div style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; border-bottom: 1px solid var(--border-color);">
+                <button type="button" class="tab-btn active" onclick="app.switchEditTab('editTabIdentity')" id="btnEditTabIdentity" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 20px; border: 1px solid var(--border-color); background: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap;">Identity</button>
+                <button type="button" class="tab-btn" onclick="app.switchEditTab('editTabVitals')" id="btnEditTabVitals" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 20px; border: 1px solid var(--border-color); background: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap;">Vitals & Contact</button>
+                <button type="button" class="tab-btn" onclick="app.switchEditTab('editTabMedical')" id="btnEditTabMedical" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 20px; border: 1px solid var(--border-color); background: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap;">Medical</button>
+                <button type="button" class="tab-btn" onclick="app.switchEditTab('editTabLifestyle')" id="btnEditTabLifestyle" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 20px; border: 1px solid var(--border-color); background: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap;">Lifestyle</button>
+            </div>
+
+            <form id="editProfileForm" onsubmit="app.handleUpdateProfile(event)">
+                <!-- Tab 1: Identity -->
+                <div class="edit-tab-content active" id="editTabIdentity">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <div style="position: relative; width: 60px; height: 60px;">
+                            <div class="user-avatar" id="editPhotoPreview" style="width: 100%; height: 100%; font-size: 1.5rem; margin: 0;">AM</div>
+                            <label for="editPhotoInput" style="position: absolute; bottom: 0; right: 0; background: hsl(var(--accent-hsl)); color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.65rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                                <i class="fa-solid fa-camera"></i>
+                            </label>
+                            <input type="file" id="editPhotoInput" accept="image/*" style="display: none;" onchange="app.handleEditPhotoUpload(event)">
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label class="input-label" for="editName">Full Name</label>
+                                <input class="input-field" type="text" id="editName" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="editPhone">Phone Number</label>
+                        <input class="input-field" type="tel" id="editPhone" required>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editDOB">Date of Birth</label>
+                            <input class="input-field" type="date" id="editDOB" required onchange="app.calculateEditAge()">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editGender">Gender</label>
+                            <select class="input-field" id="editGender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="editLanguage">Preferred Language</label>
+                        <input class="input-field" type="text" id="editLanguage" placeholder="e.g. English, Hindi" required>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label class="input-label" for="editAddress">Residential Address</label>
+                        <textarea class="input-field" id="editAddress" rows="2" placeholder="Enter complete address" required></textarea>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Vitals & Emergency Contact -->
+                <div class="edit-tab-content" id="editTabVitals" style="display: none;">
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editHeight">Height (cm)</label>
+                            <input class="input-field" type="number" id="editHeight" required oninput="app.calculateEditBMI()">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editWeight">Weight (kg)</label>
+                            <input class="input-field" type="number" id="editWeight" required oninput="app.calculateEditBMI()">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                        <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                            <label class="input-label" for="editBloodGroup">Blood Group</label>
+                            <select class="input-field" id="editBloodGroup" required>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; text-align: right; padding-top: 20px;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">Calculated BMI:</span>
+                            <div id="editBMIBadge" style="font-weight: 700; font-size: 1.1rem; color: hsl(var(--accent-hsl));">--</div>
+                        </div>
+                    </div>
+                    
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px;">
+                        <h5 style="margin: 0 0 10px 0; color: var(--text-primary); font-size: 0.8rem; font-weight: 700;">Emergency Contact</h5>
+                        <div class="input-group">
+                            <label class="input-label" for="editEmName">Contact Person Name</label>
+                            <input class="input-field" type="text" id="editEmName" required>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                                <label class="input-label" for="editEmRelation">Relation</label>
+                                <input class="input-field" type="text" id="editEmRelation" placeholder="e.g. Spouse, Parent" required>
+                            </div>
+                            <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                                <label class="input-label" for="editEmPhone">Contact Phone</label>
+                                <input class="input-field" type="tel" id="editEmPhone" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Medical History -->
+                <div class="edit-tab-content" id="editTabMedical" style="display: none;">
+                    <div class="input-group">
+                        <label class="input-label" for="editAllergies">Allergies</label>
+                        <input class="input-field" type="text" id="editAllergies" placeholder="e.g. Penicillin, Peanuts (or None)">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="editChronic">Chronic Diseases</label>
+                        <input class="input-field" type="text" id="editChronic" placeholder="e.g. Hypertension, Asthma (or None)">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="editSurgeries">Surgeries (History)</label>
+                        <input class="input-field" type="text" id="editSurgeries" placeholder="e.g. Appendectomy, None">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label class="input-label" for="editMedicines">Current Medicines</label>
+                        <input class="input-field" type="text" id="editMedicines" placeholder="e.g. Metformin 500mg, None">
+                    </div>
+                </div>
+
+                <!-- Tab 4: Lifestyle & Settings -->
+                <div class="edit-tab-content" id="editTabLifestyle" style="display: none;">
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editSmoking">Smoking Status</label>
+                            <select class="input-field" id="editSmoking">
+                                <option value="Non-smoker">Non-smoker</option>
+                                <option value="Occasional">Occasional</option>
+                                <option value="Regular">Regular</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editAlcohol">Alcohol Intake</label>
+                            <select class="input-field" id="editAlcohol">
+                                <option value="Non-drinker">Non-drinker</option>
+                                <option value="Social">Social</option>
+                                <option value="Regular">Regular</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editExercise">Exercise Habit</label>
+                            <select class="input-field" id="editExercise">
+                                <option value="None (Sedentary)">None (Sedentary)</option>
+                                <option value="1-2 times/week">1-2 times/week</option>
+                                <option value="3-5 times/week">3-5 times/week</option>
+                                <option value="Daily">Daily</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label class="input-label" for="editSleep">Sleep Duration</label>
+                            <select class="input-field" id="editSleep">
+                                <option value="< 6 hours">< 6 hours</option>
+                                <option value="6-8 hours">6-8 hours</option>
+                                <option value="> 8 hours">> 8 hours</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label class="input-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 0;">
+                            <input type="checkbox" id="editOrganDonor" style="width: 18px; height: 18px;">
+                            <span style="font-size: 0.85rem; font-weight: 600;">Register as Organ Donor</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('editProfileModal')" style="flex: 1; margin: 0;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; margin: 0;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    
+    <!-- Custom Application Javascript Files -->
+    <script src="js/data.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/emergency.js"></script>
+    <script src="js/booking.js"></script>
+    <script src="js/consultation.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>

@@ -27,6 +27,9 @@ try {
     // --- BUILD 1: PATIENT APK ---
     console.log('\n--- BUILDING PATIENT APP APK ---');
     
+    // Swap entrance: Copy patient.html to index.html in www/ so Capacitor boots into Patient Portal
+    fs.copyFileSync('www/patient.html', 'www/index.html');
+
     // Sync Capacitor assets (loads Patient index.html as entry point)
     runCommand('npx cap sync android');
     
@@ -67,8 +70,9 @@ try {
 
     // --- RESTORE ORIGINAL ---
     console.log('\n--- CLEANING UP & RESTORING ASSETS ---');
-    fs.copyFileSync('index.html', 'www/index.html'); // Restore patient index.html
+    fs.copyFileSync('patient.html', 'www/index.html'); // Restore patient app state for local Android development
     runCommand('npx cap sync android'); // Re-sync Android project to patient state for safety
+    fs.copyFileSync('index.html', 'www/index.html'); // Restore landing page index.html for static web deployment
     
     console.log('\n--- BUILD COMPLETED SUCCESSFULLY ---');
     console.log(`Patient App: ${path.resolve(patientDest)}`);

@@ -22,8 +22,11 @@ if (fs.existsSync('www')) {
 }
 fs.mkdirSync('www');
 
-// Copy index.html, doctor.html and admin.html
+// Copy index.html, patient.html, doctor.html and admin.html
 fs.copyFileSync('index.html', 'www/index.html');
+if (fs.existsSync('patient.html')) {
+    fs.copyFileSync('patient.html', 'www/patient.html');
+}
 if (fs.existsSync('doctor.html')) {
     fs.copyFileSync('doctor.html', 'www/doctor.html');
 }
@@ -35,9 +38,6 @@ if (fs.existsSync('reception.html')) {
 }
 if (fs.existsSync('preview.html')) {
     fs.copyFileSync('preview.html', 'www/preview.html');
-}
-if (fs.existsSync('landing.html')) {
-    fs.copyFileSync('landing.html', 'www/landing.html');
 }
 if (fs.existsSync('chirag.jpeg')) {
     fs.copyFileSync('chirag.jpeg', 'www/chirag.jpeg');
