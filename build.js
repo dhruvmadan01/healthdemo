@@ -42,12 +42,13 @@ if (fs.existsSync('preview.html')) {
 if (fs.existsSync('chirag.jpeg')) {
     fs.copyFileSync('chirag.jpeg', 'www/chirag.jpeg');
 }
-if (fs.existsSync('logo.jpg')) {
-    fs.copyFileSync('logo.jpg', 'www/logo.jpg');
+if (fs.existsSync('logonew.png')) {
+    fs.copyFileSync('logonew.png', 'www/logonew.png');
 }
 
 // Copy css and js folders
 if (fs.existsSync('css')) copyFolderSync('css', 'www/css');
 if (fs.existsSync('js')) copyFolderSync('js', 'www/js');
+if (fs.existsSync('zohoverify')) copyFolderSync('zohoverify', 'www/zohoverify');
 
 console.log('Build completed: Web assets copied to www/');
